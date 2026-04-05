@@ -1,0 +1,29 @@
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+.venv/
+*.egg-info/
+dist/
+build/
+
+# Docker
+.env
+
+# IDE
+.idea/
+.vscode/
+
+# OS
+.DS_Store
+
+# Node
+node_modules/
+.next/
+
+# Data files (large)
+*.pmtiles
+*.gpkg
+*.shp
+*.dbf
+*.shx
