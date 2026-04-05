@@ -57,7 +57,8 @@ async def get_kpi(
     except Exception:
         aq_row = None
 
-    tier, color = aqi_tier(aq_row["current_aqi"] if aq_row else None)
+    raw_aqi = aq_row["current_aqi"] if aq_row else None
+    tier, color = aqi_tier(raw_aqi if isinstance(raw_aqi, (int, float)) else None)
 
     # --- Weather KPI ---
     wx_row = None
