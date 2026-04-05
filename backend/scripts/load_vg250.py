@@ -18,6 +18,7 @@ Requires:
     - Town row inserted in towns table (or will fail FK constraint)
     - geopandas, geoalchemy2, httpx installed (part of uv dependencies)
 """
+import json
 import os
 import sys
 import zipfile
@@ -104,7 +105,7 @@ def load_town_boundary(town_id: str, ags: str, db_url: str) -> None:
     town_gdf["domain"] = "administrative"
     town_gdf["source_id"] = "bkg_vg250"
     town_gdf["properties"] = town_gdf.apply(
-        lambda r: {"gen": r["GEN"], "ags": r["AGS"], "bez": r.get("BEZ", "")},
+        lambda r: json.dumps({"gen": r["GEN"], "ags": r["AGS"], "bez": r.get("BEZ", "")}),
         axis=1,
     )
 
