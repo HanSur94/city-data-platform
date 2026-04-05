@@ -53,7 +53,14 @@ Plans:
   3. DWD/Bright Sky weather connector writes current conditions and MOSMIX forecasts to the weather hypertable
   4. Every connector records `last_successful_fetch` and validation error counts; a fetch that returns HTTP 200 with empty payload is treated as failure
   5. Running `pytest tests/connectors/` passes with live-endpoint integration tests for both connectors
-**Plans**: TBD
+**Plans**: 5 plans
+
+Plans:
+- [ ] 02-01-PLAN.md — Wave 0 foundation: migration 002, BaseConnector persist(), scheduler.py, test scaffolding, new packages
+- [ ] 02-02-PLAN.md — UBA + Sensor.community air quality connectors (WAIR-03, WAIR-04)
+- [ ] 02-03-PLAN.md — Bright Sky weather connector (WAIR-01, WAIR-02)
+- [ ] 02-04-PLAN.md — GTFS static connector: stops + route shapes to features table (TRAF-01)
+- [ ] 02-05-PLAN.md — GTFS-RT connector + aalen.yaml wiring + FastAPI scheduler startup (TRAF-02)
 
 ### Phase 3: Query API
 **Goal**: FastAPI exposes clean, town-scoped GeoJSON, time-series, and KPI endpoints that the frontend can consume without ever touching the database directly
@@ -167,7 +174,7 @@ Phases execute in numeric order: 1 → 2 → 3 → 4 → 5 → 6 → 7 → 8 →
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
 | 1. Foundation | 4/4 | Complete   | 2026-04-05 |
-| 2. First Connectors | 0/TBD | Not started | - |
+| 2. First Connectors | 0/5 | Not started | - |
 | 3. Query API | 0/TBD | Not started | - |
 | 4. Map Frontend | 0/TBD | Not started | - |
 | 5. Dashboard | 0/TBD | Not started | - |
