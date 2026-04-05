@@ -3,8 +3,8 @@ gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
 status: executing
-stopped_at: Completed 02-first-connectors/02-02-PLAN.md
-last_updated: "2026-04-05T19:01:41.069Z"
+stopped_at: Completed 02-first-connectors/02-03-PLAN.md
+last_updated: "2026-04-05T18:57:59.822Z"
 last_activity: 2026-04-05
 progress:
   total_phases: 10
@@ -54,7 +54,7 @@ Progress: [░░░░░░░░░░] 0%
 *Updated after each plan completion*
 | Phase 01-foundation P03 | 151 | 2 tasks | 9 files |
 | Phase 01-foundation P04 | 3 | 2 tasks | 4 files |
-| Phase 02-first-connectors P02 | 5 | 1 tasks | 7 files |
+| Phase 02-first-connectors P03 | 8 | 1 tasks | 4 files |
 
 ## Accumulated Context
 
@@ -72,8 +72,7 @@ Recent decisions affecting current work:
 - [Phase 01-foundation]: Observation is a dataclass (not Pydantic model) — no DB schema coupling in Phase 1
 - [Phase 01-foundation]: Use json.dumps() for JSONB properties in load_vg250.py — psycopg2 COPY requires valid JSON strings not Python dict repr
 - [Phase 01-foundation]: FastAPI lifespan loads town from TOWN env var, fails fast on missing/invalid config — get_current_town() dependency pattern established
-- [Phase 02-first-connectors]: UBA API response structure: timestamps are dict keys, components are sub-arrays; normalize() handles actual format not plan-documented format
-- [Phase 02-first-connectors]: Sensor.community API outage handling: live fetch test skips gracefully, normalize test uses mock fallback to preserve behavior contract
+- [Phase 02-first-connectors]: WeatherConnector: lat/lon from ConnectorConfig.config (no Aalen hardcoding); MOSMIX filter via sources list; app/models/ directory created for API response Pydantic models
 
 ### Pending Todos
 
@@ -88,6 +87,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-04-05T19:01:41.066Z
-Stopped at: Completed 02-first-connectors/02-02-PLAN.md
+Last session: 2026-04-05T18:57:59.819Z
+Stopped at: Completed 02-first-connectors/02-03-PLAN.md
 Resume file: None
