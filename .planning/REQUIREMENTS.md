@@ -92,9 +92,9 @@ Requirements for initial release. Each maps to roadmap phases.
 
 - [x] **PLAT-01**: Town-config-driven architecture — add a new town via config file, no code changes
 - [x] **PLAT-02**: Docker Compose self-hosted deployment — single `docker-compose up`
-- [ ] **PLAT-03**: NGSI-LD compatible API layer (Smart Data Models schemas)
-- [ ] **PLAT-04**: Data source attribution display (Datenlizenz Deutschland compliance)
-- [ ] **PLAT-05**: Connector health monitoring — staleness detection, last-update timestamps
+- [x] **PLAT-03**: NGSI-LD compatible API layer (Smart Data Models schemas)
+- [x] **PLAT-04**: Data source attribution display (Datenlizenz Deutschland compliance)
+- [x] **PLAT-05**: Connector health monitoring — staleness detection, last-update timestamps
 - [x] **PLAT-06**: Plugin-based connector architecture (BaseConnector pattern)
 - [ ] **PLAT-07**: Time-series storage with retention policies (TimescaleDB)
 - [ ] **PLAT-08**: Spatial query support (PostGIS)
@@ -161,9 +161,9 @@ Which phases cover which requirements. Updated during roadmap creation.
 | WAIR-02 | Phase 2 | Complete |
 | WAIR-03 | Phase 2 | Complete |
 | WAIR-04 | Phase 2 | Complete |
-| PLAT-03 | Phase 3 | Pending |
-| PLAT-04 | Phase 3 | Pending |
-| PLAT-05 | Phase 3 | Pending |
+| PLAT-03 | Phase 3 | Complete |
+| PLAT-04 | Phase 3 | Complete |
+| PLAT-05 | Phase 3 | Complete |
 | MAP-01 | Phase 4 | Pending |
 | MAP-02 | Phase 4 | Pending |
 | MAP-03 | Phase 4 | Pending |
