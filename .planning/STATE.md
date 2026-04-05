@@ -3,14 +3,14 @@ gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
 status: executing
-stopped_at: Completed 02-first-connectors/02-01-PLAN.md
-last_updated: "2026-04-05T18:54:24.505Z"
-last_activity: 2026-04-05
+stopped_at: Completed 01-foundation/01-04-PLAN.md
+last_updated: "2026-04-05T18:50:03.448Z"
+last_activity: 2026-04-05 -- Phase 02 execution started
 progress:
   total_phases: 10
   completed_phases: 1
   total_plans: 9
-  completed_plans: 5
+  completed_plans: 4
   percent: 0
 ---
 
@@ -21,14 +21,14 @@ progress:
 See: .planning/PROJECT.md (updated 2026-04-05)
 
 **Core value:** Citizens and city officials can see all publicly available city data in one place, on a map, updated live — no technical expertise required.
-**Current focus:** Phase 01 — foundation
+**Current focus:** Phase 02 — first-connectors
 
 ## Current Position
 
-Phase: 2
-Plan: Not started
-Status: Ready to execute
-Last activity: 2026-04-05
+Phase: 02 (first-connectors) — EXECUTING
+Plan: 1 of 5
+Status: Executing Phase 02
+Last activity: 2026-04-05 -- Phase 02 execution started
 
 Progress: [░░░░░░░░░░] 0%
 
@@ -54,7 +54,6 @@ Progress: [░░░░░░░░░░] 0%
 *Updated after each plan completion*
 | Phase 01-foundation P03 | 151 | 2 tasks | 9 files |
 | Phase 01-foundation P04 | 3 | 2 tasks | 4 files |
-| Phase 02-first-connectors P01 | 15 | 2 tasks | 7 files |
 
 ## Accumulated Context
 
@@ -72,8 +71,6 @@ Recent decisions affecting current work:
 - [Phase 01-foundation]: Observation is a dataclass (not Pydantic model) — no DB schema coupling in Phase 1
 - [Phase 01-foundation]: Use json.dumps() for JSONB properties in load_vg250.py — psycopg2 COPY requires valid JSON strings not Python dict repr
 - [Phase 01-foundation]: FastAPI lifespan loads town from TOWN env var, fails fast on missing/invalid config — get_current_town() dependency pattern established
-- [Phase 02-first-connectors]: Fresh AsyncSession per persist call — sessions never held at connector class level
-- [Phase 02-first-connectors]: run() explicitly calls _update_staleness() — subclasses that override run() must call it manually
 
 ### Pending Todos
 
@@ -88,6 +85,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-04-05T18:54:24.501Z
-Stopped at: Completed 02-first-connectors/02-01-PLAN.md
+Last session: 2026-04-05T18:12:16.404Z
+Stopped at: Completed 01-foundation/01-04-PLAN.md
 Resume file: None
