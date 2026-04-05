@@ -35,7 +35,13 @@ Decimal phases appear between their surrounding integers in numeric order.
   3. `towns/aalen.yaml` and `towns/example.yaml` exist with all required fields; loading either via the config loader produces a validated Town object with no code changes between them
   4. BaseConnector abstract class is defined; a stub connector that inherits it passes the test suite
   5. Administrative boundary polygons for Aalen are loaded into PostGIS via the BKG VG250 source
-**Plans**: TBD
+**Plans**: 4 plans
+
+Plans:
+- [ ] 01-01-PLAN.md — Docker Compose + project structure + Alembic scaffold + test conftest
+- [ ] 01-02-PLAN.md — Alembic migration: hypertables, PostGIS spatial table, retention policies
+- [ ] 01-03-PLAN.md — Town YAML config + Pydantic loader + BaseConnector + StubConnector
+- [ ] 01-04-PLAN.md — FastAPI lifespan wiring + BKG VG250 boundary import script
 
 ### Phase 2: First Connectors
 **Goal**: Transit and air quality data flow continuously from upstream sources through validated Pydantic models into TimescaleDB hypertables with staleness tracking
@@ -160,7 +166,7 @@ Phases execute in numeric order: 1 → 2 → 3 → 4 → 5 → 6 → 7 → 8 →
 
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
-| 1. Foundation | 0/TBD | Not started | - |
+| 1. Foundation | 0/4 | Not started | - |
 | 2. First Connectors | 0/TBD | Not started | - |
 | 3. Query API | 0/TBD | Not started | - |
 | 4. Map Frontend | 0/TBD | Not started | - |
