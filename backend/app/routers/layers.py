@@ -5,7 +5,7 @@ Returns a GeoJSON FeatureCollection for a given domain and town.
 Uses PostGIS ST_AsGeoJSON() for geometry serialization.
 """
 import json
-from datetime import datetime
+from datetime import datetime, timezone
 from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import text
@@ -28,6 +28,7 @@ router = APIRouter(tags=["layers"])
 async def get_layer(
     domain: str,
     town: str = Query(...),
+    at: datetime | None = Query(None, description="Historical snapshot timestamp (ISO 8601). If omitted, returns latest readings."),
     db: AsyncSession = Depends(get_db),
     current_town: Town = Depends(get_current_town),
 ) -> dict:
@@ -41,6 +42,11 @@ async def get_layer(
 
     rows: list = []
     last_updated: datetime | None = None
+
+    # Normalize at param to timezone-aware UTC if provided as naive datetime
+    at_aware: datetime | None = None
+    if at is not None:
+        at_aware = at.replace(tzinfo=timezone.utc) if at.tzinfo is None else at
 
     if domain == "transit":
         result = await db.execute(
@@ -85,13 +91,14 @@ async def get_layer(
                     SELECT pm25, pm10, no2, o3, aqi, time
                     FROM air_quality_readings
                     WHERE feature_id = f.id
+                      AND (:at IS NULL OR time <= :at)
                     ORDER BY time DESC
                     LIMIT 1
                 ) r ON true
                 WHERE f.town_id = :town_id
                   AND f.domain   = 'air_quality'
             """),
-            {"town_id": current_town.id},
+            {"town_id": current_town.id, "at": at_aware},
         )
         rows = result.mappings().all()
         # Get last_updated from reading_time
