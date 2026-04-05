@@ -32,5 +32,16 @@ services:
       - ./towns:/app/towns:ro
     restart: unless-stopped
 
+  frontend:
+    build: ./frontend
+    environment:
+      NEXT_PUBLIC_API_URL: http://localhost:8000
+      PORT: 4000
+    ports:
+      - "4000:4000"
+    depends_on:
+      - backend
+    restart: unless-stopped
+
 volumes:
   pgdata:
