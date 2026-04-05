@@ -1,9 +1,15 @@
 'use client';
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import Map from 'react-map-gl/maplibre';
+import { Popup } from 'react-map-gl/maplibre';
 import { Protocol } from 'pmtiles';
 import maplibregl from 'maplibre-gl';
 import { buildMapStyle } from '@/lib/map-styles';
+import TransitLayer from './TransitLayer';
+import AQILayer from './AQILayer';
+import FeaturePopup from './FeaturePopup';
+import type { LayerResponse } from '@/types/geojson';
+import type GeoJSON from 'geojson';
 
 // PMTiles file extracted from Protomaps daily build for Aalen bbox
 // Extract command: npx pmtiles extract https://build.protomaps.com/{date}.pmtiles \
@@ -13,10 +19,26 @@ const PMTILES_URL = 'pmtiles:///tiles/aalen.pmtiles';
 
 interface MapViewProps {
   layerVisibility: { transit: boolean; airQuality: boolean };
-  children?: React.ReactNode;
+  transitData: LayerResponse | null;
+  airQualityData: LayerResponse | null;
+  transitLastFetched: Date | null;
+  airQualityLastFetched: Date | null;
 }
 
-export default function MapView({ layerVisibility, children }: MapViewProps) {
+interface PopupInfo {
+  longitude: number;
+  latitude: number;
+  feature: GeoJSON.Feature;
+  domain: 'transit' | 'airQuality';
+}
+
+export default function MapView({
+  layerVisibility,
+  transitData,
+  airQualityData,
+  transitLastFetched,
+  airQualityLastFetched,
+}: MapViewProps) {
   // Register PMTiles protocol BEFORE Map renders (Pitfall 3)
   // Register at module scope to avoid double-registration on re-renders
   const protocolRef = useRef<Protocol | null>(null);
@@ -30,6 +52,8 @@ export default function MapView({ layerVisibility, children }: MapViewProps) {
       protocolRef.current = null;
     };
   }, []);
+
+  const [popupInfo, setPopupInfo] = useState<PopupInfo | null>(null);
 
   const mapStyle = buildMapStyle(PMTILES_URL);
 
@@ -45,8 +69,36 @@ export default function MapView({ layerVisibility, children }: MapViewProps) {
       style={{ width: '100%', height: '100%' }}
       mapStyle={mapStyle}
       attributionControl={{ compact: false }}
+      interactiveLayerIds={['transit-stops', 'aqi-points']}
+      onClick={(e) => {
+        const feature = e.features?.[0];
+        if (!feature || !e.lngLat) return;
+        const domain = feature.layer?.id?.startsWith('aqi') ? 'airQuality' : 'transit';
+        setPopupInfo({
+          longitude: e.lngLat.lng,
+          latitude: e.lngLat.lat,
+          feature: feature as GeoJSON.Feature,
+          domain,
+        });
+      }}
     >
-      {children}
+      <TransitLayer data={transitData} visible={layerVisibility.transit} />
+      <AQILayer data={airQualityData} visible={layerVisibility.airQuality} />
+      {popupInfo && (
+        <Popup
+          longitude={popupInfo.longitude}
+          latitude={popupInfo.latitude}
+          onClose={() => setPopupInfo(null)}
+          closeOnClick={false}
+          maxWidth="200px"
+          anchor="bottom"
+        >
+          <FeaturePopup
+            feature={popupInfo.feature}
+            lastFetched={popupInfo.domain === 'airQuality' ? airQualityLastFetched : transitLastFetched}
+          />
+        </Popup>
+      )}
     </Map>
   );
 }
