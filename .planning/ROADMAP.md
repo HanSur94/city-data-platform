@@ -58,7 +58,7 @@ Plans:
 Plans:
 - [x] 02-01-PLAN.md — Wave 0 foundation: migration 002, BaseConnector persist(), scheduler.py, test scaffolding, new packages
 - [ ] 02-02-PLAN.md — UBA + Sensor.community air quality connectors (WAIR-03, WAIR-04)
-- [ ] 02-03-PLAN.md — Bright Sky weather connector (WAIR-01, WAIR-02)
+- [x] 02-03-PLAN.md — Bright Sky weather connector (WAIR-01, WAIR-02)
 - [ ] 02-04-PLAN.md — GTFS static connector: stops + route shapes to features table (TRAF-01)
 - [ ] 02-05-PLAN.md — GTFS-RT connector + aalen.yaml wiring + FastAPI scheduler startup (TRAF-02)
 
@@ -174,7 +174,7 @@ Phases execute in numeric order: 1 → 2 → 3 → 4 → 5 → 6 → 7 → 8 →
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
 | 1. Foundation | 4/4 | Complete   | 2026-04-05 |
-| 2. First Connectors | 0/5 | Not started | - |
+| 2. First Connectors | 2/5 | In Progress|  |
 | 3. Query API | 0/TBD | Not started | - |
 | 4. Map Frontend | 0/TBD | Not started | - |
 | 5. Dashboard | 0/TBD | Not started | - |
