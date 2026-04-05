@@ -96,8 +96,8 @@ Requirements for initial release. Each maps to roadmap phases.
 - [ ] **PLAT-04**: Data source attribution display (Datenlizenz Deutschland compliance)
 - [ ] **PLAT-05**: Connector health monitoring — staleness detection, last-update timestamps
 - [ ] **PLAT-06**: Plugin-based connector architecture (BaseConnector pattern)
-- [ ] **PLAT-07**: Time-series storage with retention policies (TimescaleDB)
-- [ ] **PLAT-08**: Spatial query support (PostGIS)
+- [x] **PLAT-07**: Time-series storage with retention policies (TimescaleDB)
+- [x] **PLAT-08**: Spatial query support (PostGIS)
 - [ ] **PLAT-09**: Admin health dashboard — connector status, data freshness, error rates
 
 ## v2 Requirements
@@ -152,8 +152,8 @@ Which phases cover which requirements. Updated during roadmap creation.
 | PLAT-01 | Phase 1 | Pending |
 | PLAT-02 | Phase 1 | Complete |
 | PLAT-06 | Phase 1 | Pending |
-| PLAT-07 | Phase 1 | Pending |
-| PLAT-08 | Phase 1 | Pending |
+| PLAT-07 | Phase 1 | Complete |
+| PLAT-08 | Phase 1 | Complete |
 | GEO-06 | Phase 1 | Pending |
 | TRAF-01 | Phase 2 | Pending |
 | TRAF-02 | Phase 2 | Pending |

@@ -3,14 +3,14 @@ gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
 status: executing
-stopped_at: Roadmap created, STATE.md initialized, REQUIREMENTS.md traceability updated
-last_updated: "2026-04-05T17:49:46.424Z"
-last_activity: 2026-04-05 -- Phase 01 execution started
+stopped_at: Completed 01-foundation 01-02-PLAN.md — initial database schema with hypertables
+last_updated: "2026-04-05T18:06:15.158Z"
+last_activity: 2026-04-05
 progress:
   total_phases: 10
   completed_phases: 0
   total_plans: 4
-  completed_plans: 0
+  completed_plans: 2
   percent: 0
 ---
 
@@ -26,9 +26,9 @@ See: .planning/PROJECT.md (updated 2026-04-05)
 ## Current Position
 
 Phase: 01 (foundation) — EXECUTING
-Plan: 1 of 4
-Status: Executing Phase 01
-Last activity: 2026-04-05 -- Phase 01 execution started
+Plan: 2 of 4
+Status: Ready to execute
+Last activity: 2026-04-05
 
 Progress: [░░░░░░░░░░] 0%
 
@@ -52,6 +52,7 @@ Progress: [░░░░░░░░░░] 0%
 - Trend: -
 
 *Updated after each plan completion*
+| Phase 01-foundation P02 | 12 | 2 tasks | 2 files |
 
 ## Accumulated Context
 
@@ -64,6 +65,8 @@ Recent decisions affecting current work:
 - Init: Frontend on port 4000 (Grafana occupies 3000 on target system)
 - Init: Town config YAML from line one — Aalen is `CITY_ID=aalen`, never hardcoded
 - Init: Build order: schema first, then one vertical slice (transit + air quality), then expand
+- [Phase 01-foundation]: GeoAlchemy2 spatial_index=False required when creating explicit named GiST indexes to avoid duplicate index collision during Alembic migrations
+- [Phase 01-foundation]: Retention policies: transit=90d, air_quality=2yr, water=5yr, energy=5yr based on data volume and regulatory reference needs
 
 ### Pending Todos
 
@@ -78,6 +81,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-04-05
-Stopped at: Roadmap created, STATE.md initialized, REQUIREMENTS.md traceability updated
+Last session: 2026-04-05T18:06:15.155Z
+Stopped at: Completed 01-foundation 01-02-PLAN.md — initial database schema with hypertables
 Resume file: None
