@@ -93,7 +93,7 @@ Plans:
 **Plans**: 3 plans
 
 Plans:
-- [ ] 04-01-PLAN.md — Next.js scaffold: dependencies, types, hooks, lib utilities, Dockerfile, docker-compose frontend service
+- [x] 04-01-PLAN.md — Next.js scaffold: dependencies, types, hooks, lib utilities, Dockerfile, docker-compose frontend service
 - [ ] 04-02-PLAN.md — Map shell + sidebar: MapView with PMTiles base, layout, layer toggles, legends
 - [ ] 04-03-PLAN.md — Data layers + popups + checkpoint: TransitLayer, AQILayer, FeaturePopup, FreshnessIndicator, human verify
 **UI hint**: yes
@@ -186,7 +186,7 @@ Phases execute in numeric order: 1 → 2 → 3 → 4 → 5 → 6 → 7 → 8 →
 | 1. Foundation | 4/4 | Complete   | 2026-04-05 |
 | 2. First Connectors | 0/5 | Not started | - |
 | 3. Query API | 2/3 | In Progress|  |
-| 4. Map Frontend | 0/3 | Not started | - |
+| 4. Map Frontend | 1/3 | In Progress|  |
 | 5. Dashboard | 0/TBD | Not started | - |
 | 6. Weather & Environment Connectors | 0/TBD | Not started | - |
 | 7. Traffic & Energy Connectors | 0/TBD | Not started | - |
