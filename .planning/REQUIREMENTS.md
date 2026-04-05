@@ -149,13 +149,72 @@ Which phases cover which requirements. Updated during roadmap creation.
 
 | Requirement | Phase | Status |
 |-------------|-------|--------|
-| (populated by roadmapper) | | |
+| PLAT-01 | Phase 1 | Pending |
+| PLAT-02 | Phase 1 | Pending |
+| PLAT-06 | Phase 1 | Pending |
+| PLAT-07 | Phase 1 | Pending |
+| PLAT-08 | Phase 1 | Pending |
+| GEO-06 | Phase 1 | Pending |
+| TRAF-01 | Phase 2 | Pending |
+| TRAF-02 | Phase 2 | Pending |
+| WAIR-01 | Phase 2 | Pending |
+| WAIR-02 | Phase 2 | Pending |
+| WAIR-03 | Phase 2 | Pending |
+| WAIR-04 | Phase 2 | Pending |
+| PLAT-03 | Phase 3 | Pending |
+| PLAT-04 | Phase 3 | Pending |
+| PLAT-05 | Phase 3 | Pending |
+| MAP-01 | Phase 4 | Pending |
+| MAP-02 | Phase 4 | Pending |
+| MAP-03 | Phase 4 | Pending |
+| MAP-04 | Phase 4 | Pending |
+| MAP-05 | Phase 4 | Pending |
+| MAP-07 | Phase 4 | Pending |
+| MAP-08 | Phase 4 | Pending |
+| DASH-01 | Phase 5 | Pending |
+| DASH-02 | Phase 5 | Pending |
+| DASH-03 | Phase 5 | Pending |
+| DASH-04 | Phase 5 | Pending |
+| DASH-05 | Phase 5 | Pending |
+| MAP-06 | Phase 5 | Pending |
+| WAIR-05 | Phase 6 | Pending |
+| WAIR-06 | Phase 6 | Pending |
+| WATR-01 | Phase 6 | Pending |
+| WATR-02 | Phase 6 | Pending |
+| WATR-03 | Phase 6 | Pending |
+| WATR-04 | Phase 6 | Pending |
+| WATR-05 | Phase 6 | Pending |
+| TRAF-03 | Phase 7 | Pending |
+| TRAF-04 | Phase 7 | Pending |
+| TRAF-05 | Phase 7 | Pending |
+| ENRG-01 | Phase 7 | Pending |
+| ENRG-02 | Phase 7 | Pending |
+| ENRG-03 | Phase 7 | Pending |
+| ENRG-04 | Phase 7 | Pending |
+| COMM-01 | Phase 8 | Pending |
+| COMM-02 | Phase 8 | Pending |
+| COMM-03 | Phase 8 | Pending |
+| COMM-04 | Phase 8 | Pending |
+| INFR-01 | Phase 8 | Pending |
+| INFR-02 | Phase 8 | Pending |
+| INFR-03 | Phase 8 | Pending |
+| INFR-04 | Phase 8 | Pending |
+| GEO-01 | Phase 9 | Pending |
+| GEO-02 | Phase 9 | Pending |
+| GEO-03 | Phase 9 | Pending |
+| GEO-04 | Phase 9 | Pending |
+| GEO-05 | Phase 9 | Pending |
+| PLAT-09 | Phase 10 | Pending |
+| DEMO-01 | Phase 10 | Pending |
+| DEMO-02 | Phase 10 | Pending |
+| DEMO-03 | Phase 10 | Pending |
+| DEMO-04 | Phase 10 | Pending |
 
 **Coverage:**
 - v1 requirements: 53 total
-- Mapped to phases: 0
-- Unmapped: 53 ⚠️
+- Mapped to phases: 53
+- Unmapped: 0 ✓
 
 ---
 *Requirements defined: 2026-04-05*
-*Last updated: 2026-04-05 after initial definition*
+*Last updated: 2026-04-05 after roadmap creation*
