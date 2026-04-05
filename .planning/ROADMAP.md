@@ -115,8 +115,8 @@ Plans:
 - [x] 05-01-PLAN.md — Backend: add ?at= timestamp param to /api/layers/{domain}
 - [x] 05-02-PLAN.md — Frontend: install recharts + add shadcn chart/calendar/popover/slider
 - [x] 05-03-PLAN.md — Frontend: TypeScript types + useKpi/useTimeseries/useUrlState hooks
-- [x] 05-04-PLAN.md — Frontend: KpiTile + TrendArrow + DashboardPanel container
-- [ ] 05-05-PLAN.md — Frontend: DateRangePicker + TimeSeriesChart + DomainDetailPanel
+- [ ] 05-04-PLAN.md — Frontend: KpiTile + TrendArrow + DashboardPanel container
+- [x] 05-05-PLAN.md — Frontend: DateRangePicker + TimeSeriesChart + DomainDetailPanel
 - [ ] 05-06-PLAN.md — Frontend: TimeSlider + MapView historicalTimestamp prop
 - [ ] 05-07-PLAN.md — Frontend: page.tsx full wiring + URL permalink state
 - [ ] 05-08-PLAN.md — Human verify: all 6 Phase 5 requirements
