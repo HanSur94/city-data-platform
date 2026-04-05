@@ -4,6 +4,7 @@ import Map from 'react-map-gl/maplibre';
 import { Popup } from 'react-map-gl/maplibre';
 import { Protocol } from 'pmtiles';
 import maplibregl from 'maplibre-gl';
+import { format } from 'date-fns';
 import { buildMapStyle } from '@/lib/map-styles';
 import TransitLayer from './TransitLayer';
 import AQILayer from './AQILayer';
@@ -23,6 +24,8 @@ interface MapViewProps {
   airQualityData: LayerResponse | null;
   transitLastFetched: Date | null;
   airQualityLastFetched: Date | null;
+  /** When non-null, map is showing a historical snapshot at this timestamp */
+  historicalTimestamp?: Date | null;
 }
 
 interface PopupInfo {
@@ -38,6 +41,7 @@ export default function MapView({
   airQualityData,
   transitLastFetched,
   airQualityLastFetched,
+  historicalTimestamp,
 }: MapViewProps) {
   // Register PMTiles protocol BEFORE Map renders (Pitfall 3)
   // Register at module scope to avoid double-registration on re-renders
@@ -58,47 +62,54 @@ export default function MapView({
   const mapStyle = buildMapStyle(PMTILES_URL);
 
   return (
-    <Map
-      initialViewState={{
-        longitude: 10.0918,
-        latitude: 48.8374,
-        zoom: 13,
-      }}
-      minZoom={8}
-      maxZoom={18}
-      style={{ width: '100%', height: '100%' }}
-      mapStyle={mapStyle}
-      attributionControl={{ compact: false }}
-      interactiveLayerIds={['transit-stops', 'aqi-points']}
-      onClick={(e) => {
-        const feature = e.features?.[0];
-        if (!feature || !e.lngLat) return;
-        const domain = feature.layer?.id?.startsWith('aqi') ? 'airQuality' : 'transit';
-        setPopupInfo({
-          longitude: e.lngLat.lng,
-          latitude: e.lngLat.lat,
-          feature: feature as GeoJSON.Feature,
-          domain,
-        });
-      }}
-    >
-      <TransitLayer data={transitData} visible={layerVisibility.transit} />
-      <AQILayer data={airQualityData} visible={layerVisibility.airQuality} />
-      {popupInfo && (
-        <Popup
-          longitude={popupInfo.longitude}
-          latitude={popupInfo.latitude}
-          onClose={() => setPopupInfo(null)}
-          closeOnClick={false}
-          maxWidth="200px"
-          anchor="bottom"
-        >
-          <FeaturePopup
-            feature={popupInfo.feature}
-            lastFetched={popupInfo.domain === 'airQuality' ? airQualityLastFetched : transitLastFetched}
-          />
-        </Popup>
+    <div className="relative w-full h-full">
+      <Map
+        initialViewState={{
+          longitude: 10.0918,
+          latitude: 48.8374,
+          zoom: 13,
+        }}
+        minZoom={8}
+        maxZoom={18}
+        style={{ width: '100%', height: '100%' }}
+        mapStyle={mapStyle}
+        attributionControl={{ compact: false }}
+        interactiveLayerIds={['transit-stops', 'aqi-points']}
+        onClick={(e) => {
+          const feature = e.features?.[0];
+          if (!feature || !e.lngLat) return;
+          const domain = feature.layer?.id?.startsWith('aqi') ? 'airQuality' : 'transit';
+          setPopupInfo({
+            longitude: e.lngLat.lng,
+            latitude: e.lngLat.lat,
+            feature: feature as GeoJSON.Feature,
+            domain,
+          });
+        }}
+      >
+        <TransitLayer data={transitData} visible={layerVisibility.transit} />
+        <AQILayer data={airQualityData} visible={layerVisibility.airQuality} />
+        {popupInfo && (
+          <Popup
+            longitude={popupInfo.longitude}
+            latitude={popupInfo.latitude}
+            onClose={() => setPopupInfo(null)}
+            closeOnClick={false}
+            maxWidth="200px"
+            anchor="bottom"
+          >
+            <FeaturePopup
+              feature={popupInfo.feature}
+              lastFetched={popupInfo.domain === 'airQuality' ? airQualityLastFetched : transitLastFetched}
+            />
+          </Popup>
+        )}
+      </Map>
+      {historicalTimestamp && (
+        <div className="absolute top-4 left-1/2 -translate-x-1/2 z-10 bg-background/90 border rounded px-3 py-1 text-[12px] font-medium pointer-events-none">
+          {format(historicalTimestamp, 'dd.MM.yyyy HH:mm')} Uhr
+        </div>
       )}
-    </Map>
+    </div>
   );
 }
