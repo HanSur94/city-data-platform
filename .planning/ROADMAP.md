@@ -12,7 +12,7 @@ Ten phases build from an immovable foundation (schema + town config + Docker) th
 
 Decimal phases appear between their surrounding integers in numeric order.
 
-- [ ] **Phase 1: Foundation** - Docker environment, TimescaleDB/PostGIS schema, town config, BaseConnector abstraction
+- [x] **Phase 1: Foundation** - Docker environment, TimescaleDB/PostGIS schema, town config, BaseConnector abstraction (completed 2026-04-05)
 - [ ] **Phase 2: First Connectors** - Transit (GTFS) and air quality connectors writing validated data to hypertables
 - [ ] **Phase 3: Query API** - FastAPI routers serving GeoJSON, time-series, and KPI responses for first two domains
 - [ ] **Phase 4: Map Frontend** - Next.js + MapLibre map with transit and air quality layers, layer toggle, freshness indicators
@@ -39,9 +39,9 @@ Decimal phases appear between their surrounding integers in numeric order.
 
 Plans:
 - [x] 01-01-PLAN.md — Docker Compose + project structure + Alembic scaffold + test conftest
-- [ ] 01-02-PLAN.md — Alembic migration: hypertables, PostGIS spatial table, retention policies
+- [x] 01-02-PLAN.md — Alembic migration: hypertables, PostGIS spatial table, retention policies
 - [x] 01-03-PLAN.md — Town YAML config + Pydantic loader + BaseConnector + StubConnector
-- [ ] 01-04-PLAN.md — FastAPI lifespan wiring + BKG VG250 boundary import script
+- [x] 01-04-PLAN.md — FastAPI lifespan wiring + BKG VG250 boundary import script
 
 ### Phase 2: First Connectors
 **Goal**: Transit and air quality data flow continuously from upstream sources through validated Pydantic models into TimescaleDB hypertables with staleness tracking
@@ -166,7 +166,7 @@ Phases execute in numeric order: 1 → 2 → 3 → 4 → 5 → 6 → 7 → 8 →
 
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
-| 1. Foundation | 2/4 | In Progress|  |
+| 1. Foundation | 4/4 | Complete   | 2026-04-05 |
 | 2. First Connectors | 0/TBD | Not started | - |
 | 3. Query API | 0/TBD | Not started | - |
 | 4. Map Frontend | 0/TBD | Not started | - |

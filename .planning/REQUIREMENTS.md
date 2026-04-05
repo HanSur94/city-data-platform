@@ -72,7 +72,7 @@ Requirements for initial release. Each maps to roadmap phases.
 - [ ] **GEO-03**: Digital elevation model (1m DEM from LGL)
 - [ ] **GEO-04**: Aerial orthophotos from LGL as optional base layer
 - [ ] **GEO-05**: Satellite imagery layer (Copernicus Sentinel-2, 10m resolution)
-- [ ] **GEO-06**: Administrative boundaries (BKG VG250)
+- [x] **GEO-06**: Administrative boundaries (BKG VG250)
 
 ### Community & Services
 
@@ -154,7 +154,7 @@ Which phases cover which requirements. Updated during roadmap creation.
 | PLAT-06 | Phase 1 | Complete |
 | PLAT-07 | Phase 1 | Pending |
 | PLAT-08 | Phase 1 | Pending |
-| GEO-06 | Phase 1 | Pending |
+| GEO-06 | Phase 1 | Complete |
 | TRAF-01 | Phase 2 | Pending |
 | TRAF-02 | Phase 2 | Pending |
 | WAIR-01 | Phase 2 | Pending |
