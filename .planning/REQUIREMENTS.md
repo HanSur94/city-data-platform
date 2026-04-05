@@ -14,7 +14,7 @@ Requirements for initial release. Each maps to roadmap phases.
 - [x] **MAP-03**: Vector tile rendering for performant display (not raw GeoJSON)
 - [x] **MAP-04**: Layer legend with color coding and icons per data type
 - [x] **MAP-05**: Zoom-appropriate detail levels (cluster at city scale, detail at street scale)
-- [ ] **MAP-06**: Time slider to view historical data snapshots on map
+- [x] **MAP-06**: Time slider to view historical data snapshots on map
 - [x] **MAP-07**: Click/hover on map features shows detail popup with current readings
 - [x] **MAP-08**: Base map with OpenStreetMap / basemap.de tiles
 
@@ -176,7 +176,7 @@ Which phases cover which requirements. Updated during roadmap creation.
 | DASH-03 | Phase 5 | Pending |
 | DASH-04 | Phase 5 | Pending |
 | DASH-05 | Phase 5 | Pending |
-| MAP-06 | Phase 5 | Pending |
+| MAP-06 | Phase 5 | Complete |
 | WAIR-05 | Phase 6 | Pending |
 | WAIR-06 | Phase 6 | Pending |
 | WATR-01 | Phase 6 | Pending |

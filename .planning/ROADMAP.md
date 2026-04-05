@@ -112,7 +112,7 @@ Plans:
 **Plans**: 8 plans
 
 Plans:
-- [ ] 05-01-PLAN.md — Backend: add ?at= timestamp param to /api/layers/{domain}
+- [x] 05-01-PLAN.md — Backend: add ?at= timestamp param to /api/layers/{domain}
 - [ ] 05-02-PLAN.md — Frontend: install recharts + add shadcn chart/calendar/popover/slider
 - [ ] 05-03-PLAN.md — Frontend: TypeScript types + useKpi/useTimeseries/useUrlState hooks
 - [ ] 05-04-PLAN.md — Frontend: KpiTile + TrendArrow + DashboardPanel container
@@ -197,7 +197,7 @@ Phases execute in numeric order: 1 → 2 → 3 → 4 → 5 → 6 → 7 → 8 →
 | 2. First Connectors | 0/5 | Not started | - |
 | 3. Query API | 2/3 | In Progress|  |
 | 4. Map Frontend | 2/3 | In Progress|  |
-| 5. Dashboard | 0/TBD | Not started | - |
+| 5. Dashboard | 1/8 | In Progress|  |
 | 6. Weather & Environment Connectors | 0/TBD | Not started | - |
 | 7. Traffic & Energy Connectors | 0/TBD | Not started | - |
 | 8. Community & Infrastructure Connectors | 0/TBD | Not started | - |
