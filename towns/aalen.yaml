@@ -9,7 +9,43 @@ bbox:
   lat_max: 48.9000
 
 connectors:
-  - connector_class: StubConnector
+  - connector_class: UBAConnector
+    poll_interval_seconds: 3600
+    enabled: true
+    config:
+      station_id: 238
+      lat: 48.8360
+      lon: 10.0930
+      attribution: "Umweltbundesamt (UBA), Datenlizenz Deutschland – Namensnennung – Version 2.0"
+
+  - connector_class: SensorCommunityConnector
     poll_interval_seconds: 300
     enabled: true
-    config: {}
+    config:
+      radius_km: 25
+      attribution: "Sensor.community, CC BY-SA 4.0"
+
+  - connector_class: WeatherConnector
+    poll_interval_seconds: 3600
+    enabled: true
+    config:
+      lat: 48.8400
+      lon: 10.0900
+      attribution: "Deutscher Wetterdienst (DWD) via Bright Sky, CC BY 4.0"
+
+  - connector_class: GTFSConnector
+    poll_interval_seconds: 86400
+    enabled: true
+    config:
+      gtfs_url: "https://www.nvbw.de/fileadmin/user_upload/service/open_data/fahrplandaten_mit_liniennetz/bwgesamt.zip"
+      attribution: "NVBW - Nahverkehrsgesellschaft Baden-Württemberg mbH, DL-DE-BY-2.0"
+
+  - connector_class: GTFSRealtimeConnector
+    poll_interval_seconds: 30
+    enabled: true
+    config:
+      gtfs_rt_url: ""
+      # NOTE: GTFS-RT feed URL for NVBW bwgesamt is unconfirmed.
+      # See RESEARCH.md open question 1. Set this once the URL is found.
+      # Connector skips gracefully when empty.
+      attribution: "NVBW - Nahverkehrsgesellschaft Baden-Württemberg mbH, CC BY-SA 4.0"

@@ -2,6 +2,7 @@
 
 On startup, loads and validates the town config identified by the TOWN
 environment variable (default: "aalen"). Fails fast on missing or invalid config.
+After town and DB are ready, starts APScheduler with all enabled connectors.
 """
 import os
 from contextlib import asynccontextmanager
@@ -10,6 +11,7 @@ from pathlib import Path
 from fastapi import FastAPI
 
 from app.config import load_town, Town
+from app.scheduler import scheduler, setup_scheduler
 
 # Application-level state (populated on startup)
 _current_town: Town | None = None
@@ -25,9 +27,17 @@ async def lifespan(app: FastAPI):
     _current_town = load_town(town_id, towns_dir=towns_dir)
     print(f"[startup] Loaded town config: {_current_town.display_name} ({_current_town.id})")
 
+    # Start APScheduler with all enabled connectors
+    # NOTE: Must come after town config is loaded and verified.
+    # Scheduler runs in the same asyncio event loop as FastAPI.
+    setup_scheduler(_current_town)
+    scheduler.start()
+    print(f"[startup] APScheduler started with {len([c for c in _current_town.connectors if c.enabled])} connector(s)")
+
     yield
 
     # Shutdown
+    scheduler.shutdown(wait=False)
     print("[shutdown] City Data Platform stopping")
 
 
