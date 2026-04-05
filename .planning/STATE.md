@@ -3,14 +3,14 @@ gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
 status: executing
-stopped_at: Completed 05-dashboard/05-03-PLAN.md
-last_updated: "2026-04-05T23:21:03.549Z"
-last_activity: 2026-04-05
+stopped_at: Completed 04-map-frontend/04-03-PLAN.md
+last_updated: "2026-04-05T23:11:26.531Z"
+last_activity: 2026-04-05 -- Phase 05 execution started
 progress:
   total_phases: 10
   completed_phases: 4
   total_plans: 23
-  completed_plans: 18
+  completed_plans: 15
   percent: 0
 ---
 
@@ -21,14 +21,14 @@ progress:
 See: .planning/PROJECT.md (updated 2026-04-05)
 
 **Core value:** Citizens and city officials can see all publicly available city data in one place, on a map, updated live — no technical expertise required.
-**Current focus:** Phase 04 — map-frontend
+**Current focus:** Phase 05 — dashboard
 
 ## Current Position
 
-Phase: 5
-Plan: Not started
-Status: Ready to execute
-Last activity: 2026-04-05
+Phase: 05 (dashboard) — EXECUTING
+Plan: 1 of 8
+Status: Executing Phase 05
+Last activity: 2026-04-05 -- Phase 05 execution started
 
 Progress: [░░░░░░░░░░] 0%
 
@@ -59,8 +59,6 @@ Progress: [░░░░░░░░░░] 0%
 | Phase 03-query-api P03 | 20 | 2 tasks | 6 files |
 | Phase 04-map-frontend P02 | 3 | 2 tasks | 8 files |
 | Phase 04-map-frontend P03 | 525526 | 2 tasks | 6 files |
-| Phase 05-dashboard P02 | 4 | 2 tasks | 6 files |
-| Phase 05-dashboard P03 | 5 | 2 tasks | 7 files |
 
 ## Accumulated Context
 
@@ -87,10 +85,6 @@ Recent decisions affecting current work:
 - [Phase 04-map-frontend]: page.tsx is use-client to hold layerVisibility state; MapView loaded with next/dynamic ssr:false to prevent window-is-not-defined SSR errors
 - [Phase 04-map-frontend]: Use CircleLayerSpecification (not CircleLayer) — actual exported type from react-map-gl/maplibre
 - [Phase 04-map-frontend]: base-ui TooltipTrigger uses render prop not asChild — different API from Radix UI
-- [Phase 05-dashboard]: recharts 3.x (not 2.x) installed — plan must_haves explicitly require 3.x; shadcn chart/calendar/popover/slider generated via CLI without modification
-- [Phase 05-dashboard]: useLayerData stops polling when timestamp set — historical data does not auto-refresh
-- [Phase 05-dashboard]: useTimeseries uses ISO string dep values to avoid object reference churn
-- [Phase 05-dashboard]: useUrlState Suspense requirement documented inline; enforcement deferred to Plan 07
 
 ### Pending Todos
 
@@ -105,6 +99,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-04-05T23:21:03.545Z
-Stopped at: Completed 05-dashboard/05-03-PLAN.md
+Last session: 2026-04-05T22:41:55.584Z
+Stopped at: Completed 04-map-frontend/04-03-PLAN.md
 Resume file: None
