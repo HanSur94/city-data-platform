@@ -30,3 +30,6 @@ dev = [
 
 [tool.pytest.ini_options]
 asyncio_mode = "auto"
+markers = [
+    "slow: marks tests as slow (live network downloads); deselect with '-m \"not slow\"'",
+]

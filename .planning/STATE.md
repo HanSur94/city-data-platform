@@ -3,8 +3,8 @@ gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
 status: executing
-stopped_at: Completed 02-first-connectors/02-03-PLAN.md
-last_updated: "2026-04-05T18:57:59.822Z"
+stopped_at: Completed 02-first-connectors/02-04-PLAN.md
+last_updated: "2026-04-05T18:58:45.530Z"
 last_activity: 2026-04-05
 progress:
   total_phases: 10
@@ -54,7 +54,7 @@ Progress: [░░░░░░░░░░] 0%
 *Updated after each plan completion*
 | Phase 01-foundation P03 | 151 | 2 tasks | 9 files |
 | Phase 01-foundation P04 | 3 | 2 tasks | 4 files |
-| Phase 02-first-connectors P03 | 8 | 1 tasks | 4 files |
+| Phase 02-first-connectors P04 | 135 | 1 tasks | 3 files |
 
 ## Accumulated Context
 
@@ -72,7 +72,8 @@ Recent decisions affecting current work:
 - [Phase 01-foundation]: Observation is a dataclass (not Pydantic model) — no DB schema coupling in Phase 1
 - [Phase 01-foundation]: Use json.dumps() for JSONB properties in load_vg250.py — psycopg2 COPY requires valid JSON strings not Python dict repr
 - [Phase 01-foundation]: FastAPI lifespan loads town from TOWN env var, fails fast on missing/invalid config — get_current_town() dependency pattern established
-- [Phase 02-first-connectors]: WeatherConnector: lat/lon from ConnectorConfig.config (no Aalen hardcoding); MOSMIX filter via sources list; app/models/ directory created for API response Pydantic models
+- [Phase 02-first-connectors]: gtfs-kit 12.x requires Path/str not BytesIO — use tempfile.NamedTemporaryFile for in-memory GTFS zip parsing
+- [Phase 02-first-connectors]: GTFSConnector does NOT call persist() — transit stops/shapes are static features in features table, not time-series positions
 
 ### Pending Todos
 
@@ -87,6 +88,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-04-05T18:57:59.819Z
-Stopped at: Completed 02-first-connectors/02-03-PLAN.md
+Last session: 2026-04-05T18:58:45.526Z
+Stopped at: Completed 02-first-connectors/02-04-PLAN.md
 Resume file: None
