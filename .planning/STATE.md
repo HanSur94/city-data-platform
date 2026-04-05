@@ -3,14 +3,14 @@ gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
 status: executing
-stopped_at: Completed 02-first-connectors/02-05-PLAN.md
-last_updated: "2026-04-05T21:31:58.965Z"
-last_activity: 2026-04-05 -- Phase 03 execution started
+stopped_at: Completed 03-query-api/03-02-PLAN.md
+last_updated: "2026-04-05T21:43:59.831Z"
+last_activity: 2026-04-05
 progress:
   total_phases: 10
   completed_phases: 2
   total_plans: 12
-  completed_plans: 9
+  completed_plans: 11
   percent: 0
 ---
 
@@ -26,9 +26,9 @@ See: .planning/PROJECT.md (updated 2026-04-05)
 ## Current Position
 
 Phase: 03 (query-api) — EXECUTING
-Plan: 1 of 3
-Status: Executing Phase 03
-Last activity: 2026-04-05 -- Phase 03 execution started
+Plan: 2 of 3
+Status: Ready to execute
+Last activity: 2026-04-05
 
 Progress: [░░░░░░░░░░] 0%
 
@@ -56,6 +56,7 @@ Progress: [░░░░░░░░░░] 0%
 | Phase 01-foundation P04 | 3 | 2 tasks | 4 files |
 | Phase 02-first-connectors P04 | 135 | 1 tasks | 3 files |
 | Phase 02-first-connectors P05 | 3 | 2 tasks | 4 files |
+| Phase 03-query-api P02 | 4 | 2 tasks | 5 files |
 
 ## Accumulated Context
 
@@ -77,6 +78,9 @@ Recent decisions affecting current work:
 - [Phase 02-first-connectors]: GTFSConnector does NOT call persist() — transit stops/shapes are static features in features table, not time-series positions
 - [Phase 02-first-connectors]: GTFSRealtimeConnector overrides run() to upsert features before normalize() — transit_positions.feature_id must be UUID, not trip_id string
 - [Phase 02-first-connectors]: gtfs_rt_url empty string = graceful skip with log warning (NVBW GTFS-RT URL unconfirmed)
+- [Phase 03-query-api]: Transit layer returns only static features (stops + routes) — no transit_positions JOIN in Phase 3; real-time positions deferred to later phase
+- [Phase 03-query-api]: response_model=None on layers endpoint to preserve @context NGSI-LD alias key — model_dump(by_alias=True) returns plain dict
+- [Phase 03-query-api]: Fixed 2-hour staleness threshold for connector health — poll_interval not in sources query scope for Phase 3
 
 ### Pending Todos
 
@@ -91,6 +95,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-04-05T19:06:15.644Z
-Stopped at: Completed 02-first-connectors/02-05-PLAN.md
+Last session: 2026-04-05T21:43:59.828Z
+Stopped at: Completed 03-query-api/03-02-PLAN.md
 Resume file: None

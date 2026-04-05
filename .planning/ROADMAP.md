@@ -76,7 +76,7 @@ Plans:
 
 Plans:
 - [x] 03-01-PLAN.md — Foundation: dependencies.py, schemas package, test stubs (RED state), geojson-pydantic install
-- [ ] 03-02-PLAN.md — Layers + connectors routers: GET /api/layers/{domain} and GET /api/connectors/health
+- [x] 03-02-PLAN.md — Layers + connectors routers: GET /api/layers/{domain} and GET /api/connectors/health
 - [ ] 03-03-PLAN.md — Timeseries + KPI routers + main.py wiring: GET /api/timeseries/{domain} and GET /api/kpi
 
 ### Phase 4: Map Frontend
