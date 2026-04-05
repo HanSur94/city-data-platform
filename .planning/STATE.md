@@ -3,14 +3,14 @@ gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
 status: executing
-stopped_at: Completed 05-dashboard/05-06-PLAN.md
-last_updated: "2026-04-05T23:31:24.281Z"
+stopped_at: Completed 05-dashboard/05-07-PLAN.md
+last_updated: "2026-04-05T23:36:46.783Z"
 last_activity: 2026-04-05
 progress:
   total_phases: 10
   completed_phases: 4
   total_plans: 23
-  completed_plans: 21
+  completed_plans: 22
   percent: 0
 ---
 
@@ -26,7 +26,7 @@ See: .planning/PROJECT.md (updated 2026-04-05)
 ## Current Position
 
 Phase: 05 (dashboard) — EXECUTING
-Plan: 3 of 8
+Plan: 4 of 8
 Status: Ready to execute
 Last activity: 2026-04-05
 
@@ -61,6 +61,7 @@ Progress: [░░░░░░░░░░] 0%
 | Phase 04-map-frontend P03 | 525526 | 2 tasks | 6 files |
 | Phase 05-dashboard P05 | 2 | 2 tasks | 3 files |
 | Phase 05-dashboard P06 | 3 | 2 tasks | 2 files |
+| Phase 05-dashboard P07 | 2 | 1 tasks | 1 files |
 
 ## Accumulated Context
 
@@ -91,6 +92,8 @@ Recent decisions affecting current work:
 - [Phase 05-dashboard]: onValueChange for Base UI Slider receives (value: number | number[], eventDetails) — normalised to number via Array.isArray guard
 - [Phase 05-dashboard]: MapView wrapped in relative div to allow absolute badge overlay without breaking Map fill
 - [Phase 05-dashboard]: historicalTimestamp is optional prop on MapView — existing callers need no change until Plan 07
+- [Phase 05-dashboard]: page.tsx: useUrlState is single source of truth — no local useState for layerVisibility, domain, dateRange, or timestamp
+- [Phase 05-dashboard]: Suspense + HomeInner pattern for pages using useSearchParams-based hooks — enforced in page.tsx Plan 07
 
 ### Pending Todos
 
@@ -105,6 +108,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-04-05T23:31:24.278Z
-Stopped at: Completed 05-dashboard/05-06-PLAN.md
+Last session: 2026-04-05T23:36:46.779Z
+Stopped at: Completed 05-dashboard/05-07-PLAN.md
 Resume file: None

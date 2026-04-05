@@ -24,7 +24,7 @@ Requirements for initial release. Each maps to roadmap phases.
 - [x] **DASH-02**: Time-series charts with configurable date range picker
 - [x] **DASH-03**: Per-domain detail panels accessible from dashboard or map
 - [x] **DASH-04**: Shareable/permalink URLs that encode current view, time, and active layers
-- [ ] **DASH-05**: Responsive layout — usable on desktop and tablet
+- [x] **DASH-05**: Responsive layout — usable on desktop and tablet
 
 ### Transport & Traffic
 
@@ -175,7 +175,7 @@ Which phases cover which requirements. Updated during roadmap creation.
 | DASH-02 | Phase 5 | Complete |
 | DASH-03 | Phase 5 | Complete |
 | DASH-04 | Phase 5 | Complete |
-| DASH-05 | Phase 5 | Pending |
+| DASH-05 | Phase 5 | Complete |
 | MAP-06 | Phase 5 | Complete |
 | WAIR-05 | Phase 6 | Pending |
 | WAIR-06 | Phase 6 | Pending |
