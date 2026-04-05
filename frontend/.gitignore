@@ -39,3 +39,6 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# PMTiles binary map data (large files, not for git)
+public/tiles/*.pmtiles
