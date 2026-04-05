@@ -3,14 +3,14 @@ gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
 status: executing
-stopped_at: Completed 03-query-api/03-03-PLAN.md
-last_updated: "2026-04-05T22:22:13.588Z"
-last_activity: 2026-04-05 -- Phase 04 execution started
+stopped_at: Completed 04-map-frontend/04-02-PLAN.md
+last_updated: "2026-04-05T22:34:46.858Z"
+last_activity: 2026-04-05
 progress:
   total_phases: 10
   completed_phases: 3
   total_plans: 15
-  completed_plans: 12
+  completed_plans: 14
   percent: 0
 ---
 
@@ -26,9 +26,9 @@ See: .planning/PROJECT.md (updated 2026-04-05)
 ## Current Position
 
 Phase: 04 (map-frontend) — EXECUTING
-Plan: 1 of 3
-Status: Executing Phase 04
-Last activity: 2026-04-05 -- Phase 04 execution started
+Plan: 2 of 3
+Status: Ready to execute
+Last activity: 2026-04-05
 
 Progress: [░░░░░░░░░░] 0%
 
@@ -57,6 +57,7 @@ Progress: [░░░░░░░░░░] 0%
 | Phase 02-first-connectors P04 | 135 | 1 tasks | 3 files |
 | Phase 02-first-connectors P05 | 3 | 2 tasks | 4 files |
 | Phase 03-query-api P03 | 20 | 2 tasks | 6 files |
+| Phase 04-map-frontend P02 | 3 | 2 tasks | 8 files |
 
 ## Accumulated Context
 
@@ -80,6 +81,7 @@ Recent decisions affecting current work:
 - [Phase 02-first-connectors]: gtfs_rt_url empty string = graceful skip with log warning (NVBW GTFS-RT URL unconfirmed)
 - [Phase 03-query-api]: asyncio_default_test_loop_scope=session required for async tests sharing APScheduler singleton
 - [Phase 03-query-api]: KPI DB queries wrapped in try/except for graceful degradation in test environments without TimescaleDB
+- [Phase 04-map-frontend]: page.tsx is use-client to hold layerVisibility state; MapView loaded with next/dynamic ssr:false to prevent window-is-not-defined SSR errors
 
 ### Pending Todos
 
@@ -94,6 +96,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-04-05T21:45:12.437Z
-Stopped at: Completed 03-query-api/03-03-PLAN.md
+Last session: 2026-04-05T22:34:46.855Z
+Stopped at: Completed 04-map-frontend/04-02-PLAN.md
 Resume file: None

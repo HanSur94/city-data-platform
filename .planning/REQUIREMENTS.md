@@ -10,9 +10,9 @@ Requirements for initial release. Each maps to roadmap phases.
 ### Map & Visualization
 
 - [x] **MAP-01**: Interactive map centered on configured town with pan/zoom
-- [ ] **MAP-02**: Toggleable data layers per domain (transport, air, energy, water, etc.)
+- [x] **MAP-02**: Toggleable data layers per domain (transport, air, energy, water, etc.)
 - [ ] **MAP-03**: Vector tile rendering for performant display (not raw GeoJSON)
-- [ ] **MAP-04**: Layer legend with color coding and icons per data type
+- [x] **MAP-04**: Layer legend with color coding and icons per data type
 - [ ] **MAP-05**: Zoom-appropriate detail levels (cluster at city scale, detail at street scale)
 - [ ] **MAP-06**: Time slider to view historical data snapshots on map
 - [ ] **MAP-07**: Click/hover on map features shows detail popup with current readings
@@ -165,9 +165,9 @@ Which phases cover which requirements. Updated during roadmap creation.
 | PLAT-04 | Phase 3 | Complete |
 | PLAT-05 | Phase 3 | Complete |
 | MAP-01 | Phase 4 | Complete |
-| MAP-02 | Phase 4 | Pending |
+| MAP-02 | Phase 4 | Complete |
 | MAP-03 | Phase 4 | Pending |
-| MAP-04 | Phase 4 | Pending |
+| MAP-04 | Phase 4 | Complete |
 | MAP-05 | Phase 4 | Pending |
 | MAP-07 | Phase 4 | Pending |
 | MAP-08 | Phase 4 | Complete |
