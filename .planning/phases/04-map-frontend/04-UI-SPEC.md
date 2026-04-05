@@ -54,13 +54,13 @@ Exceptions:
 | Role | Size | Weight | Line Height |
 |------|------|--------|-------------|
 | Body | 14px | 400 (regular) | 1.5 |
-| Label | 12px | 500 (medium) | 1.4 |
+| Label | 12px | 400 (regular) | 1.4 |
 | Heading | 16px | 600 (semibold) | 1.2 |
 | Display | Not used in Phase 4 | — | — |
 
 Notes:
 - Body (14px/400): popup reading text, sidebar description text, freshness timestamps
-- Label (12px/500): legend tier labels ("Good", "Moderate", "Poor"), layer toggle labels, attribution text
+- Label (12px/400): legend tier labels ("Good", "Moderate", "Poor"), layer toggle labels, attribution text
 - Heading (16px/600): sidebar title ("Aalen — City Data"), popup domain header (e.g. "Air Quality")
 - All text renders in German. No i18n layer in Phase 4.
 
@@ -190,7 +190,7 @@ Popup content contract by domain:
 ```
 [Stop name]              ← Heading 16px/600
 Line: [route short name] ← Body 14px/400
-Type: Bus / Train / Tram ← Label 12px/500
+Type: Bus / Train / Tram ← Label 12px/400
 [FreshnessIndicator] Updated [relative time]
 ```
 
@@ -215,7 +215,7 @@ NO₂:   [value] µg/m³    ← Body 14px/400
 
 - Zoom < 14: cluster stops into circle markers showing count
 - Zoom ≥ 14: dissolve to individual stop dots
-- Cluster circle: 24px diameter, secondary color background (#f4f5f7), count label 12px/500
+- Cluster circle: 24px diameter, secondary color background (#f4f5f7), count label 12px/400
 - Individual stop dot: 8px diameter, route-type color fill, white 1px stroke
 
 ### AQI Heatmap
