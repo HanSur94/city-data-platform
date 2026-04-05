@@ -1,0 +1,26 @@
+[project]
+name = "city-data-platform-backend"
+version = "0.1.0"
+description = "City Data Platform backend — FastAPI ingestion service"
+readme = "README.md"
+requires-python = ">=3.11"
+dependencies = [
+    "alembic>=1.18.4",
+    "asyncpg>=0.31.0",
+    "fastapi>=0.135.3",
+    "geoalchemy2>=0.18.4",
+    "geopandas>=1.1.3",
+    "httpx>=0.28.1",
+    "psycopg2-binary>=2.9.11",
+    "pydantic>=2.12.5",
+    "pyyaml>=6.0.3",
+    "shapely>=2.1.2",
+    "sqlalchemy>=2.0.49",
+    "uvicorn[standard]>=0.43.0",
+]
+
+[dependency-groups]
+dev = [
+    "pytest>=9.0.2",
+    "pytest-asyncio>=1.3.0",
+]
