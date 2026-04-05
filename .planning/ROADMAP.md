@@ -109,7 +109,17 @@ Plans:
   4. A time slider on the map moves historical data snapshots; the map layers reflect the selected timestamp
   5. The current view state (active layers, time range, map viewport) is encoded in the URL; pasting that URL into a new browser tab restores the exact same view
   6. Layout is usable on desktop and tablet (768px+) with no horizontal scroll
-**Plans**: TBD
+**Plans**: 8 plans
+
+Plans:
+- [ ] 05-01-PLAN.md — Backend: add ?at= timestamp param to /api/layers/{domain}
+- [ ] 05-02-PLAN.md — Frontend: install recharts + add shadcn chart/calendar/popover/slider
+- [ ] 05-03-PLAN.md — Frontend: TypeScript types + useKpi/useTimeseries/useUrlState hooks
+- [ ] 05-04-PLAN.md — Frontend: KpiTile + TrendArrow + DashboardPanel container
+- [ ] 05-05-PLAN.md — Frontend: DateRangePicker + TimeSeriesChart + DomainDetailPanel
+- [ ] 05-06-PLAN.md — Frontend: TimeSlider + MapView historicalTimestamp prop
+- [ ] 05-07-PLAN.md — Frontend: page.tsx full wiring + URL permalink state
+- [ ] 05-08-PLAN.md — Human verify: all 6 Phase 5 requirements
 **UI hint**: yes
 
 ### Phase 6: Weather & Environment Connectors
