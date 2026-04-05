@@ -28,18 +28,18 @@ Requirements for initial release. Each maps to roadmap phases.
 
 ### Transport & Traffic
 
-- [ ] **TRAF-01**: Public transport routes and stops on map (NVBW GTFS — 3,688 routes, 55,284 stops)
-- [ ] **TRAF-02**: Real-time transit positions/delays where available (GTFS-RT via gtfs.de)
+- [x] **TRAF-01**: Public transport routes and stops on map (NVBW GTFS — 3,688 routes, 55,284 stops)
+- [x] **TRAF-02**: Real-time transit positions/delays where available (GTFS-RT via gtfs.de)
 - [ ] **TRAF-03**: Traffic count stations on map with flow data (BASt permanent counters near Aalen)
 - [ ] **TRAF-04**: Autobahn roadworks, warnings, and closures for nearby A7 (Autobahn API)
 - [ ] **TRAF-05**: MobiData BW traffic counts and sharing/bike data integration
 
 ### Weather & Air Quality
 
-- [ ] **WAIR-01**: Current weather conditions for configured town (DWD via Bright Sky — no API key)
-- [ ] **WAIR-02**: Weather forecast overlay (MOSMIX point forecasts from DWD)
-- [ ] **WAIR-03**: Air quality readings from UBA station in Aalen (PM10, PM2.5, NO₂, O₃)
-- [ ] **WAIR-04**: Citizen-science air quality sensors (Sensor.community — multiple sensors in Ostalbkreis)
+- [x] **WAIR-01**: Current weather conditions for configured town (DWD via Bright Sky — no API key)
+- [x] **WAIR-02**: Weather forecast overlay (MOSMIX point forecasts from DWD)
+- [x] **WAIR-03**: Air quality readings from UBA station in Aalen (PM10, PM2.5, NO₂, O₃)
+- [x] **WAIR-04**: Citizen-science air quality sensors (Sensor.community — multiple sensors in Ostalbkreis)
 - [ ] **WAIR-05**: Air quality index (AQI) visualization with health-based color scale
 - [ ] **WAIR-06**: Historical air quality trends (time-series from UBA + Sensor.community)
 
@@ -155,12 +155,12 @@ Which phases cover which requirements. Updated during roadmap creation.
 | PLAT-07 | Phase 1 | Pending |
 | PLAT-08 | Phase 1 | Pending |
 | GEO-06 | Phase 1 | Complete |
-| TRAF-01 | Phase 2 | Pending |
-| TRAF-02 | Phase 2 | Pending |
-| WAIR-01 | Phase 2 | Pending |
-| WAIR-02 | Phase 2 | Pending |
-| WAIR-03 | Phase 2 | Pending |
-| WAIR-04 | Phase 2 | Pending |
+| TRAF-01 | Phase 2 | Complete |
+| TRAF-02 | Phase 2 | Complete |
+| WAIR-01 | Phase 2 | Complete |
+| WAIR-02 | Phase 2 | Complete |
+| WAIR-03 | Phase 2 | Complete |
+| WAIR-04 | Phase 2 | Complete |
 | PLAT-03 | Phase 3 | Pending |
 | PLAT-04 | Phase 3 | Pending |
 | PLAT-05 | Phase 3 | Pending |

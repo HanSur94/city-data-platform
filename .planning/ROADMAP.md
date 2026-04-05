@@ -56,7 +56,7 @@ Plans:
 **Plans**: 5 plans
 
 Plans:
-- [ ] 02-01-PLAN.md — Wave 0 foundation: migration 002, BaseConnector persist(), scheduler.py, test scaffolding, new packages
+- [x] 02-01-PLAN.md — Wave 0 foundation: migration 002, BaseConnector persist(), scheduler.py, test scaffolding, new packages
 - [ ] 02-02-PLAN.md — UBA + Sensor.community air quality connectors (WAIR-03, WAIR-04)
 - [ ] 02-03-PLAN.md — Bright Sky weather connector (WAIR-01, WAIR-02)
 - [ ] 02-04-PLAN.md — GTFS static connector: stops + route shapes to features table (TRAF-01)
