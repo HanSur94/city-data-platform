@@ -11,28 +11,26 @@ from pathlib import Path
 from fastapi import FastAPI
 
 from app.config import load_town, Town
+from app.dependencies import set_current_town, get_current_town
 from app.scheduler import scheduler, setup_scheduler
-
-# Application-level state (populated on startup)
-_current_town: Town | None = None
 
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     """Load and validate town config on startup."""
-    global _current_town
     town_id = os.environ.get("TOWN", "aalen")
     towns_dir = Path(os.environ.get("TOWNS_DIR", "towns"))
 
-    _current_town = load_town(town_id, towns_dir=towns_dir)
-    print(f"[startup] Loaded town config: {_current_town.display_name} ({_current_town.id})")
+    town = load_town(town_id, towns_dir=towns_dir)
+    set_current_town(town)
+    print(f"[startup] Loaded town config: {town.display_name} ({town.id})")
 
     # Start APScheduler with all enabled connectors
     # NOTE: Must come after town config is loaded and verified.
     # Scheduler runs in the same asyncio event loop as FastAPI.
-    setup_scheduler(_current_town)
+    setup_scheduler(town)
     scheduler.start()
-    print(f"[startup] APScheduler started with {len([c for c in _current_town.connectors if c.enabled])} connector(s)")
+    print(f"[startup] APScheduler started with {len([c for c in town.connectors if c.enabled])} connector(s)")
 
     yield
 
@@ -51,12 +49,9 @@ app = FastAPI(
 
 @app.get("/health")
 async def health() -> dict:
-    town_id = _current_town.id if _current_town else "not loaded"
+    try:
+        town = get_current_town()
+        town_id = town.id
+    except RuntimeError:
+        town_id = "not loaded"
     return {"status": "ok", "town": town_id}
-
-
-def get_current_town() -> Town:
-    """FastAPI dependency: returns the currently loaded town."""
-    if _current_town is None:
-        raise RuntimeError("Town not loaded — lifespan not started")
-    return _current_town
