@@ -112,8 +112,8 @@ Plans:
 **Plans**: 8 plans
 
 Plans:
-- [x] 05-01-PLAN.md — Backend: add ?at= timestamp param to /api/layers/{domain}
-- [ ] 05-02-PLAN.md — Frontend: install recharts + add shadcn chart/calendar/popover/slider
+- [ ] 05-01-PLAN.md — Backend: add ?at= timestamp param to /api/layers/{domain}
+- [x] 05-02-PLAN.md — Frontend: install recharts + add shadcn chart/calendar/popover/slider
 - [ ] 05-03-PLAN.md — Frontend: TypeScript types + useKpi/useTimeseries/useUrlState hooks
 - [ ] 05-04-PLAN.md — Frontend: KpiTile + TrendArrow + DashboardPanel container
 - [ ] 05-05-PLAN.md — Frontend: DateRangePicker + TimeSeriesChart + DomainDetailPanel
