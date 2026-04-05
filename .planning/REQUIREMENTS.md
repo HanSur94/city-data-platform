@@ -91,7 +91,7 @@ Requirements for initial release. Each maps to roadmap phases.
 ### Platform & Infrastructure
 
 - [ ] **PLAT-01**: Town-config-driven architecture — add a new town via config file, no code changes
-- [ ] **PLAT-02**: Docker Compose self-hosted deployment — single `docker-compose up`
+- [x] **PLAT-02**: Docker Compose self-hosted deployment — single `docker-compose up`
 - [ ] **PLAT-03**: NGSI-LD compatible API layer (Smart Data Models schemas)
 - [ ] **PLAT-04**: Data source attribution display (Datenlizenz Deutschland compliance)
 - [ ] **PLAT-05**: Connector health monitoring — staleness detection, last-update timestamps
@@ -150,7 +150,7 @@ Which phases cover which requirements. Updated during roadmap creation.
 | Requirement | Phase | Status |
 |-------------|-------|--------|
 | PLAT-01 | Phase 1 | Pending |
-| PLAT-02 | Phase 1 | Pending |
+| PLAT-02 | Phase 1 | Complete |
 | PLAT-06 | Phase 1 | Pending |
 | PLAT-07 | Phase 1 | Pending |
 | PLAT-08 | Phase 1 | Pending |
