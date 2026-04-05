@@ -40,7 +40,7 @@ Decimal phases appear between their surrounding integers in numeric order.
 Plans:
 - [x] 01-01-PLAN.md — Docker Compose + project structure + Alembic scaffold + test conftest
 - [ ] 01-02-PLAN.md — Alembic migration: hypertables, PostGIS spatial table, retention policies
-- [ ] 01-03-PLAN.md — Town YAML config + Pydantic loader + BaseConnector + StubConnector
+- [x] 01-03-PLAN.md — Town YAML config + Pydantic loader + BaseConnector + StubConnector
 - [ ] 01-04-PLAN.md — FastAPI lifespan wiring + BKG VG250 boundary import script
 
 ### Phase 2: First Connectors
@@ -166,7 +166,7 @@ Phases execute in numeric order: 1 → 2 → 3 → 4 → 5 → 6 → 7 → 8 →
 
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
-| 1. Foundation | 0/4 | Not started | - |
+| 1. Foundation | 2/4 | In Progress|  |
 | 2. First Connectors | 0/TBD | Not started | - |
 | 3. Query API | 0/TBD | Not started | - |
 | 4. Map Frontend | 0/TBD | Not started | - |
