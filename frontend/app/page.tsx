@@ -1,40 +1,134 @@
-'use client';
-import dynamic from 'next/dynamic';
-import { useState } from 'react';
-import Sidebar from '@/components/sidebar/Sidebar';
-import { useLayerData } from '@/hooks/useLayerData';
-import type { LayerResponse } from '@/types/geojson';
+'use client'
+import { Suspense } from 'react'
+import dynamic from 'next/dynamic'
+import Sidebar from '@/components/sidebar/Sidebar'
+import { DashboardPanel } from '@/components/dashboard/DashboardPanel'
+import { TimeSlider } from '@/components/dashboard/TimeSlider'
+import { DateRangePicker } from '@/components/dashboard/DateRangePicker'
+import { DomainDetailPanel } from '@/components/dashboard/DomainDetailPanel'
+import { TimeSeriesChart } from '@/components/dashboard/TimeSeriesChart'
+import { useLayerData } from '@/hooks/useLayerData'
+import { useUrlState } from '@/hooks/useUrlState'
+import { useTimeseries } from '@/hooks/useTimeseries'
 
 const MapView = dynamic(() => import('@/components/map/MapView'), {
   ssr: false,
   loading: () => <div className="flex-1 bg-slate-100 animate-pulse" />,
-});
+})
 
-export default function Home() {
-  const [layerVisibility, setLayerVisibility] = useState({ transit: true, airQuality: true });
-  const toggleLayer = (layer: 'transit' | 'airQuality') =>
-    setLayerVisibility(prev => ({ ...prev, [layer]: !prev[layer] }));
+// Inner component — safe to use useSearchParams (wrapped in Suspense by Home)
+function HomeInner() {
+  const { state, update } = useUrlState()
 
-  const transit = useLayerData('transit');
-  const airQuality = useLayerData('air_quality');
+  const town = state.town   // 'aalen' (from URL or default)
+  const dateRange = { from: state.from, to: state.to }
+  const historicalTimestamp = state.ts  // Date | null
+
+  // Layer visibility driven by URL params
+  const layerVisibility = {
+    transit: state.layers.includes('transit'),
+    airQuality: state.layers.includes('aqi'),
+  }
+
+  const toggleLayer = (layer: 'transit' | 'airQuality') => {
+    const key = layer === 'airQuality' ? 'aqi' : 'transit'
+    const current = state.layers
+    const next = current.includes(key)
+      ? current.filter(l => l !== key)
+      : [...current, key]
+    update({ layers: next.join(',') || null })
+  }
+
+  // Data hooks — pass historicalTimestamp for time slider historical support
+  const transit = useLayerData('transit', town, historicalTimestamp)
+  const airQuality = useLayerData('air_quality', town, historicalTimestamp)
+
+  // Default chart data (shown when no activeDomain detail panel open)
+  const aqiTs = useTimeseries('air_quality', dateRange.from, dateRange.to, town)
+
+  const activeDomain = state.domain  // 'aqi' | 'weather' | 'transit' | null
+
+  const handleDomainSelect = (domain: string | null) => {
+    update({ domain: domain ?? null })
+  }
+
+  const handleDateRangeChange = (range: { from: Date; to: Date }) => {
+    update({
+      from: range.from.toISOString().split('T')[0],
+      to: range.to.toISOString().split('T')[0],
+    })
+  }
+
+  const handleTimeSliderChange = (ts: Date | null) => {
+    update({ ts: ts ? ts.toISOString() : null })
+  }
+
+  // Dashboard panel chart slot: DomainDetailPanel if activeDomain, else default AQI chart
+  const chartSlot = activeDomain ? (
+    <DomainDetailPanel
+      domain={activeDomain}
+      dateRange={dateRange}
+      town={town}
+      onBack={() => handleDomainSelect(null)}
+    />
+  ) : (
+    <div className="flex flex-col gap-4">
+      <DateRangePicker value={dateRange} onChange={handleDateRangeChange} />
+      <TimeSeriesChart
+        domain="air_quality"
+        points={aqiTs.data?.points ?? []}
+        loading={aqiTs.loading}
+        error={aqiTs.error}
+        dateRange={dateRange}
+      />
+    </div>
+  )
 
   return (
     <main className="flex h-screen overflow-hidden">
+      {/* Left sidebar — 280px fixed, collapses to drawer on tablet/mobile */}
       <Sidebar
         layerVisibility={layerVisibility}
         onToggleLayer={toggleLayer}
         transitError={transit.error}
         airQualityError={airQuality.error}
       />
-      <div className="flex-1 relative">
-        <MapView
-          layerVisibility={layerVisibility}
-          transitData={transit.data}
-          airQualityData={airQuality.data}
-          transitLastFetched={transit.lastFetched}
-          airQualityLastFetched={airQuality.lastFetched}
-        />
+
+      {/* Map column — flex-1, fills space between sidebar and dashboard panel */}
+      <div className="flex-1 flex flex-col min-w-0 relative">
+        {/* Map view fills remaining height above time slider */}
+        <div className="flex-1 relative min-h-0">
+          <MapView
+            layerVisibility={layerVisibility}
+            transitData={transit.data}
+            airQualityData={airQuality.data}
+            transitLastFetched={transit.lastFetched}
+            airQualityLastFetched={airQuality.lastFetched}
+            historicalTimestamp={historicalTimestamp}
+          />
+        </div>
+
+        {/* Time slider — pinned below map, full map column width */}
+        <TimeSlider value={historicalTimestamp} onChange={handleTimeSliderChange} />
       </div>
+
+      {/* Right dashboard panel — 320px, hidden on tablet/mobile (hidden lg:flex inside component) */}
+      <DashboardPanel
+        town={town}
+        activeDomain={activeDomain}
+        onDomainSelect={handleDomainSelect}
+      >
+        {chartSlot}
+      </DashboardPanel>
     </main>
-  );
+  )
+}
+
+// Outer shell: Suspense boundary required for useSearchParams in production builds
+export default function Home() {
+  return (
+    <Suspense fallback={null}>
+      <HomeInner />
+    </Suspense>
+  )
 }
