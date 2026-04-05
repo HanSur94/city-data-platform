@@ -3,8 +3,8 @@ gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
 status: executing
-stopped_at: Completed 01-foundation 01-02-PLAN.md — initial database schema with hypertables
-last_updated: "2026-04-05T18:06:15.158Z"
+stopped_at: Completed 01-foundation/01-03-PLAN.md
+last_updated: "2026-04-05T18:06:46.495Z"
 last_activity: 2026-04-05
 progress:
   total_phases: 10
@@ -52,7 +52,7 @@ Progress: [░░░░░░░░░░] 0%
 - Trend: -
 
 *Updated after each plan completion*
-| Phase 01-foundation P02 | 12 | 2 tasks | 2 files |
+| Phase 01-foundation P03 | 151 | 2 tasks | 9 files |
 
 ## Accumulated Context
 
@@ -65,8 +65,9 @@ Recent decisions affecting current work:
 - Init: Frontend on port 4000 (Grafana occupies 3000 on target system)
 - Init: Town config YAML from line one — Aalen is `CITY_ID=aalen`, never hardcoded
 - Init: Build order: schema first, then one vertical slice (transit + air quality), then expand
-- [Phase 01-foundation]: GeoAlchemy2 spatial_index=False required when creating explicit named GiST indexes to avoid duplicate index collision during Alembic migrations
-- [Phase 01-foundation]: Retention policies: transit=90d, air_quality=2yr, water=5yr, energy=5yr based on data volume and regulatory reference needs
+- [Phase 01-foundation]: Town id validated as alphanumeric slug via Pydantic field_validator in config.py
+- [Phase 01-foundation]: BaseConnector.persist() is no-op in Phase 1 — SQLAlchemy session injection deferred to Phase 2
+- [Phase 01-foundation]: Observation is a dataclass (not Pydantic model) — no DB schema coupling in Phase 1
 
 ### Pending Todos
 
@@ -81,6 +82,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-04-05T18:06:15.155Z
-Stopped at: Completed 01-foundation 01-02-PLAN.md — initial database schema with hypertables
+Last session: 2026-04-05T18:06:46.492Z
+Stopped at: Completed 01-foundation/01-03-PLAN.md
 Resume file: None

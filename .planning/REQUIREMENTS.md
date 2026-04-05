@@ -90,14 +90,14 @@ Requirements for initial release. Each maps to roadmap phases.
 
 ### Platform & Infrastructure
 
-- [ ] **PLAT-01**: Town-config-driven architecture — add a new town via config file, no code changes
+- [x] **PLAT-01**: Town-config-driven architecture — add a new town via config file, no code changes
 - [x] **PLAT-02**: Docker Compose self-hosted deployment — single `docker-compose up`
 - [ ] **PLAT-03**: NGSI-LD compatible API layer (Smart Data Models schemas)
 - [ ] **PLAT-04**: Data source attribution display (Datenlizenz Deutschland compliance)
 - [ ] **PLAT-05**: Connector health monitoring — staleness detection, last-update timestamps
-- [ ] **PLAT-06**: Plugin-based connector architecture (BaseConnector pattern)
-- [x] **PLAT-07**: Time-series storage with retention policies (TimescaleDB)
-- [x] **PLAT-08**: Spatial query support (PostGIS)
+- [x] **PLAT-06**: Plugin-based connector architecture (BaseConnector pattern)
+- [ ] **PLAT-07**: Time-series storage with retention policies (TimescaleDB)
+- [ ] **PLAT-08**: Spatial query support (PostGIS)
 - [ ] **PLAT-09**: Admin health dashboard — connector status, data freshness, error rates
 
 ## v2 Requirements
@@ -149,11 +149,11 @@ Which phases cover which requirements. Updated during roadmap creation.
 
 | Requirement | Phase | Status |
 |-------------|-------|--------|
-| PLAT-01 | Phase 1 | Pending |
+| PLAT-01 | Phase 1 | Complete |
 | PLAT-02 | Phase 1 | Complete |
-| PLAT-06 | Phase 1 | Pending |
-| PLAT-07 | Phase 1 | Complete |
-| PLAT-08 | Phase 1 | Complete |
+| PLAT-06 | Phase 1 | Complete |
+| PLAT-07 | Phase 1 | Pending |
+| PLAT-08 | Phase 1 | Pending |
 | GEO-06 | Phase 1 | Pending |
 | TRAF-01 | Phase 2 | Pending |
 | TRAF-02 | Phase 2 | Pending |

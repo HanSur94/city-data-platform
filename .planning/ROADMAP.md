@@ -39,8 +39,8 @@ Decimal phases appear between their surrounding integers in numeric order.
 
 Plans:
 - [x] 01-01-PLAN.md — Docker Compose + project structure + Alembic scaffold + test conftest
-- [x] 01-02-PLAN.md — Alembic migration: hypertables, PostGIS spatial table, retention policies
-- [ ] 01-03-PLAN.md — Town YAML config + Pydantic loader + BaseConnector + StubConnector
+- [ ] 01-02-PLAN.md — Alembic migration: hypertables, PostGIS spatial table, retention policies
+- [x] 01-03-PLAN.md — Town YAML config + Pydantic loader + BaseConnector + StubConnector
 - [ ] 01-04-PLAN.md — FastAPI lifespan wiring + BKG VG250 boundary import script
 
 ### Phase 2: First Connectors

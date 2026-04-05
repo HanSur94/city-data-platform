@@ -1,0 +1,15 @@
+id: aalen
+display_name: "Aalen (Württemberg)"
+country: DE
+timezone: Europe/Berlin
+bbox:
+  lon_min: 9.9700
+  lat_min: 48.7600
+  lon_max: 10.2200
+  lat_max: 48.9000
+
+connectors:
+  - connector_class: StubConnector
+    poll_interval_seconds: 300
+    enabled: true
+    config: {}
