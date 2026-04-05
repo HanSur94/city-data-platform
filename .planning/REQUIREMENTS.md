@@ -20,10 +20,10 @@ Requirements for initial release. Each maps to roadmap phases.
 
 ### Dashboard
 
-- [ ] **DASH-01**: KPI summary tiles showing key metrics per domain (e.g., current AQI, transit delays, energy mix)
+- [x] **DASH-01**: KPI summary tiles showing key metrics per domain (e.g., current AQI, transit delays, energy mix)
 - [x] **DASH-02**: Time-series charts with configurable date range picker
 - [ ] **DASH-03**: Per-domain detail panels accessible from dashboard or map
-- [ ] **DASH-04**: Shareable/permalink URLs that encode current view, time, and active layers
+- [x] **DASH-04**: Shareable/permalink URLs that encode current view, time, and active layers
 - [ ] **DASH-05**: Responsive layout — usable on desktop and tablet
 
 ### Transport & Traffic
@@ -171,10 +171,10 @@ Which phases cover which requirements. Updated during roadmap creation.
 | MAP-05 | Phase 4 | Complete |
 | MAP-07 | Phase 4 | Complete |
 | MAP-08 | Phase 4 | Complete |
-| DASH-01 | Phase 5 | Pending |
+| DASH-01 | Phase 5 | Complete |
 | DASH-02 | Phase 5 | Complete |
 | DASH-03 | Phase 5 | Pending |
-| DASH-04 | Phase 5 | Pending |
+| DASH-04 | Phase 5 | Complete |
 | DASH-05 | Phase 5 | Pending |
 | MAP-06 | Phase 5 | Complete |
 | WAIR-05 | Phase 6 | Pending |
