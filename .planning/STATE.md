@@ -3,14 +3,14 @@ gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
 status: executing
-stopped_at: Completed 02-first-connectors/02-04-PLAN.md
-last_updated: "2026-04-05T18:58:45.530Z"
+stopped_at: Completed 02-first-connectors/02-05-PLAN.md
+last_updated: "2026-04-05T19:06:15.646Z"
 last_activity: 2026-04-05
 progress:
   total_phases: 10
-  completed_phases: 1
+  completed_phases: 2
   total_plans: 9
-  completed_plans: 6
+  completed_plans: 9
   percent: 0
 ---
 
@@ -26,7 +26,7 @@ See: .planning/PROJECT.md (updated 2026-04-05)
 ## Current Position
 
 Phase: 02 (first-connectors) — EXECUTING
-Plan: 2 of 5
+Plan: 3 of 5
 Status: Ready to execute
 Last activity: 2026-04-05
 
@@ -55,6 +55,7 @@ Progress: [░░░░░░░░░░] 0%
 | Phase 01-foundation P03 | 151 | 2 tasks | 9 files |
 | Phase 01-foundation P04 | 3 | 2 tasks | 4 files |
 | Phase 02-first-connectors P04 | 135 | 1 tasks | 3 files |
+| Phase 02-first-connectors P05 | 3 | 2 tasks | 4 files |
 
 ## Accumulated Context
 
@@ -74,6 +75,8 @@ Recent decisions affecting current work:
 - [Phase 01-foundation]: FastAPI lifespan loads town from TOWN env var, fails fast on missing/invalid config — get_current_town() dependency pattern established
 - [Phase 02-first-connectors]: gtfs-kit 12.x requires Path/str not BytesIO — use tempfile.NamedTemporaryFile for in-memory GTFS zip parsing
 - [Phase 02-first-connectors]: GTFSConnector does NOT call persist() — transit stops/shapes are static features in features table, not time-series positions
+- [Phase 02-first-connectors]: GTFSRealtimeConnector overrides run() to upsert features before normalize() — transit_positions.feature_id must be UUID, not trip_id string
+- [Phase 02-first-connectors]: gtfs_rt_url empty string = graceful skip with log warning (NVBW GTFS-RT URL unconfirmed)
 
 ### Pending Todos
 
@@ -88,6 +91,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-04-05T18:58:45.526Z
-Stopped at: Completed 02-first-connectors/02-04-PLAN.md
+Last session: 2026-04-05T19:06:15.644Z
+Stopped at: Completed 02-first-connectors/02-05-PLAN.md
 Resume file: None
