@@ -41,8 +41,8 @@ export function useUrlState(defaultTown = 'aalen'): {
     (patch: Partial<Record<string, string | null>>) => {
       const params = new URLSearchParams(searchParams.toString())
       for (const [k, v] of Object.entries(patch)) {
-        if (v === null) params.delete(k)
-        else params.set(k, v)
+        if (v === null || v === undefined) params.delete(k)
+        else params.set(k, v as string)
       }
       router.replace(`?${params.toString()}`, { scroll: false })
     },

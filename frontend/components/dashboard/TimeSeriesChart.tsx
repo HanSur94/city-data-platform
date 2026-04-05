@@ -74,7 +74,7 @@ export function TimeSeriesChart({ domain, points, loading, error, dateRange }: T
     }
     return (
       <ChartContainer config={config} className="min-h-[200px] w-full">
-        <AreaChart data={chartData}>
+        <AreaChart data={chartData as Record<string, unknown>[]}>
           <CartesianGrid strokeDasharray="3 3" />
           <XAxis
             dataKey="time"
@@ -116,7 +116,7 @@ export function TimeSeriesChart({ domain, points, loading, error, dateRange }: T
     }
     return (
       <ChartContainer config={config} className="min-h-[200px] w-full">
-        <LineChart data={chartData}>
+        <LineChart data={chartData as Record<string, unknown>[]}>
           <CartesianGrid strokeDasharray="3 3" />
           <XAxis
             dataKey="time"
