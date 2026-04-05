@@ -39,8 +39,15 @@ Citizens and city officials can see all publicly available city data in one plac
 ## Context
 
 - Builds on experience from a traffic tracker project (similar concept, narrower scope)
-- German open data ecosystem: many cities publish data via CKAN portals, Open Data platforms, or standardized APIs
-- Aalen (pop. ~67k, Baden-Württemberg) serves as the reference/test city
+- **Aalen is a federally funded Smart City model project** (#AAHDHGemeinsamDigital, 2nd cohort) with €17.5M shared funding (with Heidenheim), running through December 2027
+- Aalen already operates a live dashboard at aalen-dashboard.de with LoRaWAN IoT sensors (traffic counting, river level, soil moisture, parking, air quality)
+- Partners: SmartMakers GmbH, Conclurer GmbH, Fraunhofer IAO (KTS advisor), Hochschule Aalen (Prof. Dr. Anna Nagl)
+- Aalen's Smart City roadmap explicitly calls for a nationwide LoRaWAN network, an open-source municipal data platform, a digital twin, and an Open Data portal
+- 50+ free data sources available: DWD/Bright Sky (weather), UBA (air quality station IN Aalen), SMARD (energy), NVBW (3,688 transit routes), BASt (traffic counts), MobiData BW, Wegweiser Kommune (700+ indicators, CC0), LGL (3D building models), PEGELONLINE (water levels), and many more
+- FIWARE is the EU/German standard for smart city data (18+ German cities), with NGSI-LD as the API standard
+- Key German standards: DIN SPEC 91357, NGSI-LD, DCAT-AP.de, Smart Data Models
+- Neighboring OK Labs: Stuttgart (created Sensor.Community/Luftdaten.info), Ulm (Verschwörhaus)
+- daten.bw (BW open data portal, CKAN-based) launched July 2023
 - Target audience ranges from curious citizens to city officials — UI must work for both
 - Open source from day one
 
@@ -49,7 +56,8 @@ Citizens and city officials can see all publicly available city data in one plac
 - **Data sources**: Only freely available / open data — no paid APIs or restricted feeds
 - **Deployment**: Must run on modest hardware (self-hostable, not cloud-dependent)
 - **Scope**: Generic architecture from the start — no Aalen-specific hardcoding
-- **Stack**: Best-fit for the domain (research will determine)
+- **Standards**: NGSI-LD compatible API layer, Smart Data Models schemas, DCAT-AP.de metadata
+- **Licensing**: Datenlizenz Deutschland (DL-DE-BY-2.0) attribution required for most German open data
 
 ## Key Decisions
 
@@ -59,6 +67,8 @@ Citizens and city officials can see all publicly available city data in one plac
 | Generic multi-town architecture | User wants any German town to work, not just Aalen | — Pending |
 | Open data only | Keeps it open-source friendly, no licensing issues | — Pending |
 | Web-first, no native app | Broadest reach, simplest deployment | — Pending |
+| Hybrid architecture | Own lightweight backend (FastAPI + TimescaleDB) with NGSI-LD compatible API — simpler than full FIWARE, but interoperable with EU standard ecosystem | — Pending |
+| Smart Data Models schemas | Data follows standardized NGSI-LD models so FIWARE systems can connect | — Pending |
 
 ## Evolution
 
