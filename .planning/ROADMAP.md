@@ -95,7 +95,7 @@ Plans:
 Plans:
 - [x] 04-01-PLAN.md — Next.js scaffold: dependencies, types, hooks, lib utilities, Dockerfile, docker-compose frontend service
 - [x] 04-02-PLAN.md — Map shell + sidebar: MapView with PMTiles base, layout, layer toggles, legends
-- [ ] 04-03-PLAN.md — Data layers + popups + checkpoint: TransitLayer, AQILayer, FeaturePopup, FreshnessIndicator, human verify
+- [x] 04-03-PLAN.md — Data layers + popups + checkpoint: TransitLayer, AQILayer, FeaturePopup, FreshnessIndicator, human verify
 **UI hint**: yes
 
 ### Phase 5: Dashboard
