@@ -76,8 +76,8 @@ Plans:
 
 Plans:
 - [x] 03-01-PLAN.md — Foundation: dependencies.py, schemas package, test stubs (RED state), geojson-pydantic install
-- [x] 03-02-PLAN.md — Layers + connectors routers: GET /api/layers/{domain} and GET /api/connectors/health
-- [ ] 03-03-PLAN.md — Timeseries + KPI routers + main.py wiring: GET /api/timeseries/{domain} and GET /api/kpi
+- [ ] 03-02-PLAN.md — Layers + connectors routers: GET /api/layers/{domain} and GET /api/connectors/health
+- [x] 03-03-PLAN.md — Timeseries + KPI routers + main.py wiring: GET /api/timeseries/{domain} and GET /api/kpi
 
 ### Phase 4: Map Frontend
 **Goal**: Citizens can open the app, see Aalen on a map, toggle transit and air quality layers, and know how fresh the data is
@@ -180,7 +180,7 @@ Phases execute in numeric order: 1 → 2 → 3 → 4 → 5 → 6 → 7 → 8 →
 |-------|----------------|--------|-----------|
 | 1. Foundation | 4/4 | Complete   | 2026-04-05 |
 | 2. First Connectors | 0/5 | Not started | - |
-| 3. Query API | 1/3 | In Progress|  |
+| 3. Query API | 2/3 | In Progress|  |
 | 4. Map Frontend | 0/TBD | Not started | - |
 | 5. Dashboard | 0/TBD | Not started | - |
 | 6. Weather & Environment Connectors | 0/TBD | Not started | - |
