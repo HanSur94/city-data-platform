@@ -1,0 +1,11 @@
+id: example
+display_name: "Example Town"
+country: DE
+timezone: Europe/Berlin
+bbox:
+  lon_min: 0.0
+  lat_min: 0.0
+  lon_max: 1.0
+  lat_max: 1.0
+
+connectors: []
