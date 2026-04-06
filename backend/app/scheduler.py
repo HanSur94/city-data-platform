@@ -44,6 +44,8 @@ _CONNECTOR_MODULES = {
     "OverpassRoadworksConnector": "app.connectors.overpass_roadworks",
     "LadesaeulenConnector": "app.connectors.ladesaeulen",
     "SolarPotentialConnector": "app.connectors.solar_potential",
+    # Phase 11: TomTom traffic flow
+    "TomTomConnector": "app.connectors.tomtom",
 }
 
 

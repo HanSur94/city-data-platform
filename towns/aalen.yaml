@@ -76,6 +76,13 @@ connectors:
     config:
       attribution: "BASt (Bundesanstalt fuer Strassenwesen), DL-DE-Zero-2.0"
 
+  - connector_class: TomTomConnector
+    poll_interval_seconds: 600
+    enabled: true
+    config:
+      api_key: "${TOMTOM_API_KEY}"
+      attribution: "TomTom Traffic Flow API"
+
   - connector_class: AutobahnConnector
     poll_interval_seconds: 300
     enabled: true
