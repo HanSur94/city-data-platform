@@ -1,11 +1,54 @@
-"""BusInterpolationConnector: interpolates bus positions from GTFS static + RT delays.
+"""BusInterpolationConnector: interpolates bus positions from GTFS static
+schedule data + GTFS-RT delay offsets.
 
-Stub — implementation follows in TDD GREEN phase.
+Computation connector — does NOT use the standard fetch/normalize/persist
+pipeline. Instead, run() downloads/caches the GTFS zip, parses it with
+gtfs_kit, determines active trips, queries delay data from the database,
+and writes interpolated positions as transit domain features.
+
+Shape-walking algorithm (shape_walk) and trip interpolation
+(interpolate_position) are pure functions for easy unit testing.
 """
 from __future__ import annotations
 
-from app.connectors.base import BaseConnector
+import asyncio
+import hashlib
+import logging
+import math
+import os
+import tempfile
+import time
+from datetime import datetime, timezone
+from pathlib import Path
+from typing import Any
+
+from app.connectors.base import BaseConnector, Observation
 from app.models.bus_interpolation import ActiveTrip, BusPosition
+
+logger = logging.getLogger(__name__)
+
+# Cache GTFS zip for 24 hours
+_GTFS_CACHE_MAX_AGE = 86400
+
+
+def _haversine(lon1: float, lat1: float, lon2: float, lat2: float) -> float:
+    """Haversine distance in metres between two WGS84 points."""
+    R = 6_371_000.0
+    rlat1, rlat2 = math.radians(lat1), math.radians(lat2)
+    dlat = math.radians(lat2 - lat1)
+    dlon = math.radians(lon2 - lon1)
+    a = math.sin(dlat / 2) ** 2 + math.cos(rlat1) * math.cos(rlat2) * math.sin(dlon / 2) ** 2
+    return R * 2 * math.atan2(math.sqrt(a), math.sqrt(1 - a))
+
+
+def _bearing(lon1: float, lat1: float, lon2: float, lat2: float) -> float:
+    """Initial bearing in degrees (0-360) from point 1 to point 2."""
+    rlat1, rlat2 = math.radians(lat1), math.radians(lat2)
+    dlon = math.radians(lon2 - lon1)
+    x = math.sin(dlon) * math.cos(rlat2)
+    y = math.cos(rlat1) * math.sin(rlat2) - math.sin(rlat1) * math.cos(rlat2) * math.cos(dlon)
+    brng = math.degrees(math.atan2(x, y))
+    return (brng + 360) % 360
 
 
 def shape_walk(
@@ -14,9 +57,56 @@ def shape_walk(
 ) -> tuple[float, float, float]:
     """Walk along a LineString shape at the given progress fraction.
 
-    Stub — not yet implemented.
+    Args:
+        shape_coords: Ordered list of (lon, lat) tuples defining the route shape.
+        progress: Fraction of total distance (0.0 = start, 1.0 = end).
+
+    Returns:
+        (lon, lat, bearing) at the interpolated position.
     """
-    raise NotImplementedError("shape_walk not yet implemented")
+    if not shape_coords:
+        raise ValueError("shape_coords must not be empty")
+    if len(shape_coords) == 1:
+        lon, lat = shape_coords[0]
+        return (lon, lat, 0.0)
+
+    progress = max(0.0, min(1.0, progress))
+
+    # Compute cumulative distances
+    cum_dist = [0.0]
+    for i in range(1, len(shape_coords)):
+        lon1, lat1 = shape_coords[i - 1]
+        lon2, lat2 = shape_coords[i]
+        cum_dist.append(cum_dist[-1] + _haversine(lon1, lat1, lon2, lat2))
+
+    total = cum_dist[-1]
+    if total == 0.0:
+        lon, lat = shape_coords[0]
+        return (lon, lat, 0.0)
+
+    target = progress * total
+
+    # Find the segment
+    for i in range(1, len(cum_dist)):
+        if cum_dist[i] >= target:
+            seg_start = cum_dist[i - 1]
+            seg_len = cum_dist[i] - seg_start
+            if seg_len == 0:
+                frac = 0.0
+            else:
+                frac = (target - seg_start) / seg_len
+
+            lon1, lat1 = shape_coords[i - 1]
+            lon2, lat2 = shape_coords[i]
+            lon = lon1 + frac * (lon2 - lon1)
+            lat = lat1 + frac * (lat2 - lat1)
+            brng = _bearing(lon1, lat1, lon2, lat2)
+            return (lon, lat, brng)
+
+    # Fallback: return last point
+    lon, lat = shape_coords[-1]
+    brng = _bearing(*shape_coords[-2], *shape_coords[-1]) if len(shape_coords) >= 2 else 0.0
+    return (lon, lat, brng)
 
 
 def interpolate_position(
@@ -25,16 +115,496 @@ def interpolate_position(
 ) -> BusPosition | None:
     """Calculate interpolated bus position for an active trip.
 
-    Stub — not yet implemented.
+    Args:
+        trip: ActiveTrip with stop_times, shape_coords, and delay.
+        now_seconds_since_midnight: Current time as seconds since midnight.
+
+    Returns:
+        BusPosition if the trip is active, None if trip is completed.
+
+    Edge cases handled per REQ-BUS-05:
+        - Trip not departed: returns position at first stop, departed=False
+        - Trip completed: returns None
+        - Dwelling at stop: returns stop position exactly
+        - No delay data: delay_seconds=0, pure schedule interpolation
     """
-    raise NotImplementedError("interpolate_position not yet implemented")
+    if not trip.stop_times or not trip.shape_coords:
+        return None
+
+    delay = trip.delay_seconds
+
+    # Effective times = scheduled + delay
+    first_departure = trip.stop_times[0][2] + delay  # departure of first stop
+    last_arrival = trip.stop_times[-1][1] + delay     # arrival at last stop
+
+    now = now_seconds_since_midnight
+
+    # Trip completed: current time > last arrival
+    if now > last_arrival:
+        return None
+
+    # Trip not departed: current time < first departure
+    if now < first_departure:
+        lon, lat = trip.shape_coords[0]
+        return BusPosition(
+            trip_id=trip.trip_id,
+            route_id=trip.route_id,
+            line_name=trip.line_name,
+            destination=trip.destination,
+            next_stop=trip.stop_times[0][0],
+            lat=lat,
+            lon=lon,
+            bearing=0.0,
+            delay_seconds=delay,
+            progress=0.0,
+            departed=False,
+        )
+
+    # Find current segment between stops
+    # Check if dwelling at a stop (between arrival and departure at same stop)
+    for i, (stop_name, arr, dep) in enumerate(trip.stop_times):
+        eff_arr = arr + delay
+        eff_dep = dep + delay
+        if eff_arr <= now <= eff_dep and eff_arr != eff_dep:
+            # Dwelling at this stop — compute position from stop fraction
+            # Stop i is at fraction i/(n-1) along the shape (approximate)
+            n_stops = len(trip.stop_times)
+            if n_stops <= 1:
+                progress = 0.0
+            else:
+                progress = i / (n_stops - 1)
+            lon, lat, brng = shape_walk(trip.shape_coords, progress)
+            return BusPosition(
+                trip_id=trip.trip_id,
+                route_id=trip.route_id,
+                line_name=trip.line_name,
+                destination=trip.destination,
+                next_stop=stop_name,
+                lat=lat,
+                lon=lon,
+                bearing=brng,
+                delay_seconds=delay,
+                progress=progress,
+                departed=True,
+            )
+
+    # Find the segment: between which two stops is the bus now?
+    for i in range(len(trip.stop_times) - 1):
+        _name_a, _arr_a, dep_a = trip.stop_times[i]
+        name_b, arr_b, _dep_b = trip.stop_times[i + 1]
+        eff_dep_a = dep_a + delay
+        eff_arr_b = arr_b + delay
+
+        if eff_dep_a <= now <= eff_arr_b:
+            # Interpolate within this segment
+            seg_duration = eff_arr_b - eff_dep_a
+            if seg_duration <= 0:
+                seg_frac = 1.0
+            else:
+                seg_frac = (now - eff_dep_a) / seg_duration
+
+            # Map segment fraction to overall trip progress
+            n_stops = len(trip.stop_times)
+            stop_frac_a = i / (n_stops - 1) if n_stops > 1 else 0.0
+            stop_frac_b = (i + 1) / (n_stops - 1) if n_stops > 1 else 1.0
+            progress = stop_frac_a + seg_frac * (stop_frac_b - stop_frac_a)
+
+            lon, lat, brng = shape_walk(trip.shape_coords, progress)
+            return BusPosition(
+                trip_id=trip.trip_id,
+                route_id=trip.route_id,
+                line_name=trip.line_name,
+                destination=trip.destination,
+                next_stop=name_b,
+                lat=lat,
+                lon=lon,
+                bearing=brng,
+                delay_seconds=delay,
+                progress=progress,
+                departed=True,
+            )
+
+    # Fallback: past last computed segment, show at last stop
+    lon, lat, brng = shape_walk(trip.shape_coords, 1.0)
+    return BusPosition(
+        trip_id=trip.trip_id,
+        route_id=trip.route_id,
+        line_name=trip.line_name,
+        destination=trip.destination,
+        next_stop=trip.stop_times[-1][0],
+        lat=lat,
+        lon=lon,
+        bearing=brng,
+        delay_seconds=delay,
+        progress=1.0,
+        departed=True,
+    )
 
 
 class BusInterpolationConnector(BaseConnector):
-    """Computation connector: interpolates bus positions from GTFS schedule + RT delay."""
+    """Computation connector: interpolates bus positions from GTFS schedule + RT delay.
 
-    async def fetch(self):
-        raise NotImplementedError
+    Does NOT use the standard fetch/normalize/persist pipeline.
+    run() orchestrates the full computation:
+    1. Download/cache GTFS zip
+    2. Parse with gtfs_kit (in thread — blocking)
+    3. Determine active service_ids for today
+    4. Find active trips
+    5. Fetch GTFS-RT delays from DB
+    6. Interpolate positions
+    7. Upsert features + persist to transit_positions
+    8. Clean up stale features
+    """
 
-    def normalize(self, raw):
-        raise NotImplementedError
+    async def fetch(self) -> Any:
+        """Not used — run() handles everything."""
+        return None
+
+    def normalize(self, raw: Any) -> list[Observation]:
+        """Not used — run() handles everything."""
+        return []
+
+    async def run(self) -> None:
+        """Full interpolation pipeline."""
+        gtfs_url = self.config.config.get("gtfs_url", "")
+        if not gtfs_url:
+            logger.warning("BusInterpolationConnector: gtfs_url not configured, skipping.")
+            return
+
+        # 1. Download/cache GTFS
+        zip_bytes = await self._download_cached_gtfs(gtfs_url)
+        if not zip_bytes:
+            return
+
+        # 2. Parse GTFS (blocking, run in thread)
+        feed = await asyncio.to_thread(self._parse_gtfs, zip_bytes)
+        if feed is None:
+            return
+
+        # 3. Determine active services for today
+        now_utc = datetime.now(timezone.utc)
+        try:
+            import zoneinfo
+            tz = zoneinfo.ZoneInfo(self.town.timezone if hasattr(self.town, 'timezone') else "Europe/Berlin")
+        except Exception:
+            import zoneinfo
+            tz = zoneinfo.ZoneInfo("Europe/Berlin")
+        now_local = now_utc.astimezone(tz)
+        today = now_local.date()
+        now_secs = now_local.hour * 3600 + now_local.minute * 60 + now_local.second
+
+        active_service_ids = self._get_active_service_ids(feed, today)
+        if not active_service_ids:
+            logger.info("No active services for %s — skipping interpolation.", today)
+            await self._update_staleness()
+            return
+
+        # 4. Find active trips
+        active_trips = self._build_active_trips(feed, active_service_ids, now_secs)
+        logger.info("Found %d active trips for interpolation.", len(active_trips))
+
+        # 5. Fetch delays from DB
+        delays = await self._fetch_delays([t.trip_id for t in active_trips])
+
+        # 6. Interpolate and upsert
+        active_source_ids: set[str] = set()
+        observations: list[Observation] = []
+
+        for trip in active_trips:
+            trip.delay_seconds = delays.get(trip.trip_id, 0)
+            pos = interpolate_position(trip, now_secs)
+            if pos is None:
+                continue
+
+            source_id = f"bus-pos:{trip.trip_id}"
+            active_source_ids.add(source_id)
+            wkt = f"POINT({pos.lon} {pos.lat})"
+            properties = {
+                "feature_type": "bus_position",
+                "trip_id": pos.trip_id,
+                "route_id": pos.route_id,
+                "line_name": pos.line_name,
+                "destination": pos.destination,
+                "next_stop": pos.next_stop,
+                "delay_seconds": pos.delay_seconds,
+                "bearing": pos.bearing,
+                "progress": pos.progress,
+                "departed": pos.departed,
+            }
+
+            feature_id = await self.upsert_feature(
+                source_id=source_id,
+                domain="transit",
+                geometry_wkt=wkt,
+                properties=properties,
+            )
+
+            observations.append(
+                Observation(
+                    feature_id=feature_id,
+                    domain="transit",
+                    values={
+                        "trip_id": pos.trip_id,
+                        "route_id": pos.route_id,
+                        "delay_seconds": pos.delay_seconds,
+                    },
+                    timestamp=now_utc,
+                    source_id=source_id,
+                )
+            )
+
+        # 7. Persist to transit_positions
+        if observations:
+            await self.persist(observations)
+
+        # 8. Clean up stale bus-pos features
+        await self._cleanup_stale_features(active_source_ids)
+
+        await self._update_staleness()
+        logger.info(
+            "BusInterpolationConnector: interpolated %d bus positions.",
+            len(observations),
+        )
+
+    async def _download_cached_gtfs(self, url: str) -> bytes | None:
+        """Download GTFS zip, caching in /tmp for 24 hours."""
+        url_hash = hashlib.md5(url.encode()).hexdigest()[:12]
+        cache_path = Path(tempfile.gettempdir()) / f"gtfs_cache_{url_hash}.zip"
+
+        if cache_path.exists():
+            age = time.time() - cache_path.stat().st_mtime
+            if age < _GTFS_CACHE_MAX_AGE:
+                logger.debug("Using cached GTFS zip: %s (age=%ds)", cache_path, int(age))
+                return cache_path.read_bytes()
+
+        try:
+            import httpx
+            async with httpx.AsyncClient(timeout=120.0) as client:
+                r = await client.get(url)
+                r.raise_for_status()
+                data = r.content
+            if not data:
+                logger.error("Empty GTFS response from %s", url)
+                return None
+            cache_path.write_bytes(data)
+            return data
+        except Exception as exc:
+            logger.error("Failed to download GTFS zip: %s", exc)
+            # Fall back to stale cache if available
+            if cache_path.exists():
+                logger.warning("Using stale GTFS cache after download failure.")
+                return cache_path.read_bytes()
+            return None
+
+    def _parse_gtfs(self, zip_bytes: bytes):
+        """Parse GTFS zip bytes with gtfs_kit. Called in a thread."""
+        import gtfs_kit
+        with tempfile.NamedTemporaryFile(suffix=".zip", delete=False) as tmp:
+            tmp.write(zip_bytes)
+            tmp_path = Path(tmp.name)
+        try:
+            return gtfs_kit.read_feed(tmp_path, dist_units="km")
+        except Exception as exc:
+            logger.error("Failed to parse GTFS feed: %s", exc)
+            return None
+        finally:
+            tmp_path.unlink(missing_ok=True)
+
+    def _get_active_service_ids(self, feed, today) -> set[str]:
+        """Determine which service_ids are active for the given date."""
+        active = set()
+        weekday = today.strftime("%A").lower()  # monday, tuesday, etc.
+
+        if hasattr(feed, "calendar") and feed.calendar is not None and not feed.calendar.empty:
+            for row in feed.calendar.itertuples(index=False):
+                start = getattr(row, "start_date", None)
+                end = getattr(row, "end_date", None)
+                if start and end:
+                    # Parse dates if strings
+                    if isinstance(start, str):
+                        start = datetime.strptime(start, "%Y%m%d").date()
+                    if isinstance(end, str):
+                        end = datetime.strptime(end, "%Y%m%d").date()
+                    if hasattr(start, 'date'):
+                        start = start.date() if hasattr(start, 'date') else start
+                    if hasattr(end, 'date'):
+                        end = end.date() if hasattr(end, 'date') else end
+                    if start <= today <= end:
+                        if getattr(row, weekday, 0) == 1:
+                            active.add(row.service_id)
+
+        # calendar_dates overrides
+        if hasattr(feed, "calendar_dates") and feed.calendar_dates is not None and not feed.calendar_dates.empty:
+            for row in feed.calendar_dates.itertuples(index=False):
+                d = row.date
+                if isinstance(d, str):
+                    d = datetime.strptime(d, "%Y%m%d").date()
+                if hasattr(d, 'date'):
+                    d = d.date() if callable(getattr(d, 'date', None)) else d
+                if d == today:
+                    if row.exception_type == 1:
+                        active.add(row.service_id)
+                    elif row.exception_type == 2:
+                        active.discard(row.service_id)
+
+        return active
+
+    def _build_active_trips(
+        self, feed, active_service_ids: set[str], now_secs: int,
+    ) -> list[ActiveTrip]:
+        """Build ActiveTrip objects for trips currently running."""
+        bbox = self.town.bbox
+        active_trips: list[ActiveTrip] = []
+
+        if feed.trips is None or feed.trips.empty:
+            return []
+        if feed.stop_times is None or feed.stop_times.empty:
+            return []
+
+        # Build route lookup
+        route_info: dict[str, tuple[str, str]] = {}  # route_id -> (short_name, long_name)
+        if hasattr(feed, "routes") and feed.routes is not None and not feed.routes.empty:
+            for row in feed.routes.itertuples(index=False):
+                route_info[row.route_id] = (
+                    getattr(row, "route_short_name", "") or "",
+                    getattr(row, "route_long_name", "") or "",
+                )
+
+        # Build shapes lookup
+        shape_coords_map: dict[str, list[tuple[float, float]]] = {}
+        if hasattr(feed, "shapes") and feed.shapes is not None and not feed.shapes.empty:
+            for shape_id, group in feed.shapes.groupby("shape_id"):
+                pts = group.sort_values("shape_pt_sequence")
+                coords = [
+                    (float(r.shape_pt_lon), float(r.shape_pt_lat))
+                    for r in pts.itertuples(index=False)
+                ]
+                # Filter: include if any point in bbox
+                in_bbox = any(
+                    bbox.lon_min <= lon <= bbox.lon_max and bbox.lat_min <= lat <= bbox.lat_max
+                    for lon, lat in coords
+                )
+                if in_bbox:
+                    shape_coords_map[shape_id] = coords
+
+        # Build stop_times by trip_id (only for trips with active service + in-bbox shapes)
+        trips_df = feed.trips[feed.trips.service_id.isin(active_service_ids)]
+
+        # Build stop name lookup
+        stop_names: dict[str, str] = {}
+        if hasattr(feed, "stops") and feed.stops is not None and not feed.stops.empty:
+            for row in feed.stops.itertuples(index=False):
+                stop_names[row.stop_id] = getattr(row, "stop_name", row.stop_id)
+
+        for trip_row in trips_df.itertuples(index=False):
+            shape_id = getattr(trip_row, "shape_id", None)
+            if not shape_id or shape_id not in shape_coords_map:
+                continue
+
+            trip_id = trip_row.trip_id
+            route_id = trip_row.route_id
+
+            # Get stop_times for this trip
+            trip_st = feed.stop_times[feed.stop_times.trip_id == trip_id].sort_values("stop_sequence")
+            if trip_st.empty:
+                continue
+
+            stop_time_list: list[tuple[str, int, int]] = []
+            for st_row in trip_st.itertuples(index=False):
+                arr_str = getattr(st_row, "arrival_time", "00:00:00")
+                dep_str = getattr(st_row, "departure_time", "00:00:00")
+                arr_secs = self._time_str_to_seconds(arr_str)
+                dep_secs = self._time_str_to_seconds(dep_str)
+                stop_name = stop_names.get(st_row.stop_id, st_row.stop_id)
+                stop_time_list.append((stop_name, arr_secs, dep_secs))
+
+            if not stop_time_list:
+                continue
+
+            first_dep = stop_time_list[0][2]
+            last_arr = stop_time_list[-1][1]
+
+            # Active if first departure <= now <= last arrival (with generous buffer for delays)
+            if first_dep - 600 <= now_secs <= last_arr + 600:
+                line_name, _ = route_info.get(route_id, ("", ""))
+                headsign = getattr(trip_row, "trip_headsign", "") or ""
+                destination = headsign if headsign else stop_time_list[-1][0]
+
+                active_trips.append(ActiveTrip(
+                    trip_id=trip_id,
+                    route_id=route_id,
+                    line_name=line_name,
+                    destination=destination,
+                    stop_times=stop_time_list,
+                    shape_coords=shape_coords_map[shape_id],
+                    delay_seconds=0,
+                ))
+
+        return active_trips
+
+    @staticmethod
+    def _time_str_to_seconds(t: str) -> int:
+        """Convert HH:MM:SS to seconds since midnight. Handles >24h GTFS times."""
+        if not t or not isinstance(t, str):
+            return 0
+        parts = t.strip().split(":")
+        if len(parts) != 3:
+            return 0
+        try:
+            h, m, s = int(parts[0]), int(parts[1]), int(parts[2])
+            return h * 3600 + m * 60 + s
+        except ValueError:
+            return 0
+
+    async def _fetch_delays(self, trip_ids: list[str]) -> dict[str, int]:
+        """Query transit_positions for latest delay_seconds per trip_id."""
+        if not trip_ids:
+            return {}
+
+        from app.db import AsyncSessionLocal
+        from sqlalchemy import text
+
+        delays: dict[str, int] = {}
+        try:
+            async with AsyncSessionLocal() as session:
+                result = await session.execute(
+                    text("""
+                        SELECT DISTINCT ON (trip_id) trip_id, delay_seconds
+                        FROM transit_positions
+                        WHERE trip_id = ANY(:trip_ids)
+                          AND delay_seconds IS NOT NULL
+                          AND time > NOW() - INTERVAL '10 minutes'
+                        ORDER BY trip_id, time DESC
+                    """),
+                    {"trip_ids": trip_ids},
+                )
+                for row in result.mappings():
+                    delays[row["trip_id"]] = int(row["delay_seconds"])
+        except Exception as exc:
+            logger.warning("Could not fetch delays from DB: %s", exc)
+
+        return delays
+
+    async def _cleanup_stale_features(self, active_source_ids: set[str]) -> None:
+        """Delete bus-pos features that are no longer active."""
+        from app.db import AsyncSessionLocal
+        from sqlalchemy import text
+
+        try:
+            async with AsyncSessionLocal() as session:
+                await session.execute(
+                    text("""
+                        DELETE FROM features
+                        WHERE town_id = :town_id
+                          AND domain = 'transit'
+                          AND source_id LIKE 'bus-pos:%'
+                          AND source_id != ALL(:active_ids)
+                    """),
+                    {
+                        "town_id": self.town.id,
+                        "active_ids": list(active_source_ids) if active_source_ids else ["__none__"],
+                    },
+                )
+                await session.commit()
+        except Exception as exc:
+            logger.warning("Could not clean up stale bus-pos features: %s", exc)
