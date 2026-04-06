@@ -6,16 +6,16 @@ from app.schemas.geojson import eaqi_from_readings
 @pytest.mark.parametrize("pm25,pm10,no2,o3,expected", [
     # All low — good (tier 0)
     (3, 8, 8, 40, (0, "good", "#50F0E6")),
-    # Mixed moderate — tier 2 dominates
-    (30, 60, 60, 140, (2, "moderate", "#F0E641")),
-    # PM2.5=60 dominates → poor (tier 3)
-    (60, 5, 5, 5, (3, "poor", "#FF5050")),
+    # pm25=30 > 25 → tier 3; pm10=60 > 50 → tier 3; no2=60 > 50 → tier 3; o3=140 > 130 → tier 3 poor
+    (30, 60, 60, 140, (3, "poor", "#FF5050")),
+    # pm25=60: 50 < 60 <= 75 → tier 4 very_poor
+    (60, 5, 5, 5, (4, "very_poor", "#960032")),
     # All None — unknown gray
     (None, None, None, None, (0, "unknown", "#9e9e9e")),
-    # Only pm10=120 provided → tier 3 (100 < 120 <= 150 → tier 3 poor)
-    (None, 120, None, None, (3, "poor", "#FF5050")),
-    # Very poor: pm25=80 → tier 4 (75 < 80 → tier 4 very_poor)
-    (80, None, None, None, (4, "very_poor", "#960032")),
+    # pm10=120: 100 < 120 <= 150 → tier 4 very_poor
+    (None, 120, None, None, (4, "very_poor", "#960032")),
+    # Extremely poor: pm25=80 → tier 5 (75 < 80 <= inf → tier 5 extremely_poor)
+    (80, None, None, None, (5, "extremely_poor", "#7D2181")),
     # Extremely poor: pm25=100 → tier 5
     (100, None, None, None, (5, "extremely_poor", "#7D2181")),
     # O3 threshold check: o3=55 → tier 1 fair (50 < 55 <= 100)
@@ -24,10 +24,10 @@ from app.schemas.geojson import eaqi_from_readings
     (5, None, None, None, (0, "good", "#50F0E6")),
     # Fair boundary: pm25=6 → tier 1
     (6, None, None, None, (1, "fair", "#50CCAA")),
-    # NO2 poor: no2=150 → tier 3 (100 < 150 <= 200)
-    (None, None, 150, None, (3, "poor", "#FF5050")),
-    # Worst pollutant wins across mix
-    (3, 3, 3, 250, (3, "poor", "#FF5050")),  # o3=250 → tier 3 (240 < 250 <= 380)
+    # no2=150: 100 < 150 <= 200 → tier 4 very_poor
+    (None, None, 150, None, (4, "very_poor", "#960032")),
+    # o3=250: 240 < 250 <= 380 → tier 4 very_poor (worst wins)
+    (3, 3, 3, 250, (4, "very_poor", "#960032")),
 ])
 def test_eaqi_from_readings(pm25, pm10, no2, o3, expected):
     result = eaqi_from_readings(pm25=pm25, pm10=pm10, no2=no2, o3=o3)

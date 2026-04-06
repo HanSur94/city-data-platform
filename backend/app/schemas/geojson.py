@@ -51,25 +51,45 @@ VALID_DOMAINS: frozenset[str] = frozenset(
     {"air_quality", "transit", "weather", "water", "energy"}
 )
 
-# AQI health tier thresholds (WHO/UBA guidelines, based on max of PM2.5/PM10/NO2/O3)
-# Returns (tier_label, hex_color)
-AQI_TIERS: list[tuple[float, str, str]] = [
-    (20.0,  "good",      "#00c853"),
-    (40.0,  "moderate",  "#ffeb3b"),
-    (60.0,  "poor",      "#ff9800"),
-    (80.0,  "bad",       "#f44336"),
-    (float("inf"), "very_bad", "#b71c1c"),
+# EEA European Air Quality Index (EAQI) 6-tier per-pollutant thresholds
+# Reference: https://airindex.eea.europa.eu (verified 2026-04-06)
+EAQI_TIER_LABELS: list[str] = [
+    "good", "fair", "moderate", "poor", "very_poor", "extremely_poor"
 ]
+EAQI_TIER_COLORS: list[str] = [
+    "#50F0E6", "#50CCAA", "#F0E641", "#FF5050", "#960032", "#7D2181"
+]
+EAQI_BREAKPOINTS: dict[str, list[float]] = {
+    "pm25": [5,   15,   25,   50,  75,  float("inf")],
+    "pm10": [10,  20,   50,  100, 150,  float("inf")],
+    "no2":  [10,  20,   50,  100, 200,  float("inf")],
+    "o3":   [50, 100,  130,  240, 380,  float("inf")],
+}
 
 
-def aqi_tier(aqi_value: float | None) -> tuple[str, str]:
-    """Return (tier_label, hex_color) for a given AQI float. Returns unknown for None."""
-    if aqi_value is None:
-        return ("unknown", "#9e9e9e")
-    for threshold, label, color in AQI_TIERS:
-        if aqi_value <= threshold:
-            return (label, color)
-    return ("very_bad", "#b71c1c")
+def eaqi_from_readings(
+    pm25: float | None,
+    pm10: float | None,
+    no2: float | None,
+    o3: float | None,
+) -> tuple[int, str, str]:
+    """Return (tier_index 0-5, label, hex_color) using EEA EAQI methodology.
+
+    Overall EAQI = max tier index across all pollutants with non-None values.
+    Returns (0, "unknown", "#9e9e9e") when all inputs are None.
+    """
+    best_tier = -1
+    for pollutant, value in [("pm25", pm25), ("pm10", pm10), ("no2", no2), ("o3", o3)]:
+        if value is None:
+            continue
+        thresholds = EAQI_BREAKPOINTS[pollutant]
+        for tier_idx, threshold in enumerate(thresholds):
+            if value <= threshold:
+                best_tier = max(best_tier, tier_idx)
+                break
+    if best_tier == -1:
+        return (0, "unknown", "#9e9e9e")
+    return (best_tier, EAQI_TIER_LABELS[best_tier], EAQI_TIER_COLORS[best_tier])
 
 
 class Attribution(BaseModel):
