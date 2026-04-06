@@ -69,3 +69,35 @@ connectors:
       # WATR-05: LUBW WFS environmental layers — Naturschutzgebiet + Wasserschutzgebiet
       # Uses town bbox (9.97,48.76,10.22,48.90) from town config automatically.
       attribution: "Landesanstalt für Umwelt Baden-Württemberg (LUBW), DL-DE-BY-2.0"
+
+  - connector_class: BastConnector
+    poll_interval_seconds: 3600
+    enabled: true
+    config:
+      attribution: "BASt (Bundesanstalt fuer Strassenwesen), DL-DE-Zero-2.0"
+
+  - connector_class: AutobahnConnector
+    poll_interval_seconds: 300
+    enabled: true
+    config:
+      roads: ["A7", "A6"]
+      attribution: "Autobahn GmbH des Bundes, DL-DE-Zero-2.0"
+
+  - connector_class: MobiDataBWConnector
+    poll_interval_seconds: 3600
+    enabled: true
+    config:
+      attribution: "MobiData BW, DL-DE-BY-2.0"
+
+  - connector_class: SmardConnector
+    poll_interval_seconds: 900
+    enabled: true
+    config:
+      attribution: "SMARD (Bundesnetzagentur), DL-DE-Zero-2.0"
+
+  - connector_class: MastrConnector
+    poll_interval_seconds: 86400
+    enabled: true
+    config:
+      landkreis: "Ostalbkreis"
+      attribution: "Marktstammdatenregister (BNetzA), DL-DE-Zero-2.0"

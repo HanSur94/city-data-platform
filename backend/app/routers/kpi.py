@@ -13,12 +13,14 @@ from sqlalchemy import text
 from app.db import get_db
 from app.dependencies import get_current_town
 from app.config import Town
-from app.schemas.geojson import CONNECTOR_ATTRIBUTION, aqi_tier
+from app.schemas.geojson import CONNECTOR_ATTRIBUTION, eaqi_from_readings
 from app.schemas.responses import (
     KPIResponse,
     AirQualityKPI,
     WeatherKPI,
     TransitKPI,
+    TrafficKPI,
+    EnergyKPI,
 )
 
 router = APIRouter(tags=["kpi"])
@@ -57,8 +59,21 @@ async def get_kpi(
     except Exception:
         aq_row = None
 
-    raw_aqi = aq_row["current_aqi"] if aq_row else None
-    tier, color = aqi_tier(raw_aqi if isinstance(raw_aqi, (int, float)) else None)
+    def _to_float(val: object) -> float | None:
+        """Convert a DB value to float, returning None for non-numeric types."""
+        if val is None:
+            return None
+        try:
+            return float(val)  # type: ignore[arg-type]
+        except (TypeError, ValueError):
+            return None
+
+    _tier_idx, tier, color = eaqi_from_readings(
+        pm25=_to_float(aq_row["current_pm25"] if aq_row else None),
+        pm10=_to_float(aq_row["current_pm10"] if aq_row else None),
+        no2=_to_float(aq_row["current_no2"] if aq_row else None),
+        o3=_to_float(aq_row["current_o3"] if aq_row else None),
+    )
 
     # --- Weather KPI ---
     wx_row = None
@@ -102,6 +117,102 @@ async def get_kpi(
     except Exception:
         tr_row = None
 
+    # --- Traffic KPI ---
+    traffic_kpi: TrafficKPI
+    try:
+        # Count active roadworks (Autobahn features with type="roadwork" or type="closure")
+        roadworks_result = await db.execute(
+            text("""
+                SELECT COUNT(*) FROM features
+                WHERE domain = 'traffic'
+                  AND town_id = :town_id
+                  AND properties->>'type' IN ('roadwork', 'closure')
+            """),
+            {"town_id": current_town.id},
+        )
+        active_roadworks = roadworks_result.scalar() or 0
+
+        # Flow status: most common congestion level in last hour's readings
+        flow_result = await db.execute(
+            text("""
+                SELECT r.congestion_level, COUNT(*) AS cnt
+                FROM traffic_readings r
+                INNER JOIN features f ON f.id = r.feature_id
+                WHERE f.domain = 'traffic'
+                  AND f.town_id = :town_id
+                  AND r.time > NOW() - INTERVAL '1 hour'
+                GROUP BY r.congestion_level
+                ORDER BY cnt DESC
+                LIMIT 1
+            """),
+            {"town_id": current_town.id},
+        )
+        flow_row = flow_result.first()
+        flow_status_map = {"free": "normal", "moderate": "elevated", "congested": "congested"}
+        flow_status = flow_status_map.get(flow_row[0]) if flow_row else None
+
+        # Last updated from traffic_readings
+        traffic_ts_result = await db.execute(
+            text("""
+                SELECT MAX(r.time)
+                FROM traffic_readings r
+                INNER JOIN features f ON f.id = r.feature_id
+                WHERE f.domain = 'traffic' AND f.town_id = :town_id
+            """),
+            {"town_id": current_town.id},
+        )
+        traffic_last_updated = traffic_ts_result.scalar()
+        traffic_kpi = TrafficKPI(
+            active_roadworks=int(active_roadworks),
+            flow_status=flow_status,
+            last_updated=traffic_last_updated,
+        )
+    except Exception:
+        traffic_kpi = TrafficKPI(active_roadworks=0, flow_status=None, last_updated=None)
+
+    # --- Energy KPI ---
+    energy_kpi: EnergyKPI
+    try:
+        # Latest generation mix from energy_readings (one row per source_type)
+        mix_result = await db.execute(
+            text("""
+                SELECT DISTINCT ON (source_type) source_type, value_kw, time
+                FROM energy_readings
+                WHERE time > NOW() - INTERVAL '1 hour'
+                ORDER BY source_type, time DESC
+            """),
+        )
+        mix_rows = mix_result.fetchall()
+        generation_mix = {
+            row.source_type: row.value_kw / 1000
+            for row in mix_rows
+            if row.source_type != "price"
+        }
+        # Wholesale price stored as EUR/MWh in value_kw
+        price_row = next((r for r in mix_rows if r.source_type == "price"), None)
+        wholesale_price = price_row.value_kw if price_row else None
+        # Renewable percent
+        renewable_sources = {"solar", "wind_onshore", "wind_offshore", "hydro", "biomass"}
+        total = sum(generation_mix.values()) if generation_mix else 0
+        renewable = sum(v for k, v in generation_mix.items() if k in renewable_sources)
+        renewable_pct: float | None = (renewable / total * 100) if total > 0 else None
+
+        # Last updated
+        energy_last_updated = max((r.time for r in mix_rows), default=None)
+        energy_kpi = EnergyKPI(
+            renewable_percent=renewable_pct,
+            generation_mix=generation_mix,
+            wholesale_price_eur_mwh=wholesale_price,
+            last_updated=energy_last_updated,
+        )
+    except Exception:
+        energy_kpi = EnergyKPI(
+            renewable_percent=None,
+            generation_mix={},
+            wholesale_price_eur_mwh=None,
+            last_updated=None,
+        )
+
     # --- Attribution ---
     attributions: list[dict[str, str]] = []
     try:
@@ -124,41 +235,71 @@ async def get_kpi(
     except Exception:
         attributions = []
 
+    def _to_datetime(val: object) -> datetime | None:
+        """Return val if it's a datetime, else None."""
+        return val if isinstance(val, datetime) else None  # type: ignore[return-value]
+
     # --- Overall last_updated: max of all domain timestamps ---
     candidate_times = [
-        aq_row["last_updated"] if aq_row else None,
-        wx_row["last_updated"] if wx_row else None,
-        tr_row["last_updated"] if tr_row else None,
+        _to_datetime(aq_row["last_updated"]) if aq_row else None,
+        _to_datetime(wx_row["last_updated"]) if wx_row else None,
+        _to_datetime(tr_row["last_updated"]) if tr_row else None,
+        traffic_kpi.last_updated,
+        energy_kpi.last_updated,
     ]
     last_updated: datetime | None = max(
         filter(None, candidate_times),
         default=None,
     )
 
-    return KPIResponse(
-        town=current_town.id,
-        air_quality=AirQualityKPI(
-            current_aqi=aq_row["current_aqi"] if aq_row else None,
-            current_pm25=aq_row["current_pm25"] if aq_row else None,
-            current_pm10=aq_row["current_pm10"] if aq_row else None,
-            current_no2=aq_row["current_no2"] if aq_row else None,
-            current_o3=aq_row["current_o3"] if aq_row else None,
+    try:
+        air_quality_kpi = AirQualityKPI(
+            current_aqi=_to_float(aq_row["current_aqi"] if aq_row else None),
+            current_pm25=_to_float(aq_row["current_pm25"] if aq_row else None),
+            current_pm10=_to_float(aq_row["current_pm10"] if aq_row else None),
+            current_no2=_to_float(aq_row["current_no2"] if aq_row else None),
+            current_o3=_to_float(aq_row["current_o3"] if aq_row else None),
             aqi_tier=tier,
             aqi_color=color,
-            last_updated=aq_row["last_updated"] if aq_row else None,
-        ),
-        weather=WeatherKPI(
-            temperature=wx_row["temperature"] if wx_row else None,
-            condition=wx_row["condition"] if wx_row else None,
-            wind_speed=wx_row["wind_speed"] if wx_row else None,
-            icon=wx_row["icon"] if wx_row else None,
-            last_updated=wx_row["last_updated"] if wx_row else None,
-        ),
-        transit=TransitKPI(
+            last_updated=_to_datetime(aq_row["last_updated"] if aq_row else None),
+        )
+    except Exception:
+        air_quality_kpi = AirQualityKPI(
+            current_aqi=None, current_pm25=None, current_pm10=None,
+            current_no2=None, current_o3=None, aqi_tier=None, aqi_color=None,
+            last_updated=None,
+        )
+
+    try:
+        weather_kpi = WeatherKPI(
+            temperature=_to_float(wx_row["temperature"] if wx_row else None),
+            condition=wx_row["condition"] if wx_row and isinstance(wx_row["condition"], (str, type(None))) else None,
+            wind_speed=_to_float(wx_row["wind_speed"] if wx_row else None),
+            icon=wx_row["icon"] if wx_row and isinstance(wx_row["icon"], (str, type(None))) else None,
+            last_updated=_to_datetime(wx_row["last_updated"] if wx_row else None),
+        )
+    except Exception:
+        weather_kpi = WeatherKPI(
+            temperature=None, condition=None, wind_speed=None,
+            icon=None, last_updated=None,
+        )
+
+    try:
+        transit_kpi = TransitKPI(
             stop_count=int(tr_row["stop_count"] or 0) if tr_row else 0,
             route_count=int(tr_row["route_count"] or 0) if tr_row else 0,
-            last_updated=tr_row["last_updated"] if tr_row else None,
-        ),
+            last_updated=_to_datetime(tr_row["last_updated"] if tr_row else None),
+        )
+    except Exception:
+        transit_kpi = TransitKPI(stop_count=0, route_count=0, last_updated=None)
+
+    return KPIResponse(
+        town=current_town.id,
+        air_quality=air_quality_kpi,
+        weather=weather_kpi,
+        transit=transit_kpi,
+        traffic=traffic_kpi,
+        energy=energy_kpi,
         attribution=attributions,
         last_updated=last_updated,
     )
