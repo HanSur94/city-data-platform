@@ -10,6 +10,9 @@ import { getMapStyle } from '@/lib/map-styles';
 import type { BaseLayer } from '@/lib/map-styles';
 import TransitLayer from './TransitLayer';
 import AQILayer from './AQILayer';
+import AirQualityHeatmapLayer from './AirQualityHeatmapLayer';
+import type { Pollutant } from './AirQualityHeatmapLayer';
+import SensorPopupChart from './SensorPopupChart';
 import WaterLayer from './WaterLayer';
 import WmsOverlayLayer from './WmsOverlayLayer';
 import TrafficLayer from './TrafficLayer';
@@ -58,6 +61,8 @@ interface MapViewProps {
   };
   transitData: LayerResponse | null;
   airQualityData: LayerResponse | null;
+  airQualityGridData?: LayerResponse | null;
+  activePollutant?: Pollutant;
   transitLastFetched: Date | null;
   airQualityLastFetched: Date | null;
   waterData?: LayerResponse | null;
@@ -97,6 +102,8 @@ export default function MapView({
   layerVisibility,
   transitData,
   airQualityData,
+  airQualityGridData,
+  activePollutant = 'pm25',
   transitLastFetched,
   airQualityLastFetched,
   waterData,
@@ -210,6 +217,7 @@ export default function MapView({
       >
         <TransitLayer data={transitData} visible={layerVisibility.transit} />
         <AQILayer data={airQualityData} visible={layerVisibility.airQuality} />
+        <AirQualityHeatmapLayer data={airQualityGridData ?? null} visible={layerVisibility.airQuality} activePollutant={activePollutant} />
         <WaterLayer
           data={waterData ?? null}
           visible={layerVisibility.water}
@@ -279,10 +287,21 @@ export default function MapView({
             latitude={popupInfo.latitude}
             onClose={() => setPopupInfo(null)}
             closeOnClick={false}
-            maxWidth="200px"
+            maxWidth="320px"
             anchor="bottom"
           >
-            {popupInfo.domain === 'kocher' ? (
+            {popupInfo.domain === 'airQuality' ? (
+              <div>
+                <FeaturePopup
+                  feature={popupInfo.feature}
+                  lastFetched={airQualityLastFetched}
+                />
+                <SensorPopupChart
+                  featureId={String(popupInfo.feature.properties?.feature_id ?? popupInfo.feature.id ?? '')}
+                  town={town}
+                />
+              </div>
+            ) : popupInfo.domain === 'kocher' ? (
               <KocherPopup feature={popupInfo.feature} />
             ) : popupInfo.domain === 'trafficFlow' ? (
               <TrafficFlowPopup feature={popupInfo.feature} />
@@ -306,9 +325,7 @@ export default function MapView({
               <FeaturePopup
                 feature={popupInfo.feature}
                 lastFetched={
-                  popupInfo.domain === 'airQuality'
-                    ? airQualityLastFetched
-                    : popupInfo.domain === 'water'
+                  popupInfo.domain === 'water'
                     ? (waterLastFetched ?? null)
                     : transitLastFetched
                 }

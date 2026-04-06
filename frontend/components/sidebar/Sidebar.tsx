@@ -4,7 +4,9 @@ import { Button } from '@/components/ui/button';
 import { Separator } from '@/components/ui/separator';
 import { Layers } from 'lucide-react';
 import LayerToggle from './LayerToggle';
+import PollutantToggle from './PollutantToggle';
 import AQILegend from './AQILegend';
+import type { Pollutant } from '@/components/map/AirQualityHeatmapLayer';
 import TransitLegend from './TransitLegend';
 import WaterLegend from './WaterLegend';
 import TrafficLegend from './TrafficLegend';
@@ -44,9 +46,11 @@ interface SidebarProps {
   cadastralVisible?: boolean;
   hillshadeVisible?: boolean;
   buildings3dVisible?: boolean;
+  activePollutant?: Pollutant;
+  onPollutantChange?: (pollutant: Pollutant) => void;
 }
 
-export default function Sidebar({ layerVisibility, onToggleLayer, transitError, airQualityError, trafficError, energyError, baseLayer, onBaseLayerChange, cadastralVisible, hillshadeVisible, buildings3dVisible }: SidebarProps) {
+export default function Sidebar({ layerVisibility, onToggleLayer, transitError, airQualityError, trafficError, energyError, baseLayer, onBaseLayerChange, cadastralVisible, hillshadeVisible, buildings3dVisible, activePollutant, onPollutantChange }: SidebarProps) {
   const [drawerOpen, setDrawerOpen] = useState(false);
 
   const content = (
@@ -82,6 +86,9 @@ export default function Sidebar({ layerVisibility, onToggleLayer, transitError, 
           onCheckedChange={() => onToggleLayer('airQuality')}
           freshnessError={airQualityError}
         />
+        {layerVisibility.airQuality && activePollutant && onPollutantChange && (
+          <PollutantToggle activePollutant={activePollutant} onPollutantChange={onPollutantChange} />
+        )}
         <LayerToggle
           id="water-toggle"
           label="Pegel & Gewässer"
