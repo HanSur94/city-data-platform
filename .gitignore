@@ -27,3 +27,8 @@ node_modules/
 *.shp
 *.dbf
 *.shx
+
+# Claude Code worktrees
+.claude/worktrees/
+.clone/
+worktrees/
