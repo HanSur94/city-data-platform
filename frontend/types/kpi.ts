@@ -31,11 +31,26 @@ export interface TransitKPI {
   last_updated: string | null
 }
 
+export interface TrafficKPI {
+  active_roadworks: number
+  flow_status: 'normal' | 'elevated' | 'congested' | null
+  last_updated: string | null
+}
+
+export interface EnergyKPI {
+  renewable_percent: number | null
+  generation_mix: Record<string, number>
+  wholesale_price_eur_mwh: number | null
+  last_updated: string | null
+}
+
 export interface KPIResponse {
   town: string
   air_quality: AirQualityKPI
   weather: WeatherKPI
   transit: TransitKPI
+  traffic: TrafficKPI | null
+  energy: EnergyKPI | null
   attribution: Attribution[]
   last_updated: string | null
 }

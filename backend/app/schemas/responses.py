@@ -47,11 +47,26 @@ class TransitKPI(BaseModel):
     last_updated: datetime | None
 
 
+class TrafficKPI(BaseModel):
+    active_roadworks: int
+    flow_status: str | None  # "normal" | "elevated" | "congested" | None
+    last_updated: datetime | None
+
+
+class EnergyKPI(BaseModel):
+    renewable_percent: float | None
+    generation_mix: dict[str, float]  # source -> MW
+    wholesale_price_eur_mwh: float | None
+    last_updated: datetime | None
+
+
 class KPIResponse(BaseModel):
     town: str
     air_quality: AirQualityKPI
     weather: WeatherKPI
     transit: TransitKPI
+    traffic: TrafficKPI | None = None
+    energy: EnergyKPI | None = None
     attribution: list[dict[str, str]]
     last_updated: datetime | None
 
