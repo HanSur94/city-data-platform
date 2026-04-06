@@ -129,10 +129,17 @@ Plans:
 **Success Criteria** (what must be TRUE):
   1. Air quality index is displayed with EU/WHO health-based color scale; toggling the AQI layer shows all sensor locations color-coded by tier
   2. Historical AQI trend charts show at least 90 days of UBA and Sensor.community data with no missing-data gaps beyond expected upstream outages
-  3. Real-time water level gauge readings from PEGELONLINE appear on the map for the Kocher and nearby stations; the HVZ BW state monitoring data supplements this
-  4. Flood hazard map (HQ10 to HQextrem) and noise map (road + railway) are available as toggleable WMS overlay layers
-  5. LUBW environmental WFS layers (water quality, nature conservation) can be toggled on the map
-**Plans**: TBD
+  3. Real-time water level gauge readings from PEGELONLINE appear on the map for Neckar stations near Aalen (note: Kocher is a state river not in PEGELONLINE; WATR-02 scope is Neckar federal stations)
+  4. Flood hazard map (HQ100 + statutory USG zones) and railway noise map (EBA Lden) are available as toggleable WMS overlay layers
+  5. LUBW environmental WFS layers (Naturschutzgebiet, Wasserschutzgebiet) can be toggled on the map
+**Plans**: 5 plans
+
+Plans:
+- [ ] 06-01-PLAN.md — Backend: base.py water branch + PegelonlineConnector + scheduler + aalen.yaml (WATR-01, WATR-02)
+- [ ] 06-02-PLAN.md — AQI: EEA EAQI 6-tier scale in geojson.py + layers.py + AQILayer.tsx + AQILegend (WAIR-05)
+- [ ] 06-03-PLAN.md — Backend: LubwWfsConnector fetching nature/water protection zones to features table (WATR-05)
+- [ ] 06-04-PLAN.md — Frontend: WaterLayer + WmsOverlayLayer + Sidebar toggles + MapView + page.tsx wiring (WATR-01/03/04/05)
+- [ ] 06-05-PLAN.md — 90-day AQI backfill script + human verify checkpoint (WAIR-06)
 **UI hint**: yes
 
 ### Phase 7: Traffic & Energy Connectors
@@ -198,7 +205,7 @@ Phases execute in numeric order: 1 → 2 → 3 → 4 → 5 → 6 → 7 → 8 →
 | 3. Query API | 2/3 | In Progress|  |
 | 4. Map Frontend | 2/3 | In Progress|  |
 | 5. Dashboard | 7/8 | In Progress|  |
-| 6. Weather & Environment Connectors | 0/TBD | Not started | - |
+| 6. Weather & Environment Connectors | 0/5 | Not started | - |
 | 7. Traffic & Energy Connectors | 0/TBD | Not started | - |
 | 8. Community & Infrastructure Connectors | 0/TBD | Not started | - |
 | 9. Geospatial Enrichment | 0/TBD | Not started | - |
