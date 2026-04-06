@@ -1,5 +1,5 @@
 'use client'
-import { Suspense } from 'react'
+import { Suspense, useState } from 'react'
 import dynamic from 'next/dynamic'
 import Sidebar from '@/components/sidebar/Sidebar'
 import { DashboardPanel } from '@/components/dashboard/DashboardPanel'
@@ -8,8 +8,10 @@ import { DateRangePicker } from '@/components/dashboard/DateRangePicker'
 import { DomainDetailPanel } from '@/components/dashboard/DomainDetailPanel'
 import { TimeSeriesChart } from '@/components/dashboard/TimeSeriesChart'
 import { useLayerData } from '@/hooks/useLayerData'
+import { useGridLayerData } from '@/hooks/useGridLayerData'
 import { useUrlState } from '@/hooks/useUrlState'
 import { useTimeseries } from '@/hooks/useTimeseries'
+import type { Pollutant } from '@/components/map/AirQualityHeatmapLayer'
 
 const MapView = dynamic(() => import('@/components/map/MapView'), {
   ssr: false,
@@ -88,9 +90,13 @@ function HomeInner() {
     update({ layers: next.join(',') || null })
   }
 
+  // Pollutant toggle state for air quality heatmap grid
+  const [activePollutant, setActivePollutant] = useState<Pollutant>('pm25')
+
   // Data hooks — pass historicalTimestamp for time slider historical support
   const transit = useLayerData('transit', town, historicalTimestamp)
   const airQuality = useLayerData('air_quality', town, historicalTimestamp)
+  const airQualityGrid = useGridLayerData('air_quality', 'air_grid', town, historicalTimestamp)
   const water = useLayerData('water', town, historicalTimestamp)
   const traffic = useLayerData('traffic', town, historicalTimestamp)
   const energy = useLayerData('energy', town)
@@ -155,6 +161,8 @@ function HomeInner() {
         cadastralVisible={layerVisibility.cadastral}
         hillshadeVisible={layerVisibility.hillshade}
         buildings3dVisible={layerVisibility.buildings3d}
+        activePollutant={activePollutant}
+        onPollutantChange={setActivePollutant}
       />
 
       {/* Map column — flex-1, fills space between sidebar and dashboard panel */}
@@ -165,11 +173,14 @@ function HomeInner() {
             layerVisibility={layerVisibility}
             transitData={transit.data}
             airQualityData={airQuality.data}
+            airQualityGridData={airQualityGrid.data}
+            activePollutant={activePollutant}
             transitLastFetched={transit.lastFetched}
             airQualityLastFetched={airQuality.lastFetched}
             waterData={water.data}
             waterLastFetched={water.lastFetched}
             historicalTimestamp={historicalTimestamp}
+            town={town}
             trafficVisible={layerVisibility.traffic}
             autobahnVisible={layerVisibility.autobahn}
             energyVisible={layerVisibility.energy}

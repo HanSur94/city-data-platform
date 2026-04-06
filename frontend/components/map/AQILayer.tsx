@@ -33,6 +33,20 @@ const aqiHeatmapLayer: HeatmapLayerSpecification = {
   },
 };
 
+// Pulsing glow ring behind sensor dots — larger, translucent for pulse effect (REQ-AIR-04)
+const aqiPulseRingLayer: CircleLayerSpecification = {
+  id: 'aqi-pulse-ring',
+  type: 'circle',
+  source: 'air-quality',
+  layout: { visibility: 'visible' },
+  paint: {
+    'circle-radius': ['interpolate', ['linear'], ['zoom'], 10, 12, 14, 20],
+    'circle-color': ['get', 'aqi_color'],
+    'circle-opacity': 0.3,
+    'circle-blur': 0.6,
+  },
+};
+
 // Colored EEA EAQI circles — color driven by aqi_color property from backend
 const aqiColorLayer: CircleLayerSpecification = {
   id: 'aqi-circles',
@@ -43,8 +57,9 @@ const aqiColorLayer: CircleLayerSpecification = {
     'circle-radius': 8,
     'circle-color': ['get', 'aqi_color'],
     'circle-opacity': 0.85,
-    'circle-stroke-width': 1,
+    'circle-stroke-width': 2,
     'circle-stroke-color': '#ffffff',
+    'circle-blur': 0.4,
   },
 };
 
@@ -66,6 +81,7 @@ export default function AQILayer({ data, visible }: AQILayerProps) {
   return (
     <Source id="air-quality" type="geojson" data={data}>
       <Layer {...aqiHeatmapLayer} layout={{ ...aqiHeatmapLayer.layout, visibility: vis }} />
+      <Layer {...aqiPulseRingLayer} layout={{ ...aqiPulseRingLayer.layout, visibility: vis }} />
       <Layer {...aqiColorLayer} layout={{ ...aqiColorLayer.layout, visibility: vis }} />
       <Layer {...aqiPointLayer} layout={{ ...aqiPointLayer.layout, visibility: vis }} />
     </Source>

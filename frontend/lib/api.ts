@@ -13,6 +13,14 @@ export async function fetchLayer(domain: string, town = 'aalen', at?: Date | nul
   return res.json() as Promise<LayerResponse>
 }
 
+export async function fetchGridLayer(domain: string, featureType: string, town = 'aalen', at?: Date | null): Promise<LayerResponse> {
+  const params = new URLSearchParams({ town, feature_type: featureType })
+  if (at) params.set('at', at.toISOString())
+  const res = await fetch(`${API_BASE}/api/layers/${encodeURIComponent(domain)}?${params}`)
+  if (!res.ok) throw new Error(`Grid layer fetch failed: ${res.status}`)
+  return res.json() as Promise<LayerResponse>
+}
+
 export async function fetchKpi(town: string): Promise<KPIResponse> {
   const res = await fetch(`${API_BASE}/api/kpi?town=${encodeURIComponent(town)}`)
   if (!res.ok) throw new Error(`KPI fetch failed: ${res.status}`)
