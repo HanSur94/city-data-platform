@@ -121,7 +121,10 @@ Implement all missing features from the AalenPulse requirements document to reac
   - [ ] Buildings with solar show glow/badge in 3D view
   - [ ] EV charger pins show real-time availability status
   - [ ] Click popup shows connector types, operator, live status
-- **Status:** Not Started
+- **Plans:** 2 plans
+  - [ ] 16-01-PLAN.md -- SolarProductionConnector + EvChargingConnector backend with tests and scheduler registration
+  - [ ] 16-02-PLAN.md -- SolarGlowLayer, EvChargingLiveLayer frontend components, popups, sidebar wiring
+- **Status:** Planning Complete
 
 ### Phase 17: Static Data Layers Expansion
 - **Goal:** Add remaining static data layers: heat demand, Fernwaerme coverage, cycling infrastructure, demographics grid, road noise map
