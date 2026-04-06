@@ -37,6 +37,12 @@ interface MapViewProps {
   waterLastFetched?: Date | null;
   /** When non-null, map is showing a historical snapshot at this timestamp */
   historicalTimestamp?: Date | null;
+  /** Traffic layer visibility — BASt count stations */
+  trafficVisible?: boolean;
+  /** Autobahn incidents layer visibility */
+  autobahnVisible?: boolean;
+  /** Energy installations layer visibility — MaStR renewable plants */
+  energyVisible?: boolean;
 }
 
 interface PopupInfo {
@@ -55,6 +61,9 @@ export default function MapView({
   waterData,
   waterLastFetched,
   historicalTimestamp,
+  trafficVisible = false,
+  autobahnVisible = false,
+  energyVisible = false,
 }: MapViewProps) {
   // Register PMTiles protocol BEFORE Map renders (Pitfall 3)
   // Register at module scope to avoid double-registration on re-renders

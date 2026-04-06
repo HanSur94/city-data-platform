@@ -1,7 +1,8 @@
 'use client'
-import { Wind, Thermometer, Bus } from 'lucide-react'
+import { Wind, Thermometer, Bus, Car, Zap } from 'lucide-react'
 import { Separator } from '@/components/ui/separator'
 import { KpiTile } from './KpiTile'
+import { EnergyMixBar } from './EnergyMixBar'
 import { useKpi } from '@/hooks/useKpi'
 
 interface DashboardPanelProps {
@@ -37,6 +38,20 @@ export function DashboardPanel({
     ? String(data.transit.route_count)
     : null
 
+  const trafficValue = data?.traffic != null
+    ? `${data.traffic.active_roadworks} aktiv`
+    : null
+
+  const trafficUnit = data?.traffic?.flow_status === 'elevated'
+    ? 'Oe Auslastung: erhoeht'
+    : data?.traffic?.flow_status === 'congested'
+    ? 'Oe Auslastung: hoch'
+    : 'Oe Auslastung: normal'
+
+  const energyValue = data?.energy?.renewable_percent != null
+    ? `${Math.round(data.energy.renewable_percent)}%`
+    : null
+
   return (
     <aside className="hidden lg:flex w-[320px] flex-shrink-0 flex-col h-screen overflow-y-auto border-l bg-background">
       {/* Panel header */}
@@ -49,7 +64,7 @@ export function DashboardPanel({
         <h3 className="text-[16px] font-semibold mb-3">Kennzahlen</h3>
         {loading && !data ? (
           <div className="space-y-2">
-            {[1, 2, 3].map(i => (
+            {[1, 2, 3, 4, 5].map(i => (
               <div key={i} className="h-[80px] rounded-lg bg-secondary animate-pulse" />
             ))}
           </div>
@@ -85,6 +100,30 @@ export function DashboardPanel({
               active={activeDomain === 'transit'}
               onSelect={handleSelect}
             />
+            <KpiTile
+              domain="traffic"
+              icon={<Car className="h-4 w-4" />}
+              label="Verkehr"
+              value={trafficValue}
+              unit={trafficUnit}
+              trend={null}
+              active={activeDomain === 'traffic'}
+              onSelect={handleSelect}
+            />
+            <KpiTile
+              domain="energy"
+              icon={<Zap className="h-4 w-4" />}
+              label="Energie"
+              value={energyValue}
+              unit="Erneuerbare am Netz"
+              trend={null}
+              active={activeDomain === 'energy'}
+              onSelect={handleSelect}
+            >
+              {data?.energy?.generation_mix && Object.keys(data.energy.generation_mix).length > 0 && (
+                <EnergyMixBar mix={data.energy.generation_mix} compact />
+              )}
+            </KpiTile>
           </div>
         )}
       </div>

@@ -32,6 +32,10 @@ function HomeInner() {
     floodHazard: state.layers.includes('flood'),
     railNoise: state.layers.includes('rail_noise'),
     lubwEnv: state.layers.includes('lubw_env'),
+    traffic: state.layers.includes('traffic'),
+    autobahn: state.layers.includes('autobahn'),
+    mobiData: state.layers.includes('mobidata'),
+    energy: state.layers.includes('energy'),
   }
 
   const LAYER_KEYS: Record<string, string> = {
@@ -41,6 +45,10 @@ function HomeInner() {
     floodHazard: 'flood',
     railNoise: 'rail_noise',
     lubwEnv: 'lubw_env',
+    traffic: 'traffic',
+    autobahn: 'autobahn',
+    mobiData: 'mobidata',
+    energy: 'energy',
   }
 
   const toggleLayer = (layer: keyof typeof LAYER_KEYS) => {
@@ -56,11 +64,13 @@ function HomeInner() {
   const transit = useLayerData('transit', town, historicalTimestamp)
   const airQuality = useLayerData('air_quality', town, historicalTimestamp)
   const water = useLayerData('water', town, historicalTimestamp)
+  const traffic = useLayerData('traffic', town, historicalTimestamp)
+  const energy = useLayerData('energy', town)
 
   // Default chart data (shown when no activeDomain detail panel open)
   const aqiTs = useTimeseries('air_quality', dateRange.from, dateRange.to, town)
 
-  const activeDomain = state.domain  // 'aqi' | 'weather' | 'transit' | null
+  const activeDomain = state.domain  // 'aqi' | 'weather' | 'transit' | 'traffic' | 'energy' | null
 
   const handleDomainSelect = (domain: string | null) => {
     update({ domain: domain ?? null })
@@ -106,6 +116,8 @@ function HomeInner() {
         onToggleLayer={toggleLayer}
         transitError={transit.error}
         airQualityError={airQuality.error}
+        trafficError={traffic.error}
+        energyError={energy.error}
       />
 
       {/* Map column — flex-1, fills space between sidebar and dashboard panel */}
@@ -121,6 +133,9 @@ function HomeInner() {
             waterData={water.data}
             waterLastFetched={water.lastFetched}
             historicalTimestamp={historicalTimestamp}
+            trafficVisible={layerVisibility.traffic}
+            autobahnVisible={layerVisibility.autobahn}
+            energyVisible={layerVisibility.energy}
           />
         </div>
 
