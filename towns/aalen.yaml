@@ -130,9 +130,10 @@ connectors:
     config:
       attribution: "OpenStreetMap contributors, ODbL"
 
+  # Replaced by EvChargingConnector (Phase 16) for live status
   - connector_class: LadesaeulenConnector
     poll_interval_seconds: 86400
-    enabled: true
+    enabled: false
     config:
       kreis_filter: "Ostalbkreis"
       attribution: "Bundesnetzagentur, CC BY 4.0"
@@ -196,3 +197,20 @@ connectors:
     config:
       ags: "08136"
       attribution: "Bundesagentur fuer Arbeit, DL-DE-Zero-2.0"
+
+  # --- Phase 16: Solar production + EV charging live status ---
+
+  - connector_class: SolarProductionConnector
+    poll_interval_seconds: 900
+    enabled: true
+    config:
+      lat: 48.8400
+      lon: 10.0900
+      attribution: "Computed from MaStR capacity x Bright Sky irradiance"
+
+  - connector_class: EvChargingConnector
+    poll_interval_seconds: 300
+    enabled: true
+    config:
+      radius_km: 15
+      attribution: "MobiData BW OCPDB, open data"

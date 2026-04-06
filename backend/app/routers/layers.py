@@ -6,6 +6,7 @@ Uses PostGIS ST_AsGeoJSON() for geometry serialization.
 """
 import json
 from datetime import datetime, timezone
+from typing import Any
 from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import text
@@ -30,6 +31,7 @@ async def get_layer(
     town: str = Query(...),
     at: datetime | None = Query(None, description="Historical snapshot timestamp (ISO 8601). If omitted, returns latest readings."),
     feature_type: str | None = Query(None, description="Filter by feature_type (e.g. 'air_grid' for grid cells, 'sensor' for sensor points)."),
+    source: str | None = Query(None, description="Filter infrastructure features by source (e.g. 'ocpdb' for live OCPDB chargers)."),
     db: AsyncSession = Depends(get_db),
     current_town: Town = Depends(get_current_town),
 ) -> dict:
@@ -208,9 +210,15 @@ async def get_layer(
                     last_updated = row_ts
 
     elif domain in ("community", "infrastructure"):
-        # Community POIs and infrastructure (roadworks) — features only, no time-series join
+        # Community POIs and infrastructure (roadworks, EV chargers) — features only
+        # Optional source filter for infrastructure: e.g. source=ocpdb for live OCPDB chargers
+        source_filter = ""
+        params: dict[str, Any] = {"town_id": current_town.id, "domain": domain}
+        if domain == "infrastructure" and source:
+            source_filter = "AND f.properties->>'source' = :source"
+            params["source"] = source
         result = await db.execute(
-            text("""
+            text(f"""
                 SELECT
                     f.id::text                     AS id,
                     ST_AsGeoJSON(f.geometry)::text AS geometry,
@@ -221,8 +229,9 @@ async def get_layer(
                 LEFT JOIN sources s ON s.town_id = f.town_id AND s.domain = f.domain
                 WHERE f.town_id = :town_id
                   AND f.domain   = :domain
+                  {source_filter}
             """),
-            {"town_id": current_town.id, "domain": domain},
+            params,
         )
         rows = result.mappings().all()
 

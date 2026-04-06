@@ -152,6 +152,18 @@ CONNECTOR_ATTRIBUTION: dict[str, dict[str, str]] = {
         "license_url": "https://www.govdata.de/dl-de/by-2-0",
         "url": "https://sensor.community/",
     },
+    "SolarProductionConnector": {
+        "source_name": "Computed from MaStR + Bright Sky",
+        "license": "Datenlizenz Deutschland / CC BY 4.0",
+        "license_url": "https://www.govdata.de/dl-de/by-2-0",
+        "url": "https://brightsky.dev/",
+    },
+    "EvChargingConnector": {
+        "source_name": "MobiData BW OCPDB",
+        "license": "Open data",
+        "license_url": "https://www.mobidata-bw.de/",
+        "url": "https://ocpdb.2hat.de/",
+    },
 }
 
 # Valid domain values for path parameter validation
