@@ -1,4 +1,6 @@
 'use client';
+import { DataSourceSection } from '@/components/map/DataSourceSection';
+import { LAYER_METADATA } from '@/lib/layer-metadata';
 import type { Feature } from 'geojson';
 
 interface RoadworksPopupProps {
@@ -19,7 +21,12 @@ export default function RoadworksPopup({ feature }: RoadworksPopupProps) {
       {(note ?? description) && (
         <p className="text-[13px]">{note ?? description}</p>
       )}
-      <p className="text-[11px] text-muted-foreground">Baustelle (OSM)</p>
+      <DataSourceSection
+        sourceName={LAYER_METADATA['roadworks'].sourceName}
+        sourceUrl={LAYER_METADATA['roadworks'].sourceUrl}
+        dataType={LAYER_METADATA['roadworks'].dataType}
+        timestamp={(props.fetched_at as string) ?? null}
+      />
     </div>
   );
 }

@@ -1,4 +1,6 @@
 'use client';
+import { DataSourceSection } from '@/components/map/DataSourceSection';
+import { LAYER_METADATA } from '@/lib/layer-metadata';
 import type { Feature } from 'geojson';
 
 interface HeatDemandPopupProps {
@@ -47,6 +49,12 @@ export default function HeatDemandPopup({ feature }: HeatDemandPopupProps) {
       {source && (
         <p className="text-[11px] text-muted-foreground mt-1">Quelle: {source}</p>
       )}
+      <DataSourceSection
+        sourceName={LAYER_METADATA['heatDemand'].sourceName}
+        sourceUrl={LAYER_METADATA['heatDemand'].sourceUrl}
+        dataType={LAYER_METADATA['heatDemand'].dataType}
+        timestamp={null}
+      />
     </div>
   );
 }

@@ -1,4 +1,6 @@
 'use client';
+import { DataSourceSection } from '@/components/map/DataSourceSection';
+import { LAYER_METADATA } from '@/lib/layer-metadata';
 import type { Feature } from 'geojson';
 
 interface CommunityPopupProps {
@@ -21,6 +23,15 @@ export default function CommunityPopup({ feature }: CommunityPopupProps) {
 
   const categoryLabel = category ? (CATEGORY_LABELS[category] ?? category) : undefined;
 
+  const CATEGORY_LAYER_MAP: Record<string, string> = {
+    school: 'schools',
+    healthcare: 'healthcare',
+    park: 'parks',
+    waste: 'waste',
+  };
+  const layerKey = category ? (CATEGORY_LAYER_MAP[category] ?? 'schools') : 'schools';
+  const meta = LAYER_METADATA[layerKey];
+
   return (
     <div className="text-sm space-y-1 max-w-[220px]">
       <p className="text-[16px] font-semibold leading-tight">
@@ -34,6 +45,14 @@ export default function CommunityPopup({ feature }: CommunityPopupProps) {
       )}
       {categoryLabel && (
         <p className="text-[11px] text-muted-foreground">{categoryLabel}</p>
+      )}
+      {meta && (
+        <DataSourceSection
+          sourceName={meta.sourceName}
+          sourceUrl={meta.sourceUrl}
+          dataType={meta.dataType}
+          timestamp={(props.fetched_at as string) ?? null}
+        />
       )}
     </div>
   );

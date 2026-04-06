@@ -5,6 +5,8 @@ import { KpiTile } from './KpiTile'
 import { EnergyMixBar } from './EnergyMixBar'
 import { KocherGaugeWidget } from './KocherGaugeWidget'
 import { useKpi } from '@/hooks/useKpi'
+import { LAYER_METADATA } from '@/lib/layer-metadata'
+import { useLayerMetadata } from '@/hooks/useLayerMetadata'
 
 interface DashboardPanelProps {
   town?: string
@@ -21,6 +23,15 @@ export function DashboardPanel({
   children,
 }: DashboardPanelProps) {
   const { data, loading } = useKpi(town)
+  const { layerMeta } = useLayerMetadata(town)
+
+  function formatTime(ts: string | null | undefined): string {
+    if (!ts) return '--:--';
+    try {
+      const d = new Date(ts);
+      return d.toLocaleTimeString('de-DE', { hour: '2-digit', minute: '2-digit' });
+    } catch { return '--:--'; }
+  }
 
   const handleSelect = (domain: string) => {
     // Toggle: clicking active domain closes the detail panel
@@ -81,33 +92,42 @@ export function DashboardPanel({
           <div className="space-y-2">
             <KpiTile
               domain="aqi"
-              label="Luftqualität"
+              label="Luftqualitaet"
               icon={<Wind size={16} />}
               value={aqiValue}
               unit="AQI"
               trend={null}
               active={activeDomain === 'aqi'}
               onSelect={handleSelect}
+              sourceAbbrev={LAYER_METADATA['airQuality']?.sourceAbbrev}
+              sourceTimestamp={formatTime(layerMeta['airQuality']?.lastUpdated)}
+              dataType={LAYER_METADATA['airQuality']?.dataType}
             />
             <KpiTile
               domain="weather"
               label="Wetter"
               icon={<Thermometer size={16} />}
               value={tempValue}
-              unit="°C"
+              unit="deg. C"
               trend={null}
               active={activeDomain === 'weather'}
               onSelect={handleSelect}
+              sourceAbbrev={LAYER_METADATA['water']?.sourceAbbrev}
+              sourceTimestamp={formatTime(layerMeta['water']?.lastUpdated)}
+              dataType={LAYER_METADATA['water']?.dataType}
             />
             <KpiTile
               domain="transit"
-              label="ÖPNV"
+              label="OEPNV"
               icon={<Bus size={16} />}
               value={routeValue}
               unit="Linien"
               trend={null}
               active={activeDomain === 'transit'}
               onSelect={handleSelect}
+              sourceAbbrev={LAYER_METADATA['transit']?.sourceAbbrev}
+              sourceTimestamp={formatTime(layerMeta['transit']?.lastUpdated)}
+              dataType={LAYER_METADATA['transit']?.dataType}
             />
             <KpiTile
               domain="traffic"
@@ -118,6 +138,9 @@ export function DashboardPanel({
               trend={null}
               active={activeDomain === 'traffic'}
               onSelect={handleSelect}
+              sourceAbbrev={LAYER_METADATA['traffic']?.sourceAbbrev}
+              sourceTimestamp={formatTime(layerMeta['traffic']?.lastUpdated)}
+              dataType={LAYER_METADATA['traffic']?.dataType}
             />
             <KpiTile
               domain="energy"
@@ -128,6 +151,9 @@ export function DashboardPanel({
               trend={null}
               active={activeDomain === 'energy'}
               onSelect={handleSelect}
+              sourceAbbrev={LAYER_METADATA['energy']?.sourceAbbrev}
+              sourceTimestamp={formatTime(layerMeta['energy']?.lastUpdated)}
+              dataType={LAYER_METADATA['energy']?.dataType}
             >
               {data?.energy?.generation_mix && Object.keys(data.energy.generation_mix).length > 0 && (
                 <EnergyMixBar mix={data.energy.generation_mix} compact />
@@ -143,6 +169,9 @@ export function DashboardPanel({
                 trend={null}
                 active={activeDomain === 'demographics'}
                 onSelect={handleSelect}
+                sourceAbbrev={LAYER_METADATA['demographics']?.sourceAbbrev}
+                sourceTimestamp={formatTime(layerMeta['demographics']?.lastUpdated)}
+                dataType={LAYER_METADATA['demographics']?.dataType}
               />
             )}
             {data?.water != null && (
@@ -158,6 +187,9 @@ export function DashboardPanel({
                 trend={null}
                 active={activeDomain === 'parking'}
                 onSelect={handleSelect}
+                sourceAbbrev={LAYER_METADATA['parking']?.sourceAbbrev}
+                sourceTimestamp={formatTime(layerMeta['parking']?.lastUpdated)}
+                dataType={LAYER_METADATA['parking']?.dataType}
               />
             )}
           </div>

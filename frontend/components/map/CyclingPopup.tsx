@@ -1,4 +1,6 @@
 'use client';
+import { DataSourceSection } from '@/components/map/DataSourceSection';
+import { LAYER_METADATA } from '@/lib/layer-metadata';
 import type { Feature } from 'geojson';
 
 interface CyclingPopupProps {
@@ -38,7 +40,12 @@ export default function CyclingPopup({ feature }: CyclingPopupProps) {
           {INFRA_TYPE_LABELS[infraType] ?? infraType}
         </p>
       )}
-      <p className="text-[11px] text-muted-foreground mt-1">Quelle: OpenStreetMap (cycling)</p>
+      <DataSourceSection
+        sourceName={LAYER_METADATA['cycling'].sourceName}
+        sourceUrl={LAYER_METADATA['cycling'].sourceUrl}
+        dataType={LAYER_METADATA['cycling'].dataType}
+        timestamp={null}
+      />
     </div>
   );
 }

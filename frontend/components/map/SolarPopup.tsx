@@ -1,4 +1,6 @@
 'use client';
+import { DataSourceSection } from '@/components/map/DataSourceSection';
+import { LAYER_METADATA } from '@/lib/layer-metadata';
 import type { Feature } from 'geojson';
 
 interface SolarPopupProps {
@@ -36,6 +38,12 @@ export default function SolarPopup({ feature }: SolarPopupProps) {
       {commissioningYear != null && (
         <p className="text-[14px]">Inbetriebnahme: {commissioningYear}</p>
       )}
+      <DataSourceSection
+        sourceName={LAYER_METADATA['solarGlow'].sourceName}
+        sourceUrl={LAYER_METADATA['solarGlow'].sourceUrl}
+        dataType={LAYER_METADATA['solarGlow'].dataType}
+        timestamp={(props.fetched_at as string) ?? null}
+      />
     </div>
   );
 }

@@ -1,4 +1,6 @@
 'use client';
+import { DataSourceSection } from '@/components/map/DataSourceSection';
+import { LAYER_METADATA } from '@/lib/layer-metadata';
 import type { Feature } from 'geojson';
 
 interface ParkingPopupProps {
@@ -33,6 +35,12 @@ export default function ParkingPopup({ feature }: ParkingPopupProps) {
           Auslastung: {Math.round(occupancyPct)}%
         </p>
       )}
+      <DataSourceSection
+        sourceName={LAYER_METADATA['parking'].sourceName}
+        sourceUrl={LAYER_METADATA['parking'].sourceUrl}
+        dataType={LAYER_METADATA['parking'].dataType}
+        timestamp={(props.fetched_at as string) ?? null}
+      />
     </div>
   );
 }

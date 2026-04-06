@@ -1,4 +1,6 @@
 'use client';
+import { DataSourceSection } from '@/components/map/DataSourceSection';
+import { LAYER_METADATA } from '@/lib/layer-metadata';
 import type { Feature } from 'geojson';
 
 interface EvChargingPopupProps {
@@ -67,6 +69,12 @@ export default function EvChargingPopup({ feature }: EvChargingPopupProps) {
             <span className="font-medium">Ladepunkte:</span> {evseCount}
           </p>
         )}
+        <DataSourceSection
+          sourceName={LAYER_METADATA['evCharging'].sourceName}
+          sourceUrl={LAYER_METADATA['evCharging'].sourceUrl}
+          dataType={LAYER_METADATA['evCharging'].dataType}
+          timestamp={(props.fetched_at as string) ?? null}
+        />
       </div>
     );
   }
@@ -117,6 +125,12 @@ export default function EvChargingPopup({ feature }: EvChargingPopupProps) {
           <span className="font-medium">Ladepunkte:</span> {chargingPoints}
         </p>
       )}
+      <DataSourceSection
+        sourceName={LAYER_METADATA['evCharging'].sourceName}
+        sourceUrl={LAYER_METADATA['evCharging'].sourceUrl}
+        dataType={LAYER_METADATA['evCharging'].dataType}
+        timestamp={(props.fetched_at as string) ?? null}
+      />
     </div>
   );
 }

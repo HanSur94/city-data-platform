@@ -1,4 +1,6 @@
 'use client';
+import { DataSourceSection } from '@/components/map/DataSourceSection';
+import { LAYER_METADATA } from '@/lib/layer-metadata';
 import type { Feature } from 'geojson';
 
 interface EnergyPopupProps {
@@ -45,6 +47,12 @@ export default function EnergyPopup({ feature }: EnergyPopupProps) {
       {municipality && (
         <p className="text-[12px] text-muted-foreground">{municipality}</p>
       )}
+      <DataSourceSection
+        sourceName={LAYER_METADATA['energy'].sourceName}
+        sourceUrl={LAYER_METADATA['energy'].sourceUrl}
+        dataType={LAYER_METADATA['energy'].dataType}
+        timestamp={(props.fetched_at as string) ?? null}
+      />
     </div>
   );
 }

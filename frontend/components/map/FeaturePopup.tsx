@@ -1,6 +1,8 @@
 'use client';
 import { Badge } from '@/components/ui/badge';
 import FreshnessIndicator from './FreshnessIndicator';
+import { DataSourceSection } from '@/components/map/DataSourceSection';
+import { LAYER_METADATA } from '@/lib/layer-metadata';
 import { AQI_TIER_COLORS } from '@/lib/map-styles';
 import type { Feature } from 'geojson';
 
@@ -36,6 +38,12 @@ export default function FeaturePopup({ feature, lastFetched }: FeaturePopupProps
           <p className="text-[12px] text-muted-foreground">Kein aktueller Messwert</p>
         )}
         <FreshnessIndicator lastFetched={lastFetched} />
+        <DataSourceSection
+          sourceName={LAYER_METADATA['airQuality'].sourceName}
+          sourceUrl={LAYER_METADATA['airQuality'].sourceUrl}
+          dataType={LAYER_METADATA['airQuality'].dataType}
+          timestamp={(props.measured_at as string) ?? (props.fetched_at as string) ?? null}
+        />
       </div>
     );
   }
@@ -51,10 +59,16 @@ export default function FeaturePopup({ feature, lastFetched }: FeaturePopupProps
       )}
       {props.route_type_color && (
         <p className="text-[12px] text-muted-foreground capitalize">
-          Typ: {props.route_type_color === 'bus' ? 'Bus' : props.route_type_color === 'train' ? 'Bahn' : 'Straßenbahn'}
+          Typ: {props.route_type_color === 'bus' ? 'Bus' : props.route_type_color === 'train' ? 'Bahn' : 'Strassenbahn'}
         </p>
       )}
       <FreshnessIndicator lastFetched={lastFetched} />
+      <DataSourceSection
+        sourceName={LAYER_METADATA['transit'].sourceName}
+        sourceUrl={LAYER_METADATA['transit'].sourceUrl}
+        dataType={LAYER_METADATA['transit'].dataType}
+        timestamp={(props.fetched_at as string) ?? null}
+      />
     </div>
   );
 }

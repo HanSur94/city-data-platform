@@ -1,6 +1,8 @@
 'use client';
 import { Badge } from '@/components/ui/badge';
 import FreshnessIndicator from './FreshnessIndicator';
+import { DataSourceSection } from '@/components/map/DataSourceSection';
+import { LAYER_METADATA } from '@/lib/layer-metadata';
 import type { Feature } from 'geojson';
 
 interface TrafficPopupProps {
@@ -55,6 +57,12 @@ export default function TrafficPopup({ feature, lastFetched }: TrafficPopupProps
         </Badge>
       )}
       <FreshnessIndicator lastFetched={lastFetched} />
+      <DataSourceSection
+        sourceName={LAYER_METADATA['traffic'].sourceName}
+        sourceUrl={LAYER_METADATA['traffic'].sourceUrl}
+        dataType={LAYER_METADATA['traffic'].dataType}
+        timestamp={(props.measured_at as string) ?? (props.fetched_at as string) ?? null}
+      />
     </div>
   );
 }

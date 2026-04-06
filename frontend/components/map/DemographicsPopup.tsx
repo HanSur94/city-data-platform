@@ -1,4 +1,6 @@
 'use client';
+import { DataSourceSection } from '@/components/map/DataSourceSection';
+import { LAYER_METADATA } from '@/lib/layer-metadata';
 import type { Feature } from 'geojson';
 
 interface DemographicsPopupProps {
@@ -32,7 +34,12 @@ export default function DemographicsPopup({ feature }: DemographicsPopupProps) {
       {ags && (
         <p className="text-[13px] text-muted-foreground">AGS: {ags}</p>
       )}
-      <p className="text-[12px] text-muted-foreground">Quelle: {source}</p>
+      <DataSourceSection
+        sourceName={LAYER_METADATA['demographics'].sourceName}
+        sourceUrl={LAYER_METADATA['demographics'].sourceUrl}
+        dataType={LAYER_METADATA['demographics'].dataType}
+        timestamp={null}
+      />
     </div>
   );
 }

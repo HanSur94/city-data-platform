@@ -1,5 +1,7 @@
 'use client';
 import { Badge } from '@/components/ui/badge';
+import { DataSourceSection } from '@/components/map/DataSourceSection';
+import { LAYER_METADATA } from '@/lib/layer-metadata';
 import type { Feature } from 'geojson';
 
 interface KocherPopupProps {
@@ -71,6 +73,12 @@ export default function KocherPopup({ feature }: KocherPopupProps) {
       {attribution && (
         <p className="text-[11px] text-muted-foreground mt-1">{attribution}</p>
       )}
+      <DataSourceSection
+        sourceName={LAYER_METADATA['kocher'].sourceName}
+        sourceUrl={LAYER_METADATA['kocher'].sourceUrl}
+        dataType={LAYER_METADATA['kocher'].dataType}
+        timestamp={(props.measured_at as string) ?? (props.fetched_at as string) ?? null}
+      />
     </div>
   );
 }

@@ -1,5 +1,7 @@
 'use client';
 import { Badge } from '@/components/ui/badge';
+import { DataSourceSection } from '@/components/map/DataSourceSection';
+import { LAYER_METADATA } from '@/lib/layer-metadata';
 import type { Feature } from 'geojson';
 
 interface TrafficFlowPopupProps {
@@ -54,6 +56,12 @@ export default function TrafficFlowPopup({ feature }: TrafficFlowPopupProps) {
           {CONGESTION_LABELS[congestionLevel] ?? congestionLevel}
         </Badge>
       )}
+      <DataSourceSection
+        sourceName={LAYER_METADATA['trafficFlow'].sourceName}
+        sourceUrl={LAYER_METADATA['trafficFlow'].sourceUrl}
+        dataType={LAYER_METADATA['trafficFlow'].dataType}
+        timestamp={(props.measured_at as string) ?? (props.fetched_at as string) ?? null}
+      />
     </div>
   );
 }

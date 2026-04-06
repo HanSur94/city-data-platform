@@ -1,6 +1,8 @@
 'use client'
 import { Card, CardContent } from '@/components/ui/card'
 import { TrendArrow } from './TrendArrow'
+import { DataTypeBadge } from '@/components/ui/DataTypeBadge'
+import type { DataType } from '@/lib/layer-metadata'
 
 interface KpiTileProps {
   domain: string         // 'aqi' | 'weather' | 'transit'
@@ -12,9 +14,12 @@ interface KpiTileProps {
   active: boolean        // is this tile's domain the activeDomain?
   onSelect: (domain: string) => void
   children?: React.ReactNode  // optional slot for compact sub-charts (e.g. EnergyMixBar)
+  sourceAbbrev?: string
+  sourceTimestamp?: string
+  dataType?: DataType
 }
 
-export function KpiTile({ domain, label, icon, value, unit, trend, active, onSelect, children }: KpiTileProps) {
+export function KpiTile({ domain, label, icon, value, unit, trend, active, onSelect, children, sourceAbbrev, sourceTimestamp, dataType }: KpiTileProps) {
   return (
     <Card
       role="button"
@@ -40,6 +45,19 @@ export function KpiTile({ domain, label, icon, value, unit, trend, active, onSel
           <span className="text-[14px] text-muted-foreground">Kein aktueller Messwert</span>
         )}
         {children && <div className="mt-1">{children}</div>}
+        {sourceAbbrev && (
+          <div className="flex items-center gap-1.5 text-[11px] text-muted-foreground mt-1">
+            <span>{sourceAbbrev}</span>
+            <span>&middot;</span>
+            <span>{sourceTimestamp ?? '--:--'}</span>
+            {dataType && (
+              <>
+                <span>&middot;</span>
+                <DataTypeBadge dataType={dataType} size="sm" />
+              </>
+            )}
+          </div>
+        )}
       </CardContent>
     </Card>
   )

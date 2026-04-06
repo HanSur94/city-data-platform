@@ -1,5 +1,7 @@
 'use client';
 import { Badge } from '@/components/ui/badge';
+import { DataSourceSection } from '@/components/map/DataSourceSection';
+import { LAYER_METADATA } from '@/lib/layer-metadata';
 import type { Feature } from 'geojson';
 
 interface AutobahnPopupProps {
@@ -38,6 +40,12 @@ export default function AutobahnPopup({ feature }: AutobahnPopupProps) {
           {isBlocked ? 'Gesperrt' : 'Offen'}
         </Badge>
       )}
+      <DataSourceSection
+        sourceName={LAYER_METADATA['autobahn'].sourceName}
+        sourceUrl={LAYER_METADATA['autobahn'].sourceUrl}
+        dataType={LAYER_METADATA['autobahn'].dataType}
+        timestamp={(props.fetched_at as string) ?? null}
+      />
     </div>
   );
 }
