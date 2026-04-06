@@ -64,7 +64,10 @@ Implement all missing features from the AalenPulse requirements document to reac
   - [ ] Parking features created with correct locations
   - [ ] Map shows parking pins with occupancy coloring
   - [ ] Dashboard shows parking KPI tile
-- **Status:** Not Started
+- **Plans:** 2 plans
+  - [ ] 13-01-PLAN.md -- ParkingConnector scraper, KPI endpoint, TypeScript types
+  - [ ] 13-02-PLAN.md -- ParkingLayer map component, popup, sidebar toggle, dashboard KPI tile
+- **Status:** Planning Complete
 
 ### Phase 14: Bus Position Interpolation
 - **Goal:** Implement interpolated bus positions from GTFS schedule + GTFS-RT delays, showing moving bus icons on routes
