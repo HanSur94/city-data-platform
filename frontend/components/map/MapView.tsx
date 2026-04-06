@@ -104,7 +104,7 @@ export default function MapView({
   baseLayer = 'osm',
   cadastralVisible = false,
   hillshadeVisible = false,
-  buildings3dVisible = false,
+  buildings3dVisible = true,
 }: MapViewProps) {
   // Register PMTiles protocol BEFORE Map renders (Pitfall 3)
   // Register at module scope to avoid double-registration on re-renders
@@ -142,6 +142,7 @@ export default function MapView({
           longitude: 10.0918,
           latitude: 48.8374,
           zoom: 13,
+          pitch: 45,
         }}
         minZoom={8}
         maxZoom={18}
