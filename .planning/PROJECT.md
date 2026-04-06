@@ -10,14 +10,10 @@ Citizens and city officials can see all publicly available city data in one plac
 
 ## Requirements
 
-### Validated
+### Validated (v1.0 — shipped 2026-04-06)
 
-(None yet — ship to validate)
-
-### Active
-
-- [ ] Interactive map showing the city with data layers (traffic, utilities, environment, transport)
-- [ ] Dashboard with KPIs, charts, and summary tiles alongside the map
+- [x] Interactive map showing the city with data layers (10 domains: transit, air quality, weather, water, traffic, energy, community, infrastructure, geospatial, demographics)
+- [x] Dashboard with KPIs, charts, and summary tiles alongside the map
 - [ ] Traffic data ingestion and visualization (road flow, congestion)
 - [ ] Water supply data ingestion and visualization
 - [ ] Electricity grid data ingestion and visualization
@@ -88,4 +84,14 @@ This document evolves at phase transitions and milestone boundaries.
 4. Update Context with current state
 
 ---
-*Last updated: 2026-04-05 after initialization*
+## Current State
+
+**v1.0 shipped 2026-04-06.** All 53 requirements implemented across 10 phases (46 plans). Platform includes:
+- 20+ backend connectors ingesting from BASt, Autobahn API, SMARD, MaStR, Overpass, BNetzA, PEGELONLINE, DWD, UBA, Sensor.community, LUBW, Wegweiser Kommune, Statistik BW, Zensus, Bundesagentur
+- Interactive MapLibre map with 15+ toggleable layers, 3D buildings, base layer switching (OSM/orthophoto/satellite)
+- Dashboard with KPI tiles, time-series charts, domain detail panels, date range picker, time slider
+- Admin health dashboard at /admin with green/yellow/red connector staleness monitoring
+- Multi-town architecture validated (Aalen + Ulm stub)
+- Attribution footer compliant with Datenlizenz Deutschland
+
+*Last updated: 2026-04-06 after v1.0 milestone completion*
