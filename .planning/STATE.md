@@ -3,14 +3,14 @@ gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
 status: executing
-stopped_at: "Completed 07-04-PLAN.md (API routers: traffic+energy layers, KPI, timeseries + aalen.yaml connectors)"
-last_updated: "2026-04-06T17:55:21.528Z"
+stopped_at: Completed 07-06-PLAN.md (EnergyMixBar, Sidebar Verkehr/Energie groups, DomainDetailPanel traffic+energy, DashboardPanel KPI tiles, page.tsx wiring)
+last_updated: "2026-04-06T18:03:16.293Z"
 last_activity: 2026-04-06
 progress:
   total_phases: 10
   completed_phases: 4
   total_plans: 35
-  completed_plans: 30
+  completed_plans: 31
   percent: 0
 ---
 
@@ -26,7 +26,7 @@ See: .planning/PROJECT.md (updated 2026-04-05)
 ## Current Position
 
 Phase: 07 (traffic-energy-connectors) — EXECUTING
-Plan: 3 of 7
+Plan: 4 of 7
 Status: Ready to execute
 Last activity: 2026-04-06
 
@@ -65,6 +65,7 @@ Progress: [░░░░░░░░░░] 0%
 | Phase 06-weather-environment P04 | 230 | 2 tasks | 6 files |
 | Phase 07-traffic-energy-connectors P03 | 3 | 2 tasks | 7 files |
 | Phase 07 P04 | 8 | 2 tasks | 4 files |
+| Phase 07-traffic-energy-connectors P06 | 6 | 2 tasks | 9 files |
 
 ## Accumulated Context
 
@@ -104,6 +105,9 @@ Recent decisions affecting current work:
 - [Phase 07-traffic-energy-connectors]: open-mastr download cached for 24h via SQLite mtime check to avoid repeated bulk downloads; MastrConnector.normalize() returns empty list (features-only connector)
 - [Phase 07]: Energy layer (MaStR installations) uses features-only query — no LATERAL join needed as MaStR data is static with no per-installation time-series in energy_readings
 - [Phase 07]: kpi.py: _to_float()/_to_datetime() helpers added for graceful degradation when DB returns non-typed values; KPI Pydantic construction wrapped per-domain in try/except
+- [Phase 07]: KpiTile extended with optional children prop to support embedded compact sub-charts without a new component
+- [Phase 07]: MapView extended with optional trafficVisible/autobahnVisible/energyVisible props defaulting to false for future traffic/energy layer rendering
+- [Phase 07]: EnergyMixBar uses Recharts BarChart + ResponsiveContainer directly to avoid tooltip formatter type incompatibility in shadcn ChartContainer with multi-series stacked format
 
 ### Pending Todos
 
@@ -118,6 +122,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-04-06T17:55:21.525Z
-Stopped at: Completed 07-04-PLAN.md (API routers: traffic+energy layers, KPI, timeseries + aalen.yaml connectors)
+Last session: 2026-04-06T18:03:16.289Z
+Stopped at: Completed 07-06-PLAN.md (EnergyMixBar, Sidebar Verkehr/Energie groups, DomainDetailPanel traffic+energy, DashboardPanel KPI tiles, page.tsx wiring)
 Resume file: None
