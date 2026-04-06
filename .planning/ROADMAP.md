@@ -28,7 +28,10 @@ Implement all missing features from the AalenPulse requirements document to reac
   - [ ] Road segments render with congestion-based color gradient on map
   - [ ] Traffic readings stored in TimescaleDB
   - [ ] Dashboard traffic KPI updated with flow status
-- **Status:** Not Started
+- **Plans:** 2 plans
+  - [ ] 11-01-PLAN.md -- TomTom connector with adaptive polling and road segment storage
+  - [ ] 11-02-PLAN.md -- Frontend TrafficFlowLayer with sidebar toggle and popup
+- **Status:** Planning Complete
 
 ### Phase 12: Kocher Water Level — LHP Integration
 - **Goal:** Add Kocher river water level monitoring via LHP API with dashboard gauge widget and river visualization
