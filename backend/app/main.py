@@ -13,7 +13,7 @@ from fastapi import FastAPI
 from app.config import load_town, Town
 from app.dependencies import set_current_town, get_current_town
 from app.scheduler import scheduler, setup_scheduler
-from app.routers import layers, timeseries, kpi, connectors, admin
+from app.routers import layers, timeseries, kpi, connectors, admin, metadata
 
 
 @asynccontextmanager
@@ -52,6 +52,7 @@ app.include_router(timeseries.router, prefix="/api")
 app.include_router(kpi.router, prefix="/api")
 app.include_router(connectors.router, prefix="/api")
 app.include_router(admin.router, prefix="/api")
+app.include_router(metadata.router, prefix="/api")
 
 
 @app.get("/health")
