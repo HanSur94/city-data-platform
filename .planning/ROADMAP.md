@@ -83,7 +83,10 @@ Implement all missing features from the AalenPulse requirements document to reac
   - [ ] Frontend shows moving bus icons along routes
   - [ ] Bus icons colored by delay status
   - [ ] Popup shows trip details on click
-- **Status:** Not Started
+- **Plans:** 2 plans
+  - [ ] 14-01-PLAN.md -- BusInterpolationConnector with shape-walking algorithm and scheduler registration
+  - [ ] 14-02-PLAN.md -- BusPositionLayer, BusRouteLayer, BusPopup frontend components and wiring
+- **Status:** Planning Complete
 
 ### Phase 15: Air Quality Heatmap — IDW Interpolation
 - **Goal:** Create continuous air quality surface across Aalen using IDW spatial interpolation from sensor points
