@@ -1,6 +1,7 @@
 import type { LayerResponse } from '@/types/geojson'
 import type { KPIResponse } from '@/types/kpi'
 import type { TimeseriesResponse } from '@/types/timeseries'
+import type { AdminHealthResponse } from '@/types/admin'
 
 const API_BASE = process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:8000'
 
@@ -16,6 +17,12 @@ export async function fetchKpi(town: string): Promise<KPIResponse> {
   const res = await fetch(`${API_BASE}/api/kpi?town=${encodeURIComponent(town)}`)
   if (!res.ok) throw new Error(`KPI fetch failed: ${res.status}`)
   return res.json() as Promise<KPIResponse>
+}
+
+export async function fetchAdminHealth(town: string): Promise<AdminHealthResponse> {
+  const res = await fetch(`${API_BASE}/api/admin/health?town=${encodeURIComponent(town)}`)
+  if (!res.ok) throw new Error(`Admin health fetch failed: ${res.status}`)
+  return res.json() as Promise<AdminHealthResponse>
 }
 
 export async function fetchTimeseries(
