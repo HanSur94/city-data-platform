@@ -127,3 +127,35 @@ connectors:
     config:
       wms_url: ""
       attribution: "LUBW Baden-Wuerttemberg"
+
+  # --- Demographics connectors (DEMO-01 through DEMO-04) ---
+  # Daily refresh — demographic data changes slowly.
+
+  - connector_class: WegweiserKommuneConnector
+    poll_interval_seconds: 86400
+    enabled: true
+    config:
+      ags: "08136088"
+      attribution: "Wegweiser Kommune (Bertelsmann Stiftung), CC0"
+
+  - connector_class: StatistikBWConnector
+    poll_interval_seconds: 86400
+    enabled: true
+    config:
+      ags: "08136088"
+      attribution: "Statistisches Landesamt Baden-Wuerttemberg, DL-DE-BY-2.0"
+
+  - connector_class: ZensusConnector
+    poll_interval_seconds: 86400
+    enabled: true
+    config:
+      ags: "08136088"
+      wms_url: "https://atlas.zensus2022.de/geoserver/ows"
+      attribution: "Statistisches Bundesamt, Zensus 2022, DL-DE-BY-2.0"
+
+  - connector_class: BundesagenturConnector
+    poll_interval_seconds: 86400
+    enabled: true
+    config:
+      ags: "08136"
+      attribution: "Bundesagentur fuer Arbeit, DL-DE-Zero-2.0"

@@ -41,7 +41,7 @@ class Observation:
     `feature_id` must reference an existing row in the `features` table.
     """
     feature_id: str
-    domain: str       # "air_quality", "transit", "water", "energy", "weather", "traffic"
+    domain: str       # "air_quality", "transit", "water", "energy", "weather", "traffic", "demographics"
     values: dict      # domain-specific key-value pairs (e.g. {"pm10": 12.5})
     timestamp: datetime | None = field(default=None)
     source_id: str | None = field(default=None)
@@ -227,6 +227,21 @@ class BaseConnector(ABC):
                             "feature_id": obs.feature_id,
                             "value_kw": obs.values.get("value_kw"),
                             "source_type": obs.values.get("source_type"),
+                        },
+                    )
+                elif obs.domain == "demographics":
+                    import json as _json
+                    await session.execute(
+                        text(
+                            "INSERT INTO demographics_readings "
+                            "(time, feature_id, values) "
+                            "VALUES (:time, :feature_id, CAST(:values AS jsonb)) "
+                            "ON CONFLICT DO NOTHING"
+                        ),
+                        {
+                            "time": ts,
+                            "feature_id": obs.feature_id,
+                            "values": _json.dumps(obs.values),
                         },
                     )
             await session.commit()
