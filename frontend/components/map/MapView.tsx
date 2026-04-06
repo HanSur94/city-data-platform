@@ -2,6 +2,7 @@
 import { useEffect, useRef, useState } from 'react';
 import Map from 'react-map-gl/maplibre';
 import { Popup } from 'react-map-gl/maplibre';
+import type { MapRef } from 'react-map-gl/maplibre';
 import { Protocol } from 'pmtiles';
 import maplibregl from 'maplibre-gl';
 import { format } from 'date-fns';
@@ -17,6 +18,7 @@ import EnergyLayer from './EnergyLayer';
 import CommunityLayer from './CommunityLayer';
 import InfrastructureLayer from './InfrastructureLayer';
 import GeospatialOverlayLayer from './GeospatialOverlayLayer';
+import BuildingsLayer from './BuildingsLayer';
 import FeaturePopup from './FeaturePopup';
 import TrafficPopup from './TrafficPopup';
 import AutobahnPopup from './AutobahnPopup';
@@ -68,6 +70,7 @@ interface MapViewProps {
   baseLayer?: BaseLayer;
   cadastralVisible?: boolean;
   hillshadeVisible?: boolean;
+  buildings3dVisible?: boolean;
 }
 
 interface PopupInfo {
@@ -101,10 +104,12 @@ export default function MapView({
   baseLayer = 'osm',
   cadastralVisible = false,
   hillshadeVisible = false,
+  buildings3dVisible = false,
 }: MapViewProps) {
   // Register PMTiles protocol BEFORE Map renders (Pitfall 3)
   // Register at module scope to avoid double-registration on re-renders
   const protocolRef = useRef<Protocol | null>(null);
+  const mapRef = useRef<MapRef | null>(null);
   useEffect(() => {
     if (protocolRef.current) return;
     const protocol = new Protocol();
@@ -116,6 +121,15 @@ export default function MapView({
     };
   }, []);
 
+  // Auto-tilt map when 3D buildings are toggled
+  useEffect(() => {
+    if (buildings3dVisible) {
+      mapRef.current?.easeTo({ pitch: 45, duration: 500 });
+    } else {
+      mapRef.current?.easeTo({ pitch: 0, duration: 500 });
+    }
+  }, [buildings3dVisible]);
+
   const [popupInfo, setPopupInfo] = useState<PopupInfo | null>(null);
 
   const mapStyle = getMapStyle(baseLayer, PMTILES_URL);
@@ -123,6 +137,7 @@ export default function MapView({
   return (
     <div className="relative w-full h-full">
       <Map
+        ref={mapRef}
         initialViewState={{
           longitude: 10.0918,
           latitude: 48.8374,
@@ -218,6 +233,7 @@ export default function MapView({
           cadastralVisible={cadastralVisible}
           hillshadeVisible={hillshadeVisible}
         />
+        <BuildingsLayer visible={buildings3dVisible} />
         {popupInfo && (
           <Popup
             longitude={popupInfo.longitude}

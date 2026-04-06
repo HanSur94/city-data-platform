@@ -30,7 +30,7 @@ interface SidebarProps {
     roadworks?: boolean;
     solarPotential?: boolean;
   };
-  onToggleLayer: (layer: 'transit' | 'airQuality' | 'water' | 'floodHazard' | 'railNoise' | 'lubwEnv' | 'traffic' | 'autobahn' | 'mobiData' | 'energy' | 'schools' | 'healthcare' | 'parks' | 'waste' | 'evCharging' | 'roadworks' | 'solarPotential' | 'cadastral' | 'hillshade') => void;
+  onToggleLayer: (layer: 'transit' | 'airQuality' | 'water' | 'floodHazard' | 'railNoise' | 'lubwEnv' | 'traffic' | 'autobahn' | 'mobiData' | 'energy' | 'schools' | 'healthcare' | 'parks' | 'waste' | 'evCharging' | 'roadworks' | 'solarPotential' | 'cadastral' | 'hillshade' | 'buildings3d') => void;
   transitError?: boolean;
   airQualityError?: boolean;
   trafficError?: boolean;
@@ -39,9 +39,10 @@ interface SidebarProps {
   onBaseLayerChange: (base: 'osm' | 'orthophoto' | 'satellite') => void;
   cadastralVisible?: boolean;
   hillshadeVisible?: boolean;
+  buildings3dVisible?: boolean;
 }
 
-export default function Sidebar({ layerVisibility, onToggleLayer, transitError, airQualityError, trafficError, energyError, baseLayer, onBaseLayerChange, cadastralVisible, hillshadeVisible }: SidebarProps) {
+export default function Sidebar({ layerVisibility, onToggleLayer, transitError, airQualityError, trafficError, energyError, baseLayer, onBaseLayerChange, cadastralVisible, hillshadeVisible, buildings3dVisible }: SidebarProps) {
   const [drawerOpen, setDrawerOpen] = useState(false);
 
   const content = (
@@ -226,6 +227,13 @@ export default function Sidebar({ layerVisibility, onToggleLayer, transitError, 
           label="Gelaenderelief (DGM)"
           checked={hillshadeVisible ?? false}
           onCheckedChange={() => onToggleLayer('hillshade')}
+        />
+        <p className="px-4 text-[11px] text-muted-foreground mb-1 mt-3">3D</p>
+        <LayerToggle
+          id="buildings3d-toggle"
+          label="3D Gebaeude (LoD1)"
+          checked={buildings3dVisible ?? false}
+          onCheckedChange={() => onToggleLayer('buildings3d')}
         />
       </div>
 

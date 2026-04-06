@@ -45,6 +45,7 @@ function HomeInner() {
     solarPotential: state.layers.includes('solar_potential'),
     cadastral: state.layers.includes('cadastral'),
     hillshade: state.layers.includes('hillshade'),
+    buildings3d: state.layers.includes('buildings3d'),
   }
 
   const LAYER_KEYS: Record<string, string> = {
@@ -67,6 +68,7 @@ function HomeInner() {
     solarPotential: 'solar_potential',
     cadastral: 'cadastral',
     hillshade: 'hillshade',
+    buildings3d: 'buildings3d',
   }
 
   const toggleLayer = (layer: keyof typeof LAYER_KEYS) => {
@@ -144,6 +146,7 @@ function HomeInner() {
         onBaseLayerChange={handleBaseLayerChange}
         cadastralVisible={layerVisibility.cadastral}
         hillshadeVisible={layerVisibility.hillshade}
+        buildings3dVisible={layerVisibility.buildings3d}
       />
 
       {/* Map column — flex-1, fills space between sidebar and dashboard panel */}
@@ -172,6 +175,7 @@ function HomeInner() {
             baseLayer={state.baseLayer}
             cadastralVisible={layerVisibility.cadastral}
             hillshadeVisible={layerVisibility.hillshade}
+            buildings3dVisible={layerVisibility.buildings3d}
           />
         </div>
 
