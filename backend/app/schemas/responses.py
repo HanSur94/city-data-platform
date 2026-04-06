@@ -94,3 +94,24 @@ class ConnectorHealthResponse(BaseModel):
     town: str
     connectors: list[ConnectorHealthItem]
     message: str | None = None
+
+
+class AdminHealthItem(BaseModel):
+    id: str
+    domain: str
+    connector_class: str
+    last_successful_fetch: datetime | None
+    validation_error_count: int
+    status: str         # "green", "yellow", "red", "never_fetched"
+    staleness_seconds: float | None  # seconds since last fetch
+    poll_interval: int | None        # configured poll interval
+    threshold_yellow: int
+    threshold_red: int
+
+
+class AdminHealthResponse(BaseModel):
+    town: str
+    town_display_name: str
+    checked_at: datetime
+    summary: dict[str, int]  # {"green": N, "yellow": N, "red": N, "never_fetched": N}
+    connectors: list[AdminHealthItem]

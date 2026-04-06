@@ -220,8 +220,8 @@ Plans:
 **Plans**: 4 plans
 
 Plans:
-- [x] 10-01-PLAN.md — Backend: demographics connectors (Wegweiser Kommune, Statistik BW, Zensus, Bundesagentur) + migration + KPI endpoint
-- [ ] 10-02-PLAN.md — Backend: admin health router with per-domain staleness thresholds + Ulm stub town config
+- [ ] 10-01-PLAN.md — Backend: demographics connectors (Wegweiser Kommune, Statistik BW, Zensus, Bundesagentur) + migration + KPI endpoint
+- [x] 10-02-PLAN.md — Backend: admin health router with per-domain staleness thresholds + Ulm stub town config
 - [ ] 10-03-PLAN.md — Frontend: admin health page, demographics KPI tile + detail panel, attribution footer
 - [ ] 10-04-PLAN.md — Human verify: all 5 Phase 10 requirements
 

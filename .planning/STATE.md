@@ -3,8 +3,8 @@ gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
 status: verifying
-stopped_at: Completed 10-01-PLAN.md — Phase 10 demographics connectors
-last_updated: "2026-04-06T19:46:23.427Z"
+stopped_at: Completed 10-02-PLAN.md — Admin health API and Ulm multi-town validation
+last_updated: "2026-04-06T19:43:04.090Z"
 last_activity: 2026-04-06
 progress:
   total_phases: 10
@@ -73,7 +73,7 @@ Progress: [░░░░░░░░░░] 0%
 | Phase 09-geospatial-enrichment P01 | 15 | 2 tasks | 5 files |
 | Phase 09-geospatial-enrichment P02 | 8 | 2 tasks | 4 files |
 | Phase 09-geospatial-enrichment P03 | 1 | 1 tasks | 0 files |
-| Phase 10-operator-multi-town P01 | 319 | 2 tasks | 12 files |
+| Phase 10-operator-multi-town P02 | 524165 | 2 tasks | 6 files |
 
 ## Accumulated Context
 
@@ -127,9 +127,8 @@ Recent decisions affecting current work:
 - [Phase 09-geospatial-enrichment]: Base layer uses separate 'base' URL param (not layers CSV) — cleaner URL structure
 - [Phase 09-geospatial-enrichment]: BuildingsLayer uses opacity toggle consistent with WmsOverlayLayer pattern; mapRef added to Map for pitch auto-tilt on 3D toggle
 - [Phase 09-geospatial-enrichment]: Auto-approved human-verify checkpoint in autonomous mode — TypeScript check clean (0 errors)
-- [Phase 10-operator-multi-town]: Demographics readings use JSONB values column — flexible schema for 4 connectors with different indicator sets
-- [Phase 10-operator-multi-town]: BundesagenturConnector uses 5-digit AGS (Landkreis 08136) not 8-digit (Gemeinde 08136088) for district-level employment data
-- [Phase 10-operator-multi-town]: ZensusConnector always emits observation with wms_url even if REST data unavailable — ensures frontend WMS overlay is registered
+- [Phase 10-operator-multi-town]: Per-domain staleness thresholds vary by 200x (water 30m/1h vs demographics 7d/30d) — classify_staleness() uses STALENESS_THRESHOLDS dict with domain-specific timings
+- [Phase 10-operator-multi-town]: Multi-town via YAML-only: towns/ulm.yaml loads without any code changes, proving zero-code-change architecture for any German town
 
 ### Pending Todos
 
@@ -144,6 +143,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-04-06T19:46:23.423Z
-Stopped at: Completed 10-01-PLAN.md — Phase 10 demographics connectors
+Last session: 2026-04-06T19:43:04.086Z
+Stopped at: Completed 10-02-PLAN.md — Admin health API and Ulm multi-town validation
 Resume file: None
