@@ -38,6 +38,12 @@ Decimal phases appear between their surrounding integers in numeric order.
 **Plans**: 4 plans
 
 Plans:
+- [ ] 08-01-PLAN.md — Backend: domain registration + Overpass community/roadworks connectors + tests
+- [ ] 08-02-PLAN.md — Backend: LadesaeulenConnector + SolarPotentialConnector + aalen.yaml wiring
+- [ ] 08-03-PLAN.md — Frontend: community/infrastructure layers, popups, sidebar, MapView, page.tsx
+- [ ] 08-04-PLAN.md — Human verify: all 8 Phase 8 requirements
+
+Plans:
 - [x] 01-01-PLAN.md — Docker Compose + project structure + Alembic scaffold + test conftest
 - [x] 01-02-PLAN.md — Alembic migration: hypertables, PostGIS spatial table, retention policies
 - [x] 01-03-PLAN.md — Town YAML config + Pydantic loader + BaseConnector + StubConnector
@@ -175,7 +181,13 @@ Plans:
   3. Active construction sites and roadworks with detour information appear on the map from a live data source
   4. EV charging stations from the Bundesnetzagentur Ladesäulenregister render on the map with plug type and power rating in the popup
   5. Roof solar potential map (where BW/municipal data is available) is displayed as a raster overlay; buildings with existing solar installations from MaStR are highlighted distinctly
-**Plans**: TBD
+**Plans**: 4 plans
+
+Plans:
+- [ ] 08-01-PLAN.md — Backend: domain registration + Overpass community/roadworks connectors + tests
+- [ ] 08-02-PLAN.md — Backend: LadesaeulenConnector + SolarPotentialConnector + aalen.yaml wiring
+- [ ] 08-03-PLAN.md — Frontend: community/infrastructure layers, popups, sidebar, MapView, page.tsx
+- [ ] 08-04-PLAN.md — Human verify: all 8 Phase 8 requirements
 **UI hint**: yes
 
 ### Phase 9: Geospatial Enrichment
@@ -216,6 +228,6 @@ Phases execute in numeric order: 1 -> 2 -> 3 -> 4 -> 5 -> 6 -> 7 -> 8 -> 9 -> 10
 | 5. Dashboard | 7/8 | In Progress|  |
 | 6. Weather & Environment Connectors | 4/5 | In Progress|  |
 | 7. Traffic & Energy Connectors | 7/7 | Complete   | 2026-04-06 |
-| 8. Community & Infrastructure Connectors | 0/TBD | Not started | - |
+| 8. Community & Infrastructure Connectors | 0/4 | Not started | - |
 | 9. Geospatial Enrichment | 0/TBD | Not started | - |
 | 10. Operator & Multi-Town | 0/TBD | Not started | - |
