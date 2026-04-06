@@ -56,7 +56,7 @@ Requirements for initial release. Each maps to roadmap phases.
 - [x] **WATR-02**: State waterway monitoring — Kocher and tributaries (HVZ Baden-Württemberg)
 - [ ] **WATR-03**: Flood hazard map overlay (LUBW Hochwassergefahrenkarten — HQ10 to HQextrem via WMS)
 - [ ] **WATR-04**: Noise map overlay (LUBW road noise + EBA railway noise via WMS)
-- [ ] **WATR-05**: LUBW environmental data layers (water quality, nature conservation via WFS)
+- [x] **WATR-05**: LUBW environmental data layers (water quality, nature conservation via WFS)
 
 ### Demographics & Statistics
 
@@ -183,7 +183,7 @@ Which phases cover which requirements. Updated during roadmap creation.
 | WATR-02 | Phase 6 | Complete |
 | WATR-03 | Phase 6 | Pending |
 | WATR-04 | Phase 6 | Pending |
-| WATR-05 | Phase 6 | Pending |
+| WATR-05 | Phase 6 | Complete |
 | TRAF-03 | Phase 7 | Pending |
 | TRAF-04 | Phase 7 | Pending |
 | TRAF-05 | Phase 7 | Pending |

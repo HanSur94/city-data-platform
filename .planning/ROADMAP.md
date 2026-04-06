@@ -135,9 +135,9 @@ Plans:
 **Plans**: 5 plans
 
 Plans:
-- [ ] 06-01-PLAN.md — Backend: base.py water branch + PegelonlineConnector + scheduler + aalen.yaml (WATR-01, WATR-02)
+- [x] 06-01-PLAN.md — Backend: base.py water branch + PegelonlineConnector + scheduler + aalen.yaml (WATR-01, WATR-02)
 - [x] 06-02-PLAN.md — AQI: EEA EAQI 6-tier scale in geojson.py + layers.py + AQILayer.tsx + AQILegend (WAIR-05)
-- [ ] 06-03-PLAN.md — Backend: LubwWfsConnector fetching nature/water protection zones to features table (WATR-05)
+- [x] 06-03-PLAN.md — Backend: LubwWfsConnector fetching nature/water protection zones to features table (WATR-05)
 - [ ] 06-04-PLAN.md — Frontend: WaterLayer + WmsOverlayLayer + Sidebar toggles + MapView + page.tsx wiring (WATR-01/03/04/05)
 - [ ] 06-05-PLAN.md — 90-day AQI backfill script + human verify checkpoint (WAIR-06)
 **UI hint**: yes
@@ -205,7 +205,7 @@ Phases execute in numeric order: 1 → 2 → 3 → 4 → 5 → 6 → 7 → 8 →
 | 3. Query API | 2/3 | In Progress|  |
 | 4. Map Frontend | 2/3 | In Progress|  |
 | 5. Dashboard | 7/8 | In Progress|  |
-| 6. Weather & Environment Connectors | 0/5 | Not started | - |
+| 6. Weather & Environment Connectors | 3/5 | In Progress|  |
 | 7. Traffic & Energy Connectors | 0/TBD | Not started | - |
 | 8. Community & Infrastructure Connectors | 0/TBD | Not started | - |
 | 9. Geospatial Enrichment | 0/TBD | Not started | - |

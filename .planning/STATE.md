@@ -3,14 +3,14 @@ gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
 status: executing
-stopped_at: Completed 06-weather-environment/06-02-PLAN.md
-last_updated: "2026-04-06T00:08:18.306Z"
+stopped_at: Completed 06-weather-environment/06-03-PLAN.md
+last_updated: "2026-04-06T00:14:27.459Z"
 last_activity: 2026-04-05
 progress:
   total_phases: 10
   completed_phases: 4
   total_plans: 28
-  completed_plans: 23
+  completed_plans: 25
   percent: 0
 ---
 
@@ -63,6 +63,7 @@ Progress: [░░░░░░░░░░] 0%
 | Phase 05-dashboard P06 | 3 | 2 tasks | 2 files |
 | Phase 05-dashboard P07 | 2 | 1 tasks | 1 files |
 | Phase 06-weather-environment P02 | 209 | 2 tasks | 7 files |
+| Phase 06-weather-environment P03 | 4 | 2 tasks | 6 files |
 
 ## Accumulated Context
 
@@ -96,6 +97,8 @@ Recent decisions affecting current work:
 - [Phase 05-dashboard]: page.tsx: useUrlState is single source of truth — no local useState for layerVisibility, domain, dateRange, or timestamp
 - [Phase 05-dashboard]: Suspense + HomeInner pattern for pages using useSearchParams-based hooks — enforced in page.tsx Plan 07
 - [Phase 06-weather-environment]: EEA EAQI breakpoints are upper-inclusive: pm25 tier boundaries [5,15,25,50,75,inf] mean values > 75 land in tier 5 (extremely_poor), values 51-75 in tier 4 (very_poor) — plan comments had wrong tier numbers
+- [Phase 06-weather-environment]: LubwWfsConnector.fetch() returns full FeatureCollection dicts for clean Pydantic validation in run()
+- [Phase 06-weather-environment]: LUBW WFS polygon features stored as POINT centroids (shapely-based) — full polygon WMS overlay deferred to Plan 04
 
 ### Pending Todos
 
@@ -110,6 +113,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-04-06T00:08:18.302Z
-Stopped at: Completed 06-weather-environment/06-02-PLAN.md
+Last session: 2026-04-06T00:14:27.456Z
+Stopped at: Completed 06-weather-environment/06-03-PLAN.md
 Resume file: None
