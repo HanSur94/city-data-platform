@@ -32,6 +32,9 @@ import RoadworksPopup from './RoadworksPopup';
 import KocherPopup from './KocherPopup';
 import ParkingLayer from './ParkingLayer';
 import ParkingPopup from './ParkingPopup';
+import BusPositionLayer from './BusPositionLayer';
+import BusRouteLayer from './BusRouteLayer';
+import BusPopup from './BusPopup';
 import type { LayerResponse } from '@/types/geojson';
 import type GeoJSON from 'geojson';
 
@@ -76,6 +79,7 @@ interface MapViewProps {
   trafficFlowVisible?: boolean;
   kocherVisible?: boolean;
   parkingVisible?: boolean;
+  busPositionVisible?: boolean;
   baseLayer?: BaseLayer;
   cadastralVisible?: boolean;
   hillshadeVisible?: boolean;
@@ -86,7 +90,7 @@ interface PopupInfo {
   longitude: number;
   latitude: number;
   feature: GeoJSON.Feature;
-  domain: 'transit' | 'airQuality' | 'water' | 'traffic' | 'trafficFlow' | 'autobahn' | 'energy' | 'community' | 'evCharging' | 'roadworks' | 'kocher' | 'parking';
+  domain: 'transit' | 'airQuality' | 'water' | 'traffic' | 'trafficFlow' | 'autobahn' | 'energy' | 'community' | 'evCharging' | 'roadworks' | 'kocher' | 'parking' | 'busPosition';
 }
 
 export default function MapView({
@@ -113,6 +117,7 @@ export default function MapView({
   trafficFlowVisible = false,
   kocherVisible = false,
   parkingVisible = false,
+  busPositionVisible = false,
   baseLayer = 'osm',
   cadastralVisible = false,
   hillshadeVisible = false,
@@ -164,7 +169,7 @@ export default function MapView({
         interactiveLayerIds={[
           'transit-stops', 'aqi-points', 'water-gauges', 'traffic-circles', 'traffic-flow-lines', 'autobahn-markers', 'energy-points', 'kocher-gauge', 'kocher-river-line',
           'community-schools-points', 'community-healthcare-points', 'community-parks-points', 'community-waste-points',
-          'infrastructure-ev-points', 'infrastructure-roadworks-points', 'parking-points',
+          'infrastructure-ev-points', 'infrastructure-roadworks-points', 'parking-points', 'bus-position-points',
         ]}
         onClick={(e) => {
           const feature = e.features?.[0];
@@ -184,6 +189,8 @@ export default function MapView({
             ? 'autobahn'
             : layerId.startsWith('energy')
             ? 'energy'
+            : layerId === 'bus-position-points'
+            ? 'busPosition'
             : layerId === 'parking-points'
             ? 'parking'
             : layerId === 'infrastructure-ev-points'
@@ -254,6 +261,12 @@ export default function MapView({
         {parkingVisible && (
           <ParkingLayer town={town} visible={true} />
         )}
+        {busPositionVisible && (
+          <>
+            <BusRouteLayer town={town} visible={true} />
+            <BusPositionLayer town={town} visible={true} />
+          </>
+        )}
         <GeospatialOverlayLayer
           cadastralVisible={cadastralVisible}
           hillshadeVisible={hillshadeVisible}
@@ -283,6 +296,8 @@ export default function MapView({
               <CommunityPopup feature={popupInfo.feature} />
             ) : popupInfo.domain === 'evCharging' ? (
               <EvChargingPopup feature={popupInfo.feature} />
+            ) : popupInfo.domain === 'busPosition' ? (
+              <BusPopup feature={popupInfo.feature} />
             ) : popupInfo.domain === 'parking' ? (
               <ParkingPopup feature={popupInfo.feature} />
             ) : popupInfo.domain === 'roadworks' ? (

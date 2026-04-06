@@ -32,8 +32,9 @@ interface SidebarProps {
     trafficFlow?: boolean;
     kocher?: boolean;
     parking?: boolean;
+    busPosition?: boolean;
   };
-  onToggleLayer: (layer: 'transit' | 'airQuality' | 'water' | 'floodHazard' | 'railNoise' | 'lubwEnv' | 'traffic' | 'autobahn' | 'mobiData' | 'energy' | 'schools' | 'healthcare' | 'parks' | 'waste' | 'evCharging' | 'roadworks' | 'solarPotential' | 'trafficFlow' | 'cadastral' | 'hillshade' | 'buildings3d' | 'kocher' | 'parking') => void;
+  onToggleLayer: (layer: 'transit' | 'airQuality' | 'water' | 'floodHazard' | 'railNoise' | 'lubwEnv' | 'traffic' | 'autobahn' | 'mobiData' | 'energy' | 'schools' | 'healthcare' | 'parks' | 'waste' | 'evCharging' | 'roadworks' | 'solarPotential' | 'trafficFlow' | 'cadastral' | 'hillshade' | 'buildings3d' | 'kocher' | 'parking' | 'busPosition') => void;
   transitError?: boolean;
   airQualityError?: boolean;
   trafficError?: boolean;
@@ -67,6 +68,12 @@ export default function Sidebar({ layerVisibility, onToggleLayer, transitError, 
           checked={layerVisibility.transit}
           onCheckedChange={() => onToggleLayer('transit')}
           freshnessError={transitError}
+        />
+        <LayerToggle
+          id="bus-position-toggle"
+          label="Bus-Positionen (live)"
+          checked={layerVisibility.busPosition ?? false}
+          onCheckedChange={() => onToggleLayer('busPosition')}
         />
         <LayerToggle
           id="aqi-toggle"
