@@ -3,14 +3,14 @@ gsd_state_version: 1.0
 milestone: v2.0
 milestone_name: — AalenPulse Feature Parity
 status: verifying
-stopped_at: Completed 11-02-PLAN.md (Traffic Flow Frontend Layer)
-last_updated: "2026-04-06T20:56:19.548Z"
+stopped_at: Completed 12-01-PLAN.md (LHP Connector and Water KPI)
+last_updated: "2026-04-06T21:07:42.127Z"
 last_activity: 2026-04-06
 progress:
   total_phases: 8
   completed_phases: 1
-  total_plans: 2
-  completed_plans: 2
+  total_plans: 4
+  completed_plans: 3
   percent: 12
 ---
 
@@ -50,6 +50,7 @@ Progress: [█░░░░░░░░░] 12%
 - Adaptive polling via skip logic: scheduler at 600s, connector skips off-peak if <1800s elapsed
 - congestion_ratio in feature properties, speed_avg_kmh in traffic_readings for schema compat
 - [Phase 11]: Separate source ID traffic-flow to avoid conflict with existing traffic source for BASt circles
+- [Phase 12]: Used asyncio.to_thread for lhpapi since it is synchronous/blocking
 
 ### Pending Todos
 
@@ -63,6 +64,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-04-06T20:53:01.971Z
-Stopped at: Completed 11-02-PLAN.md (Traffic Flow Frontend Layer)
+Last session: 2026-04-06T21:07:42.123Z
+Stopped at: Completed 12-01-PLAN.md (LHP Connector and Water KPI)
 Resume file: None
