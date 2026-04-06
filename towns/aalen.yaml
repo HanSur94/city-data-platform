@@ -76,6 +76,15 @@ connectors:
     config:
       attribution: "BASt (Bundesanstalt fuer Strassenwesen), DL-DE-Zero-2.0"
 
+  - connector_class: LhpConnector
+    poll_interval_seconds: 900
+    enabled: true
+    config:
+      ident: "BW_13490006"
+      lat: 48.8035
+      lon: 10.0972
+      attribution: "Hochwasserportal (LHP), Datenlizenz Deutschland"
+
   - connector_class: TomTomConnector
     poll_interval_seconds: 600
     enabled: true

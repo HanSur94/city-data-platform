@@ -22,6 +22,7 @@ from app.schemas.responses import (
     TrafficKPI,
     EnergyKPI,
     DemographicsKPI,
+    WaterKPI,
 )
 
 router = APIRouter(tags=["kpi"])
@@ -274,6 +275,43 @@ async def get_kpi(
             last_updated=None,
         )
 
+    # --- Water KPI ---
+    water_kpi: WaterKPI | None = None
+    try:
+        water_result = await db.execute(
+            text("""
+                SELECT
+                    last(r.level_cm, r.time) AS level_cm,
+                    last(r.flow_m3s, r.time) AS flow_m3s,
+                    MAX(r.time) AS last_updated,
+                    f.properties
+                FROM water_readings r
+                JOIN features f ON r.feature_id = f.id
+                WHERE f.town_id = :town_id
+                  AND f.source_id LIKE 'lhp:%'
+                  AND r.time > NOW() - INTERVAL '24 hours'
+                GROUP BY f.id
+                LIMIT 1
+            """),
+            {"town_id": current_town.id},
+        )
+        water_row = water_result.mappings().first()
+        if water_row:
+            props = water_row["properties"] if isinstance(water_row["properties"], dict) else {}
+            water_kpi = WaterKPI(
+                level_cm=_to_float(water_row["level_cm"]),
+                flow_m3s=_to_float(water_row["flow_m3s"]),
+                stage=props.get("stage"),
+                trend=props.get("trend"),
+                gauge_name=props.get("station_name"),
+                last_updated=_to_datetime(water_row["last_updated"]),
+            )
+    except Exception:
+        water_kpi = WaterKPI(
+            level_cm=None, flow_m3s=None, stage=None,
+            trend=None, gauge_name=None, last_updated=None,
+        )
+
     # --- Attribution ---
     attributions: list[dict[str, str]] = []
     try:
@@ -308,6 +346,7 @@ async def get_kpi(
         traffic_kpi.last_updated,
         energy_kpi.last_updated,
         demographics_kpi.last_updated if demographics_kpi else None,
+        water_kpi.last_updated if water_kpi else None,
     ]
     last_updated: datetime | None = max(
         filter(None, candidate_times),
@@ -363,6 +402,7 @@ async def get_kpi(
         traffic=traffic_kpi,
         energy=energy_kpi,
         demographics=demographics_kpi,
+        water=water_kpi,
         attribution=attributions,
         last_updated=last_updated,
     )

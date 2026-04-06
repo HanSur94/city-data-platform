@@ -69,6 +69,15 @@ class DemographicsKPI(BaseModel):
     last_updated: datetime | None
 
 
+class WaterKPI(BaseModel):
+    level_cm: float | None
+    flow_m3s: float | None
+    stage: int | None  # 0-4 warning stage
+    trend: str | None  # "rising" | "falling" | "stable"
+    gauge_name: str | None
+    last_updated: datetime | None
+
+
 class KPIResponse(BaseModel):
     town: str
     air_quality: AirQualityKPI
@@ -77,6 +86,7 @@ class KPIResponse(BaseModel):
     traffic: TrafficKPI | None = None
     energy: EnergyKPI | None = None
     demographics: DemographicsKPI | None = None
+    water: WaterKPI | None = None
     attribution: list[dict[str, str]]
     last_updated: datetime | None
 

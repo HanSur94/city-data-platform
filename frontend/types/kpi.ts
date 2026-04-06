@@ -53,6 +53,15 @@ export interface DemographicsKPI {
   last_updated: string | null
 }
 
+export interface WaterKPI {
+  level_cm: number | null
+  flow_m3s: number | null
+  stage: number | null
+  trend: 'rising' | 'falling' | 'stable' | null
+  gauge_name: string | null
+  last_updated: string | null
+}
+
 export interface KPIResponse {
   town: string
   air_quality: AirQualityKPI
@@ -61,6 +70,7 @@ export interface KPIResponse {
   traffic: TrafficKPI | null
   energy: EnergyKPI | null
   demographics: DemographicsKPI | null
+  water: WaterKPI | null
   attribution: Attribution[]
   last_updated: string | null
 }

@@ -46,6 +46,8 @@ _CONNECTOR_MODULES = {
     "SolarPotentialConnector": "app.connectors.solar_potential",
     # Phase 11: TomTom traffic flow
     "TomTomConnector": "app.connectors.tomtom",
+    # Phase 12: LHP water level
+    "LhpConnector": "app.connectors.lhp",
 }
 
 
