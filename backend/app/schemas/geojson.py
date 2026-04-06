@@ -86,11 +86,35 @@ CONNECTOR_ATTRIBUTION: dict[str, dict[str, str]] = {
         "license_url": "https://www.govdata.de/dl-de/zero-2-0",
         "url": "https://www.marktstammdatenregister.de/",
     },
+    "OverpassCommunityConnector": {
+        "source_name": "OpenStreetMap contributors",
+        "license": "ODbL 1.0",
+        "license_url": "https://opendatacommons.org/licenses/odbl/",
+        "url": "https://www.openstreetmap.org/copyright",
+    },
+    "OverpassRoadworksConnector": {
+        "source_name": "OpenStreetMap contributors",
+        "license": "ODbL 1.0",
+        "license_url": "https://opendatacommons.org/licenses/odbl/",
+        "url": "https://www.openstreetmap.org/copyright",
+    },
+    "LadesaeulenConnector": {
+        "source_name": "Bundesnetzagentur",
+        "license": "CC BY 4.0",
+        "license_url": "https://creativecommons.org/licenses/by/4.0/",
+        "url": "https://www.bundesnetzagentur.de",
+    },
+    "SolarPotentialConnector": {
+        "source_name": "LUBW Baden-Wuerttemberg",
+        "license": "UIS-Nutzungsvereinbarung",
+        "license_url": "https://www.lubw.baden-wuerttemberg.de",
+        "url": "https://www.lubw.baden-wuerttemberg.de",
+    },
 }
 
 # Valid domain values for path parameter validation
 VALID_DOMAINS: frozenset[str] = frozenset(
-    {"air_quality", "transit", "weather", "water", "energy", "traffic"}
+    {"air_quality", "transit", "weather", "water", "energy", "traffic", "community", "infrastructure"}
 )
 
 # EEA European Air Quality Index (EAQI) 6-tier per-pollutant thresholds

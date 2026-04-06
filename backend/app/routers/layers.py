@@ -163,6 +163,25 @@ async def get_layer(
         )
         rows = result.mappings().all()
 
+    elif domain in ("community", "infrastructure"):
+        # Community POIs and infrastructure (roadworks) — features only, no time-series join
+        result = await db.execute(
+            text("""
+                SELECT
+                    f.id::text                     AS id,
+                    ST_AsGeoJSON(f.geometry)::text AS geometry,
+                    f.properties,
+                    f.source_id,
+                    s.connector_class
+                FROM features f
+                LEFT JOIN sources s ON s.town_id = f.town_id AND s.domain = f.domain
+                WHERE f.town_id = :town_id
+                  AND f.domain   = :domain
+            """),
+            {"town_id": current_town.id, "domain": domain},
+        )
+        rows = result.mappings().all()
+
     else:
         # Generic: weather, water — plain features, no reading join
         result = await db.execute(
