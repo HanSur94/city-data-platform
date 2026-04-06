@@ -158,7 +158,7 @@ Plans:
 
 Plans:
 - [x] 07-01-PLAN.md — Foundation: migration 003, base.py traffic branch, schemas, VALID_DOMAINS, test stubs
-- [ ] 07-02-PLAN.md — Traffic connectors: BASt + Autobahn + MobiData BW (TRAF-03, TRAF-04, TRAF-05)
+- [x] 07-02-PLAN.md — Traffic connectors: BASt + Autobahn + MobiData BW (TRAF-03, TRAF-04, TRAF-05)
 - [ ] 07-03-PLAN.md — Energy connectors: SMARD + MaStR (ENRG-01, ENRG-02, ENRG-03)
 - [ ] 07-04-PLAN.md — API router extensions + aalen.yaml wiring (all requirements)
 - [ ] 07-05-PLAN.md — Frontend: map layers + popups (TrafficLayer, AutobahnLayer, EnergyLayer)
@@ -215,7 +215,7 @@ Phases execute in numeric order: 1 -> 2 -> 3 -> 4 -> 5 -> 6 -> 7 -> 8 -> 9 -> 10
 | 4. Map Frontend | 2/3 | In Progress|  |
 | 5. Dashboard | 7/8 | In Progress|  |
 | 6. Weather & Environment Connectors | 4/5 | In Progress|  |
-| 7. Traffic & Energy Connectors | 0/7 | Not started | - |
+| 7. Traffic & Energy Connectors | 2/7 | In Progress|  |
 | 8. Community & Infrastructure Connectors | 0/TBD | Not started | - |
 | 9. Geospatial Enrichment | 0/TBD | Not started | - |
 | 10. Operator & Multi-Town | 0/TBD | Not started | - |
