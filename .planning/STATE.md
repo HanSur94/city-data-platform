@@ -3,14 +3,14 @@ gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
 status: executing
-stopped_at: Completed 07-07-PLAN.md — all Phase 7 requirements verified and approved
-last_updated: "2026-04-06T18:12:53.135Z"
+stopped_at: Completed 08-02-PLAN.md — LadesaeulenConnector and SolarPotentialConnector implemented
+last_updated: "2026-04-06T18:54:05.737Z"
 last_activity: 2026-04-06
 progress:
   total_phases: 10
   completed_phases: 5
-  total_plans: 35
-  completed_plans: 33
+  total_plans: 39
+  completed_plans: 34
   percent: 0
 ---
 
@@ -26,7 +26,7 @@ See: .planning/PROJECT.md (updated 2026-04-05)
 ## Current Position
 
 Phase: 07 (traffic-energy-connectors) — EXECUTING
-Plan: 6 of 7
+Plan: 7 of 7
 Status: Ready to execute
 Last activity: 2026-04-06
 
@@ -68,6 +68,7 @@ Progress: [░░░░░░░░░░] 0%
 | Phase 07-traffic-energy-connectors P06 | 6 | 2 tasks | 9 files |
 | Phase 07 P07 | 4 | 1 tasks | 2 files |
 | Phase 07-traffic-energy-connectors P07 | 20 | 2 tasks | 2 files |
+| Phase 08-community-infrastructure-connectors P02 | 222 | 2 tasks | 5 files |
 
 ## Accumulated Context
 
@@ -112,6 +113,9 @@ Recent decisions affecting current work:
 - [Phase 07]: EnergyMixBar uses Recharts BarChart + ResponsiveContainer directly to avoid tooltip formatter type incompatibility in shadcn ChartContainer with multi-series stacked format
 - [Phase 07]: greenlet added as explicit dependency to pyproject.toml — SQLAlchemy async requires it but was previously only transitive
 - [Phase 07]: pytest slow marker convention: NVBW GTFS live-network tests excluded from standard CI run
+- [Phase 08-community-infrastructure-connectors]: _parse_german_float returns None on empty/invalid — not 0.0 — so rows with missing coords are correctly skipped
+- [Phase 08-community-infrastructure-connectors]: SolarPotentialConnector is probe-only with enabled: false in aalen.yaml — INFR-03 deferred until LUBW WMS endpoint confirmed
+- [Phase 08-community-infrastructure-connectors]: INFR-04 covered by Phase 7 MaStrConnector solar_rooftop classification — no additional connector needed
 
 ### Pending Todos
 
@@ -126,6 +130,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-04-06T18:12:53.131Z
-Stopped at: Completed 07-07-PLAN.md — all Phase 7 requirements verified and approved
+Last session: 2026-04-06T18:54:05.734Z
+Stopped at: Completed 08-02-PLAN.md — LadesaeulenConnector and SolarPotentialConnector implemented
 Resume file: None

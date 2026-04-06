@@ -84,9 +84,9 @@ Requirements for initial release. Each maps to roadmap phases.
 ### Infrastructure & Construction
 
 - [ ] **INFR-01**: Active construction sites and roadworks with detour info
-- [ ] **INFR-02**: EV charging stations on map (Bundesnetzagentur Ladesäulenregister)
-- [ ] **INFR-03**: Roof solar potential map (where available from BW/municipal data)
-- [ ] **INFR-04**: Existing solar installations on buildings (from MaStR registry — shows which buildings already have solar)
+- [x] **INFR-02**: EV charging stations on map (Bundesnetzagentur Ladesäulenregister)
+- [x] **INFR-03**: Roof solar potential map (where available from BW/municipal data)
+- [x] **INFR-04**: Existing solar installations on buildings (from MaStR registry — shows which buildings already have solar)
 
 ### Platform & Infrastructure
 
@@ -196,9 +196,9 @@ Which phases cover which requirements. Updated during roadmap creation.
 | COMM-03 | Phase 8 | Pending |
 | COMM-04 | Phase 8 | Pending |
 | INFR-01 | Phase 8 | Pending |
-| INFR-02 | Phase 8 | Pending |
-| INFR-03 | Phase 8 | Pending |
-| INFR-04 | Phase 8 | Pending |
+| INFR-02 | Phase 8 | Complete |
+| INFR-03 | Phase 8 | Complete |
+| INFR-04 | Phase 8 | Complete |
 | GEO-01 | Phase 9 | Pending |
 | GEO-02 | Phase 9 | Pending |
 | GEO-03 | Phase 9 | Pending |

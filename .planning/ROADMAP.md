@@ -39,7 +39,7 @@ Decimal phases appear between their surrounding integers in numeric order.
 
 Plans:
 - [ ] 08-01-PLAN.md — Backend: domain registration + Overpass community/roadworks connectors + tests
-- [ ] 08-02-PLAN.md — Backend: LadesaeulenConnector + SolarPotentialConnector + aalen.yaml wiring
+- [x] 08-02-PLAN.md — Backend: LadesaeulenConnector + SolarPotentialConnector + aalen.yaml wiring
 - [ ] 08-03-PLAN.md — Frontend: community/infrastructure layers, popups, sidebar, MapView, page.tsx
 - [ ] 08-04-PLAN.md — Human verify: all 8 Phase 8 requirements
 
