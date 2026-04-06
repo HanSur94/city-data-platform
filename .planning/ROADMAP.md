@@ -200,8 +200,13 @@ Plans:
   3. The 1m digital elevation model from LGL is available as a hillshade or contour overlay option
   4. LGL aerial orthophotos are available as an optional base layer that replaces the OSM base map when selected
   5. Copernicus Sentinel-2 satellite imagery (10m resolution) is available as an optional base layer
-**Plans**: TBD
+**Plans**: 3 plans
 **UI hint**: yes
+
+Plans:
+- [ ] 09-01-PLAN.md — Base layer switching (OSM/Orthophoto/Satellite) + cadastral and hillshade WMS overlays
+- [ ] 09-02-PLAN.md — 3D building extrusion layer with fill-extrusion and auto-tilt
+- [ ] 09-03-PLAN.md — Human verify: all 5 Phase 9 requirements
 
 ### Phase 10: Operator & Multi-Town
 **Goal**: An operator can monitor connector health, a second town can be onboarded via a single YAML file, and demographic statistics complete the data offering
@@ -229,5 +234,5 @@ Phases execute in numeric order: 1 -> 2 -> 3 -> 4 -> 5 -> 6 -> 7 -> 8 -> 9 -> 10
 | 6. Weather & Environment Connectors | 4/5 | In Progress|  |
 | 7. Traffic & Energy Connectors | 7/7 | Complete   | 2026-04-06 |
 | 8. Community & Infrastructure Connectors | 3/4 | In Progress|  |
-| 9. Geospatial Enrichment | 0/TBD | Not started | - |
+| 9. Geospatial Enrichment | 0/3 | Not started | - |
 | 10. Operator & Multi-Town | 0/TBD | Not started | - |
