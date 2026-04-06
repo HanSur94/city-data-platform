@@ -144,6 +144,13 @@ connectors:
       wms_url: ""
       attribution: "LUBW Baden-Wuerttemberg"
 
+  - connector_class: BusInterpolationConnector
+    poll_interval_seconds: 30
+    enabled: true
+    config:
+      gtfs_url: "https://www.nvbw.de/fileadmin/user_upload/service/open_data/fahrplandaten_mit_liniennetz/bwgesamt.zip"
+      attribution: "NVBW via GTFS schedule interpolation"
+
   - connector_class: ParkingConnector
     poll_interval_seconds: 300
     enabled: true

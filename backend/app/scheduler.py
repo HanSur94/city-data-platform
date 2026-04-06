@@ -50,6 +50,8 @@ _CONNECTOR_MODULES = {
     "LhpConnector": "app.connectors.lhp",
     # Phase 13: Parking occupancy
     "ParkingConnector": "app.connectors.parking",
+    # Phase 14: Bus position interpolation
+    "BusInterpolationConnector": "app.connectors.bus_interpolation",
 }
 
 

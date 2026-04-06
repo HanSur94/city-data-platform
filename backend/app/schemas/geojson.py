@@ -140,6 +140,12 @@ CONNECTOR_ATTRIBUTION: dict[str, dict[str, str]] = {
         "license_url": "https://www.sw-aalen.de",
         "url": "https://www.sw-aalen.de",
     },
+    "BusInterpolationConnector": {
+        "source_name": "NVBW GTFS (interpoliert)",
+        "license": "Datenlizenz Deutschland – Namensnennung – Version 2.0",
+        "license_url": "https://www.govdata.de/dl-de/by-2-0",
+        "url": "https://www.nvbw.de/",
+    },
 }
 
 # Valid domain values for path parameter validation
