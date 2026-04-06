@@ -13,10 +13,15 @@ import WmsOverlayLayer from './WmsOverlayLayer';
 import TrafficLayer from './TrafficLayer';
 import AutobahnLayer from './AutobahnLayer';
 import EnergyLayer from './EnergyLayer';
+import CommunityLayer from './CommunityLayer';
+import InfrastructureLayer from './InfrastructureLayer';
 import FeaturePopup from './FeaturePopup';
 import TrafficPopup from './TrafficPopup';
 import AutobahnPopup from './AutobahnPopup';
 import EnergyPopup from './EnergyPopup';
+import CommunityPopup from './CommunityPopup';
+import EvChargingPopup from './EvChargingPopup';
+import RoadworksPopup from './RoadworksPopup';
 import type { LayerResponse } from '@/types/geojson';
 import type GeoJSON from 'geojson';
 
@@ -51,13 +56,20 @@ interface MapViewProps {
   autobahnVisible?: boolean;
   mobiDataVisible?: boolean;
   energyVisible?: boolean;
+  schoolsVisible?: boolean;
+  healthcareVisible?: boolean;
+  parksVisible?: boolean;
+  wasteVisible?: boolean;
+  evChargingVisible?: boolean;
+  roadworksVisible?: boolean;
+  solarPotentialVisible?: boolean;
 }
 
 interface PopupInfo {
   longitude: number;
   latitude: number;
   feature: GeoJSON.Feature;
-  domain: 'transit' | 'airQuality' | 'water' | 'traffic' | 'autobahn' | 'energy';
+  domain: 'transit' | 'airQuality' | 'water' | 'traffic' | 'autobahn' | 'energy' | 'community' | 'evCharging' | 'roadworks';
 }
 
 export default function MapView({
@@ -74,6 +86,13 @@ export default function MapView({
   autobahnVisible = false,
   mobiDataVisible: _mobiDataVisible,
   energyVisible = false,
+  schoolsVisible = false,
+  healthcareVisible = false,
+  parksVisible = false,
+  wasteVisible = false,
+  evChargingVisible = false,
+  roadworksVisible = false,
+  solarPotentialVisible = false,
 }: MapViewProps) {
   // Register PMTiles protocol BEFORE Map renders (Pitfall 3)
   // Register at module scope to avoid double-registration on re-renders
@@ -106,7 +125,11 @@ export default function MapView({
         style={{ width: '100%', height: '100%' }}
         mapStyle={mapStyle}
         attributionControl={{ compact: false }}
-        interactiveLayerIds={['transit-stops', 'aqi-points', 'water-gauges', 'traffic-circles', 'autobahn-markers', 'energy-points']}
+        interactiveLayerIds={[
+          'transit-stops', 'aqi-points', 'water-gauges', 'traffic-circles', 'autobahn-markers', 'energy-points',
+          'community-schools-points', 'community-healthcare-points', 'community-parks-points', 'community-waste-points',
+          'infrastructure-ev-points', 'infrastructure-roadworks-points',
+        ]}
         onClick={(e) => {
           const feature = e.features?.[0];
           if (!feature || !e.lngLat) return;
@@ -121,6 +144,12 @@ export default function MapView({
             ? 'autobahn'
             : layerId.startsWith('energy')
             ? 'energy'
+            : layerId === 'infrastructure-ev-points'
+            ? 'evCharging'
+            : layerId === 'infrastructure-roadworks-points'
+            ? 'roadworks'
+            : layerId.startsWith('community-')
+            ? 'community'
             : 'transit';
           setPopupInfo({
             longitude: e.lngLat.lng,
@@ -164,6 +193,19 @@ export default function MapView({
         {(energyVisible ?? layerVisibility.energy) && (
           <EnergyLayer town={town} visible={true} />
         )}
+        <CommunityLayer
+          town={town}
+          schoolsVisible={schoolsVisible}
+          healthcareVisible={healthcareVisible}
+          parksVisible={parksVisible}
+          wasteVisible={wasteVisible}
+        />
+        <InfrastructureLayer
+          town={town}
+          evChargingVisible={evChargingVisible}
+          roadworksVisible={roadworksVisible}
+          solarPotentialVisible={solarPotentialVisible}
+        />
         {popupInfo && (
           <Popup
             longitude={popupInfo.longitude}
@@ -179,6 +221,12 @@ export default function MapView({
               <AutobahnPopup feature={popupInfo.feature} />
             ) : popupInfo.domain === 'energy' ? (
               <EnergyPopup feature={popupInfo.feature} />
+            ) : popupInfo.domain === 'community' ? (
+              <CommunityPopup feature={popupInfo.feature} />
+            ) : popupInfo.domain === 'evCharging' ? (
+              <EvChargingPopup feature={popupInfo.feature} />
+            ) : popupInfo.domain === 'roadworks' ? (
+              <RoadworksPopup feature={popupInfo.feature} />
             ) : (
               <FeaturePopup
                 feature={popupInfo.feature}

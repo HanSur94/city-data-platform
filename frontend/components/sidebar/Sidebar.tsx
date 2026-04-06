@@ -22,8 +22,15 @@ interface SidebarProps {
     autobahn: boolean;
     mobiData: boolean;
     energy: boolean;
+    schools?: boolean;
+    healthcare?: boolean;
+    parks?: boolean;
+    waste?: boolean;
+    evCharging?: boolean;
+    roadworks?: boolean;
+    solarPotential?: boolean;
   };
-  onToggleLayer: (layer: 'transit' | 'airQuality' | 'water' | 'floodHazard' | 'railNoise' | 'lubwEnv' | 'traffic' | 'autobahn' | 'mobiData' | 'energy') => void;
+  onToggleLayer: (layer: 'transit' | 'airQuality' | 'water' | 'floodHazard' | 'railNoise' | 'lubwEnv' | 'traffic' | 'autobahn' | 'mobiData' | 'energy' | 'schools' | 'healthcare' | 'parks' | 'waste' | 'evCharging' | 'roadworks' | 'solarPotential') => void;
   transitError?: boolean;
   airQualityError?: boolean;
   trafficError?: boolean;
@@ -123,6 +130,62 @@ export default function Sidebar({ layerVisibility, onToggleLayer, transitError, 
           checked={layerVisibility.energy}
           onCheckedChange={() => onToggleLayer('energy')}
           freshnessError={energyError}
+        />
+      </div>
+
+      <Separator className="mt-6" />
+
+      {/* Gemeinwesen group */}
+      <div className="pt-2">
+        <p className="px-4 text-[12px] font-normal text-muted-foreground uppercase tracking-wide mb-2 mt-6">Gemeinwesen</p>
+        <LayerToggle
+          id="schools-toggle"
+          label="Schulen & Kitas"
+          checked={layerVisibility.schools ?? false}
+          onCheckedChange={() => onToggleLayer('schools')}
+        />
+        <LayerToggle
+          id="healthcare-toggle"
+          label="Gesundheit"
+          checked={layerVisibility.healthcare ?? false}
+          onCheckedChange={() => onToggleLayer('healthcare')}
+        />
+        <LayerToggle
+          id="parks-toggle"
+          label="Parks & Spielplaetze"
+          checked={layerVisibility.parks ?? false}
+          onCheckedChange={() => onToggleLayer('parks')}
+        />
+        <LayerToggle
+          id="waste-toggle"
+          label="Wertstoffhoefe"
+          checked={layerVisibility.waste ?? false}
+          onCheckedChange={() => onToggleLayer('waste')}
+        />
+      </div>
+
+      <Separator className="mt-6" />
+
+      {/* Infrastruktur group */}
+      <div className="pt-2">
+        <p className="px-4 text-[12px] font-normal text-muted-foreground uppercase tracking-wide mb-2 mt-6">Infrastruktur</p>
+        <LayerToggle
+          id="roadworks-toggle"
+          label="Baustellen (OSM)"
+          checked={layerVisibility.roadworks ?? false}
+          onCheckedChange={() => onToggleLayer('roadworks')}
+        />
+        <LayerToggle
+          id="ev-toggle"
+          label="E-Ladesaeulen (BNetzA)"
+          checked={layerVisibility.evCharging ?? false}
+          onCheckedChange={() => onToggleLayer('evCharging')}
+        />
+        <LayerToggle
+          id="solar-toggle"
+          label="Solarpotenzial Daecher"
+          checked={layerVisibility.solarPotential ?? false}
+          onCheckedChange={() => onToggleLayer('solarPotential')}
         />
       </div>
 

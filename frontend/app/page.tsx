@@ -36,6 +36,13 @@ function HomeInner() {
     autobahn: state.layers.includes('autobahn'),
     mobiData: state.layers.includes('mobidata'),
     energy: state.layers.includes('energy'),
+    schools: state.layers.includes('schools'),
+    healthcare: state.layers.includes('healthcare'),
+    parks: state.layers.includes('parks'),
+    waste: state.layers.includes('waste'),
+    evCharging: state.layers.includes('ev_charging'),
+    roadworks: state.layers.includes('roadworks'),
+    solarPotential: state.layers.includes('solar_potential'),
   }
 
   const LAYER_KEYS: Record<string, string> = {
@@ -49,6 +56,13 @@ function HomeInner() {
     autobahn: 'autobahn',
     mobiData: 'mobidata',
     energy: 'energy',
+    schools: 'schools',
+    healthcare: 'healthcare',
+    parks: 'parks',
+    waste: 'waste',
+    evCharging: 'ev_charging',
+    roadworks: 'roadworks',
+    solarPotential: 'solar_potential',
   }
 
   const toggleLayer = (layer: keyof typeof LAYER_KEYS) => {
@@ -136,6 +150,13 @@ function HomeInner() {
             trafficVisible={layerVisibility.traffic}
             autobahnVisible={layerVisibility.autobahn}
             energyVisible={layerVisibility.energy}
+            schoolsVisible={layerVisibility.schools}
+            healthcareVisible={layerVisibility.healthcare}
+            parksVisible={layerVisibility.parks}
+            wasteVisible={layerVisibility.waste}
+            evChargingVisible={layerVisibility.evCharging}
+            roadworksVisible={layerVisibility.roadworks}
+            solarPotentialVisible={layerVisibility.solarPotential}
           />
         </div>
 
