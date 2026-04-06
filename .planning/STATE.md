@@ -3,14 +3,14 @@ gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
 status: executing
-stopped_at: "Completed 07-04-PLAN.md (API routers: traffic+energy layers, KPI, timeseries + aalen.yaml connectors)"
-last_updated: "2026-04-06T17:55:21.528Z"
+stopped_at: "Completed 07-05-PLAN.md (traffic+energy map layers: TrafficLayer, AutobahnLayer, EnergyLayer + popups + MapView wiring)"
+last_updated: "2026-04-06T18:00:53.223Z"
 last_activity: 2026-04-06
 progress:
   total_phases: 10
   completed_phases: 4
   total_plans: 35
-  completed_plans: 30
+  completed_plans: 31
   percent: 0
 ---
 
@@ -26,7 +26,7 @@ See: .planning/PROJECT.md (updated 2026-04-05)
 ## Current Position
 
 Phase: 07 (traffic-energy-connectors) — EXECUTING
-Plan: 3 of 7
+Plan: 4 of 7
 Status: Ready to execute
 Last activity: 2026-04-06
 
@@ -65,6 +65,7 @@ Progress: [░░░░░░░░░░] 0%
 | Phase 06-weather-environment P04 | 230 | 2 tasks | 6 files |
 | Phase 07-traffic-energy-connectors P03 | 3 | 2 tasks | 7 files |
 | Phase 07 P04 | 8 | 2 tasks | 4 files |
+| Phase 07-traffic-energy-connectors P05 | 4 | 2 tasks | 7 files |
 
 ## Accumulated Context
 
@@ -104,6 +105,8 @@ Recent decisions affecting current work:
 - [Phase 07-traffic-energy-connectors]: open-mastr download cached for 24h via SQLite mtime check to avoid repeated bulk downloads; MastrConnector.normalize() returns empty list (features-only connector)
 - [Phase 07]: Energy layer (MaStR installations) uses features-only query — no LATERAL join needed as MaStR data is static with no per-installation time-series in energy_readings
 - [Phase 07]: kpi.py: _to_float()/_to_datetime() helpers added for graceful degradation when DB returns non-typed values; KPI Pydantic construction wrapped per-domain in try/except
+- [Phase 07-traffic-energy-connectors]: TrafficLayer and AutobahnLayer both use useLayerData('traffic') and split features by properties.type
+- [Phase 07-traffic-energy-connectors]: MapView popup routing extended via layerId prefix matching for traffic/autobahn/energy domains
 
 ### Pending Todos
 
@@ -118,6 +121,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-04-06T17:55:21.525Z
-Stopped at: Completed 07-04-PLAN.md (API routers: traffic+energy layers, KPI, timeseries + aalen.yaml connectors)
+Last session: 2026-04-06T18:00:53.220Z
+Stopped at: Completed 07-05-PLAN.md (traffic+energy map layers: TrafficLayer, AutobahnLayer, EnergyLayer + popups + MapView wiring)
 Resume file: None

@@ -161,7 +161,7 @@ Plans:
 - [x] 07-02-PLAN.md — Traffic connectors: BASt + Autobahn + MobiData BW (TRAF-03, TRAF-04, TRAF-05)
 - [x] 07-03-PLAN.md — Energy connectors: SMARD + MaStR (ENRG-01, ENRG-02, ENRG-03)
 - [x] 07-04-PLAN.md — API router extensions + aalen.yaml wiring (all requirements)
-- [ ] 07-05-PLAN.md — Frontend: map layers + popups (TrafficLayer, AutobahnLayer, EnergyLayer)
+- [x] 07-05-PLAN.md — Frontend: map layers + popups (TrafficLayer, AutobahnLayer, EnergyLayer)
 - [ ] 07-06-PLAN.md — Frontend: dashboard (EnergyMixBar, KPI tiles, detail panels, Sidebar, page.tsx)
 - [ ] 07-07-PLAN.md — Human verify: all 7 Phase 7 requirements
 
