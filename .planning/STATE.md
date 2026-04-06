@@ -3,14 +3,14 @@ gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
 status: executing
-stopped_at: Completed 05-dashboard/05-07-PLAN.md
-last_updated: "2026-04-06T00:03:17.729Z"
-last_activity: 2026-04-06 -- Phase 06 execution started
+stopped_at: Completed 06-weather-environment/06-04-PLAN.md
+last_updated: "2026-04-06T00:20:30.800Z"
+last_activity: 2026-04-06
 progress:
   total_phases: 10
   completed_phases: 4
   total_plans: 28
-  completed_plans: 22
+  completed_plans: 26
   percent: 0
 ---
 
@@ -26,9 +26,9 @@ See: .planning/PROJECT.md (updated 2026-04-05)
 ## Current Position
 
 Phase: 06 (weather-environment) — EXECUTING
-Plan: 1 of 5
-Status: Executing Phase 06
-Last activity: 2026-04-06 -- Phase 06 execution started
+Plan: 2 of 5
+Status: Ready to execute
+Last activity: 2026-04-06
 
 Progress: [░░░░░░░░░░] 0%
 
@@ -62,6 +62,7 @@ Progress: [░░░░░░░░░░] 0%
 | Phase 05-dashboard P05 | 2 | 2 tasks | 3 files |
 | Phase 05-dashboard P06 | 3 | 2 tasks | 2 files |
 | Phase 05-dashboard P07 | 2 | 1 tasks | 1 files |
+| Phase 06-weather-environment P04 | 230 | 2 tasks | 6 files |
 
 ## Accumulated Context
 
@@ -94,6 +95,8 @@ Recent decisions affecting current work:
 - [Phase 05-dashboard]: historicalTimestamp is optional prop on MapView — existing callers need no change until Plan 07
 - [Phase 05-dashboard]: page.tsx: useUrlState is single source of truth — no local useState for layerVisibility, domain, dateRange, or timestamp
 - [Phase 05-dashboard]: Suspense + HomeInner pattern for pages using useSearchParams-based hooks — enforced in page.tsx Plan 07
+- [Phase 06-weather-environment]: WmsOverlayLayer uses raster-opacity toggle (not layout visibility) to prevent tile re-fetch on toggle
+- [Phase 06-weather-environment]: WaterLayer uses 3 filtered sub-layers on single GeoJSON source; lubwEnvVisible prop gates protection zones independently from gauge stations
 
 ### Pending Todos
 
@@ -108,6 +111,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-04-05T23:36:46.779Z
-Stopped at: Completed 05-dashboard/05-07-PLAN.md
+Last session: 2026-04-06T00:20:30.797Z
+Stopped at: Completed 06-weather-environment/06-04-PLAN.md
 Resume file: None
