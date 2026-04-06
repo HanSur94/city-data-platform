@@ -101,3 +101,29 @@ connectors:
     config:
       landkreis: "Ostalbkreis"
       attribution: "Marktstammdatenregister (BNetzA), DL-DE-Zero-2.0"
+
+  - connector_class: OverpassCommunityConnector
+    poll_interval_seconds: 86400
+    enabled: true
+    config:
+      attribution: "OpenStreetMap contributors, ODbL"
+
+  - connector_class: OverpassRoadworksConnector
+    poll_interval_seconds: 3600
+    enabled: true
+    config:
+      attribution: "OpenStreetMap contributors, ODbL"
+
+  - connector_class: LadesaeulenConnector
+    poll_interval_seconds: 86400
+    enabled: true
+    config:
+      kreis_filter: "Ostalbkreis"
+      attribution: "Bundesnetzagentur, CC BY 4.0"
+
+  - connector_class: SolarPotentialConnector
+    poll_interval_seconds: 86400
+    enabled: false
+    config:
+      wms_url: ""
+      attribution: "LUBW Baden-Wuerttemberg"
