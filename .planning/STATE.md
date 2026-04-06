@@ -3,14 +3,14 @@ gsd_state_version: 1.0
 milestone: v2.0
 milestone_name: — AalenPulse Feature Parity
 status: verifying
-stopped_at: Completed 15-01-PLAN.md (Air Quality Grid Backend)
-last_updated: "2026-04-06T22:00:35.324Z"
+stopped_at: Completed 15-02-PLAN.md (Air Quality Heatmap Frontend)
+last_updated: "2026-04-06T22:06:49.141Z"
 last_activity: 2026-04-06
 progress:
   total_phases: 8
-  completed_phases: 4
+  completed_phases: 5
   total_plans: 10
-  completed_plans: 9
+  completed_plans: 10
   percent: 12
 ---
 
@@ -60,6 +60,8 @@ Progress: [█░░░░░░░░░] 12%
 - [Phase 14]: Separate GeoJSON source IDs (bus-positions, bus-routes) to avoid transit source interference
 - [Phase 15]: Pure function extraction for IDW and grid generation enables unit testing without database
 - [Phase 15]: feature_type filter on layers endpoint separates grid cells from sensor points without new endpoint
+- [Phase 15]: MapLibre heatmap layer type for grid overlay with dynamic paint expression rebuild on pollutant change
+- [Phase 15]: Separate air-quality-grid source ID to avoid conflict with existing air-quality sensor source
 
 ### Pending Todos
 
@@ -73,6 +75,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-04-06T22:00:35.320Z
-Stopped at: Completed 15-01-PLAN.md (Air Quality Grid Backend)
+Last session: 2026-04-06T22:06:49.137Z
+Stopped at: Completed 15-02-PLAN.md (Air Quality Heatmap Frontend)
 Resume file: None
