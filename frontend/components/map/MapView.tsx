@@ -10,7 +10,13 @@ import TransitLayer from './TransitLayer';
 import AQILayer from './AQILayer';
 import WaterLayer from './WaterLayer';
 import WmsOverlayLayer from './WmsOverlayLayer';
+import TrafficLayer from './TrafficLayer';
+import AutobahnLayer from './AutobahnLayer';
+import EnergyLayer from './EnergyLayer';
 import FeaturePopup from './FeaturePopup';
+import TrafficPopup from './TrafficPopup';
+import AutobahnPopup from './AutobahnPopup';
+import EnergyPopup from './EnergyPopup';
 import type { LayerResponse } from '@/types/geojson';
 import type GeoJSON from 'geojson';
 
@@ -28,6 +34,9 @@ interface MapViewProps {
     floodHazard: boolean;
     railNoise: boolean;
     lubwEnv: boolean;
+    traffic?: boolean;
+    autobahn?: boolean;
+    energy?: boolean;
   };
   transitData: LayerResponse | null;
   airQualityData: LayerResponse | null;
@@ -37,13 +46,18 @@ interface MapViewProps {
   waterLastFetched?: Date | null;
   /** When non-null, map is showing a historical snapshot at this timestamp */
   historicalTimestamp?: Date | null;
+  town?: string;
+  trafficVisible?: boolean;
+  autobahnVisible?: boolean;
+  mobiDataVisible?: boolean;
+  energyVisible?: boolean;
 }
 
 interface PopupInfo {
   longitude: number;
   latitude: number;
   feature: GeoJSON.Feature;
-  domain: 'transit' | 'airQuality' | 'water';
+  domain: 'transit' | 'airQuality' | 'water' | 'traffic' | 'autobahn' | 'energy';
 }
 
 export default function MapView({
@@ -55,6 +69,11 @@ export default function MapView({
   waterData,
   waterLastFetched,
   historicalTimestamp,
+  town = 'aalen',
+  trafficVisible,
+  autobahnVisible,
+  mobiDataVisible: _mobiDataVisible,
+  energyVisible,
 }: MapViewProps) {
   // Register PMTiles protocol BEFORE Map renders (Pitfall 3)
   // Register at module scope to avoid double-registration on re-renders
@@ -87,7 +106,7 @@ export default function MapView({
         style={{ width: '100%', height: '100%' }}
         mapStyle={mapStyle}
         attributionControl={{ compact: false }}
-        interactiveLayerIds={['transit-stops', 'aqi-points', 'water-gauges']}
+        interactiveLayerIds={['transit-stops', 'aqi-points', 'water-gauges', 'traffic-circles', 'autobahn-markers', 'energy-points']}
         onClick={(e) => {
           const feature = e.features?.[0];
           if (!feature || !e.lngLat) return;
@@ -96,6 +115,12 @@ export default function MapView({
             ? 'airQuality'
             : layerId.startsWith('water')
             ? 'water'
+            : layerId.startsWith('traffic')
+            ? 'traffic'
+            : layerId.startsWith('autobahn')
+            ? 'autobahn'
+            : layerId.startsWith('energy')
+            ? 'energy'
             : 'transit';
           setPopupInfo({
             longitude: e.lngLat.lng,
@@ -126,6 +151,19 @@ export default function MapView({
           visible={layerVisibility.railNoise}
           opacity={0.6}
         />
+        {(trafficVisible ?? layerVisibility.traffic) && (
+          <TrafficLayer
+            town={town}
+            visible={true}
+            timestamp={historicalTimestamp}
+          />
+        )}
+        {(autobahnVisible ?? layerVisibility.autobahn) && (
+          <AutobahnLayer town={town} visible={true} />
+        )}
+        {(energyVisible ?? layerVisibility.energy) && (
+          <EnergyLayer town={town} visible={true} />
+        )}
         {popupInfo && (
           <Popup
             longitude={popupInfo.longitude}
@@ -135,16 +173,24 @@ export default function MapView({
             maxWidth="200px"
             anchor="bottom"
           >
-            <FeaturePopup
-              feature={popupInfo.feature}
-              lastFetched={
-                popupInfo.domain === 'airQuality'
-                  ? airQualityLastFetched
-                  : popupInfo.domain === 'water'
-                  ? (waterLastFetched ?? null)
-                  : transitLastFetched
-              }
-            />
+            {popupInfo.domain === 'traffic' ? (
+              <TrafficPopup feature={popupInfo.feature} lastFetched={null} />
+            ) : popupInfo.domain === 'autobahn' ? (
+              <AutobahnPopup feature={popupInfo.feature} />
+            ) : popupInfo.domain === 'energy' ? (
+              <EnergyPopup feature={popupInfo.feature} />
+            ) : (
+              <FeaturePopup
+                feature={popupInfo.feature}
+                lastFetched={
+                  popupInfo.domain === 'airQuality'
+                    ? airQualityLastFetched
+                    : popupInfo.domain === 'water'
+                    ? (waterLastFetched ?? null)
+                    : transitLastFetched
+                }
+              />
+            )}
           </Popup>
         )}
       </Map>
