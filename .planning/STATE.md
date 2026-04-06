@@ -3,14 +3,14 @@ gsd_state_version: 1.0
 milestone: v2.0
 milestone_name: — AalenPulse Feature Parity
 status: verifying
-stopped_at: Completed 15-02-PLAN.md (Air Quality Heatmap Frontend)
-last_updated: "2026-04-06T22:07:18.636Z"
+stopped_at: Completed 16-01-PLAN.md (Solar Production + EV Charging Connectors)
+last_updated: "2026-04-06T22:21:49.730Z"
 last_activity: 2026-04-06
 progress:
   total_phases: 8
   completed_phases: 5
-  total_plans: 10
-  completed_plans: 10
+  total_plans: 12
+  completed_plans: 11
   percent: 12
 ---
 
@@ -62,6 +62,9 @@ Progress: [█░░░░░░░░░] 12%
 - [Phase 15]: feature_type filter on layers endpoint separates grid cells from sensor points without new endpoint
 - [Phase 15]: MapLibre heatmap layer type for grid overlay with dynamic paint expression rebuild on pollutant change
 - [Phase 15]: Separate air-quality-grid source ID to avoid conflict with existing air-quality sensor source
+- [Phase 16]: Computation connector pattern for SolarProductionConnector (override run() like AirQualityGridConnector)
+- [Phase 16]: Disabled LadesaeulenConnector, replaced by EvChargingConnector with live OCPDB status
+- [Phase 16]: Added source query param to infrastructure layers endpoint for OCPDB vs BNetzA separation
 
 ### Pending Todos
 
@@ -75,6 +78,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-04-06T22:06:49.137Z
-Stopped at: Completed 15-02-PLAN.md (Air Quality Heatmap Frontend)
+Last session: 2026-04-06T22:21:49.727Z
+Stopped at: Completed 16-01-PLAN.md (Solar Production + EV Charging Connectors)
 Resume file: None

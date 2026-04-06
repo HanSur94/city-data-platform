@@ -121,8 +121,8 @@ Implement all missing features from the AalenPulse requirements document to reac
   - [ ] Buildings with solar show glow/badge in 3D view
   - [ ] EV charger pins show real-time availability status
   - [ ] Click popup shows connector types, operator, live status
-- **Plans:** 2 plans
-  - [ ] 16-01-PLAN.md -- SolarProductionConnector + EvChargingConnector backend with tests and scheduler registration
+- **Plans:** 1/2 plans executed
+  - [x] 16-01-PLAN.md -- SolarProductionConnector + EvChargingConnector backend with tests and scheduler registration
   - [ ] 16-02-PLAN.md -- SolarGlowLayer, EvChargingLiveLayer frontend components, popups, sidebar wiring
 - **Status:** Planning Complete
 
