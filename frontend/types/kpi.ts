@@ -62,6 +62,14 @@ export interface WaterKPI {
   last_updated: string | null
 }
 
+export interface ParkingKPI {
+  total_free: number | null
+  total_capacity: number | null
+  garage_count: number
+  availability_pct: number | null
+  last_updated: string | null
+}
+
 export interface KPIResponse {
   town: string
   air_quality: AirQualityKPI
@@ -71,6 +79,7 @@ export interface KPIResponse {
   energy: EnergyKPI | null
   demographics: DemographicsKPI | null
   water: WaterKPI | null
+  parking: ParkingKPI | null
   attribution: Attribution[]
   last_updated: string | null
 }

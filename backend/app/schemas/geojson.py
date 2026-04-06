@@ -134,6 +134,12 @@ CONNECTOR_ATTRIBUTION: dict[str, dict[str, str]] = {
         "license_url": "https://www.govdata.de/dl-de/zero-2-0",
         "url": "https://statistik.arbeitsagentur.de/",
     },
+    "ParkingConnector": {
+        "source_name": "Stadtwerke Aalen",
+        "license": "scraping",
+        "license_url": "https://www.sw-aalen.de",
+        "url": "https://www.sw-aalen.de",
+    },
 }
 
 # Valid domain values for path parameter validation

@@ -23,6 +23,7 @@ from app.schemas.responses import (
     EnergyKPI,
     DemographicsKPI,
     WaterKPI,
+    ParkingKPI,
 )
 
 router = APIRouter(tags=["kpi"])
@@ -312,6 +313,43 @@ async def get_kpi(
             trend=None, gauge_name=None, last_updated=None,
         )
 
+    # --- Parking KPI ---
+    parking_kpi: ParkingKPI | None = None
+    try:
+        parking_result = await db.execute(
+            text("""
+                SELECT
+                    SUM((properties->>'free_spots')::int) AS total_free,
+                    SUM((properties->>'total_spots')::int) AS total_capacity,
+                    COUNT(*) AS garage_count,
+                    MAX(updated_at) AS last_updated
+                FROM features
+                WHERE town_id = :town_id
+                  AND domain = 'infrastructure'
+                  AND properties->>'category' = 'parking'
+            """),
+            {"town_id": current_town.id},
+        )
+        parking_row = parking_result.mappings().first()
+        if parking_row and parking_row["garage_count"] and int(parking_row["garage_count"]) > 0:
+            total_free = int(parking_row["total_free"]) if parking_row["total_free"] is not None else None
+            total_capacity = int(parking_row["total_capacity"]) if parking_row["total_capacity"] is not None else None
+            availability_pct = None
+            if total_free is not None and total_capacity and total_capacity > 0:
+                availability_pct = round(total_free / total_capacity * 100, 1)
+            parking_kpi = ParkingKPI(
+                total_free=total_free,
+                total_capacity=total_capacity,
+                garage_count=int(parking_row["garage_count"]),
+                availability_pct=availability_pct,
+                last_updated=parking_row["last_updated"] if isinstance(parking_row["last_updated"], datetime) else None,
+            )
+    except Exception:
+        parking_kpi = ParkingKPI(
+            total_free=None, total_capacity=None,
+            garage_count=0, availability_pct=None, last_updated=None,
+        )
+
     # --- Attribution ---
     attributions: list[dict[str, str]] = []
     try:
@@ -347,6 +385,7 @@ async def get_kpi(
         energy_kpi.last_updated,
         demographics_kpi.last_updated if demographics_kpi else None,
         water_kpi.last_updated if water_kpi else None,
+        parking_kpi.last_updated if parking_kpi else None,
     ]
     last_updated: datetime | None = max(
         filter(None, candidate_times),
@@ -403,6 +442,7 @@ async def get_kpi(
         energy=energy_kpi,
         demographics=demographics_kpi,
         water=water_kpi,
+        parking=parking_kpi,
         attribution=attributions,
         last_updated=last_updated,
     )

@@ -78,6 +78,14 @@ class WaterKPI(BaseModel):
     last_updated: datetime | None
 
 
+class ParkingKPI(BaseModel):
+    total_free: int | None          # sum of free_spots across all garages
+    total_capacity: int | None      # sum of total_spots across all garages
+    garage_count: int               # number of parking garages
+    availability_pct: float | None  # (total_free / total_capacity) * 100
+    last_updated: datetime | None
+
+
 class KPIResponse(BaseModel):
     town: str
     air_quality: AirQualityKPI
@@ -87,6 +95,7 @@ class KPIResponse(BaseModel):
     energy: EnergyKPI | None = None
     demographics: DemographicsKPI | None = None
     water: WaterKPI | None = None
+    parking: ParkingKPI | None = None
     attribution: list[dict[str, str]]
     last_updated: datetime | None
 
