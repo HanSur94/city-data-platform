@@ -5,7 +5,8 @@ import { Popup } from 'react-map-gl/maplibre';
 import { Protocol } from 'pmtiles';
 import maplibregl from 'maplibre-gl';
 import { format } from 'date-fns';
-import { buildMapStyle } from '@/lib/map-styles';
+import { getMapStyle } from '@/lib/map-styles';
+import type { BaseLayer } from '@/lib/map-styles';
 import TransitLayer from './TransitLayer';
 import AQILayer from './AQILayer';
 import WaterLayer from './WaterLayer';
@@ -15,6 +16,7 @@ import AutobahnLayer from './AutobahnLayer';
 import EnergyLayer from './EnergyLayer';
 import CommunityLayer from './CommunityLayer';
 import InfrastructureLayer from './InfrastructureLayer';
+import GeospatialOverlayLayer from './GeospatialOverlayLayer';
 import FeaturePopup from './FeaturePopup';
 import TrafficPopup from './TrafficPopup';
 import AutobahnPopup from './AutobahnPopup';
@@ -63,6 +65,9 @@ interface MapViewProps {
   evChargingVisible?: boolean;
   roadworksVisible?: boolean;
   solarPotentialVisible?: boolean;
+  baseLayer?: BaseLayer;
+  cadastralVisible?: boolean;
+  hillshadeVisible?: boolean;
 }
 
 interface PopupInfo {
@@ -93,6 +98,9 @@ export default function MapView({
   evChargingVisible = false,
   roadworksVisible = false,
   solarPotentialVisible = false,
+  baseLayer = 'osm',
+  cadastralVisible = false,
+  hillshadeVisible = false,
 }: MapViewProps) {
   // Register PMTiles protocol BEFORE Map renders (Pitfall 3)
   // Register at module scope to avoid double-registration on re-renders
@@ -110,7 +118,7 @@ export default function MapView({
 
   const [popupInfo, setPopupInfo] = useState<PopupInfo | null>(null);
 
-  const mapStyle = buildMapStyle(PMTILES_URL);
+  const mapStyle = getMapStyle(baseLayer, PMTILES_URL);
 
   return (
     <div className="relative w-full h-full">
@@ -205,6 +213,10 @@ export default function MapView({
           evChargingVisible={evChargingVisible}
           roadworksVisible={roadworksVisible}
           solarPotentialVisible={solarPotentialVisible}
+        />
+        <GeospatialOverlayLayer
+          cadastralVisible={cadastralVisible}
+          hillshadeVisible={hillshadeVisible}
         />
         {popupInfo && (
           <Popup
