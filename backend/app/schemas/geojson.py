@@ -44,6 +44,12 @@ CONNECTOR_ATTRIBUTION: dict[str, dict[str, str]] = {
         "license_url": "https://www.govdata.de/dl-de/zero-2-0",
         "url": "https://brightsky.dev/",
     },
+    "PegelonlineConnector": {
+        "source_name": "PEGELONLINE (WSV / BfG)",
+        "license": "Datenlizenz Deutschland – Zero – Version 2.0",
+        "license_url": "https://www.govdata.de/dl-de/zero-2-0",
+        "url": "https://www.pegelonline.wsv.de/",
+    },
 }
 
 # Valid domain values for path parameter validation

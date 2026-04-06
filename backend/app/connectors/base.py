@@ -182,6 +182,19 @@ class BaseConnector(ABC):
                             "delay_seconds": obs.values.get("delay_seconds"),
                         },
                     )
+                elif obs.domain == "water":
+                    await session.execute(
+                        text(
+                            "INSERT INTO water_readings (time, feature_id, level_cm, flow_m3s) "
+                            "VALUES (:time, :feature_id, :level_cm, :flow_m3s)"
+                        ),
+                        {
+                            "time": ts,
+                            "feature_id": obs.feature_id,
+                            "level_cm": obs.values.get("level_cm"),
+                            "flow_m3s": obs.values.get("flow_m3s"),
+                        },
+                    )
             await session.commit()
 
     async def upsert_feature(
