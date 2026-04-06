@@ -28,10 +28,23 @@ function HomeInner() {
   const layerVisibility = {
     transit: state.layers.includes('transit'),
     airQuality: state.layers.includes('aqi'),
+    water: state.layers.includes('water'),
+    floodHazard: state.layers.includes('flood'),
+    railNoise: state.layers.includes('rail_noise'),
+    lubwEnv: state.layers.includes('lubw_env'),
   }
 
-  const toggleLayer = (layer: 'transit' | 'airQuality') => {
-    const key = layer === 'airQuality' ? 'aqi' : 'transit'
+  const LAYER_KEYS: Record<string, string> = {
+    transit: 'transit',
+    airQuality: 'aqi',
+    water: 'water',
+    floodHazard: 'flood',
+    railNoise: 'rail_noise',
+    lubwEnv: 'lubw_env',
+  }
+
+  const toggleLayer = (layer: keyof typeof LAYER_KEYS) => {
+    const key = LAYER_KEYS[layer]
     const current = state.layers
     const next = current.includes(key)
       ? current.filter(l => l !== key)
@@ -42,6 +55,7 @@ function HomeInner() {
   // Data hooks — pass historicalTimestamp for time slider historical support
   const transit = useLayerData('transit', town, historicalTimestamp)
   const airQuality = useLayerData('air_quality', town, historicalTimestamp)
+  const water = useLayerData('water', town, historicalTimestamp)
 
   // Default chart data (shown when no activeDomain detail panel open)
   const aqiTs = useTimeseries('air_quality', dateRange.from, dateRange.to, town)
@@ -104,6 +118,8 @@ function HomeInner() {
             airQualityData={airQuality.data}
             transitLastFetched={transit.lastFetched}
             airQualityLastFetched={airQuality.lastFetched}
+            waterData={water.data}
+            waterLastFetched={water.lastFetched}
             historicalTimestamp={historicalTimestamp}
           />
         </div>

@@ -8,6 +8,8 @@ import { format } from 'date-fns';
 import { buildMapStyle } from '@/lib/map-styles';
 import TransitLayer from './TransitLayer';
 import AQILayer from './AQILayer';
+import WaterLayer from './WaterLayer';
+import WmsOverlayLayer from './WmsOverlayLayer';
 import FeaturePopup from './FeaturePopup';
 import type { LayerResponse } from '@/types/geojson';
 import type GeoJSON from 'geojson';
@@ -19,11 +21,20 @@ import type GeoJSON from 'geojson';
 const PMTILES_URL = 'pmtiles:///tiles/aalen.pmtiles';
 
 interface MapViewProps {
-  layerVisibility: { transit: boolean; airQuality: boolean };
+  layerVisibility: {
+    transit: boolean;
+    airQuality: boolean;
+    water: boolean;
+    floodHazard: boolean;
+    railNoise: boolean;
+    lubwEnv: boolean;
+  };
   transitData: LayerResponse | null;
   airQualityData: LayerResponse | null;
   transitLastFetched: Date | null;
   airQualityLastFetched: Date | null;
+  waterData?: LayerResponse | null;
+  waterLastFetched?: Date | null;
   /** When non-null, map is showing a historical snapshot at this timestamp */
   historicalTimestamp?: Date | null;
 }
@@ -32,7 +43,7 @@ interface PopupInfo {
   longitude: number;
   latitude: number;
   feature: GeoJSON.Feature;
-  domain: 'transit' | 'airQuality';
+  domain: 'transit' | 'airQuality' | 'water';
 }
 
 export default function MapView({
@@ -41,6 +52,8 @@ export default function MapView({
   airQualityData,
   transitLastFetched,
   airQualityLastFetched,
+  waterData,
+  waterLastFetched,
   historicalTimestamp,
 }: MapViewProps) {
   // Register PMTiles protocol BEFORE Map renders (Pitfall 3)
@@ -74,11 +87,16 @@ export default function MapView({
         style={{ width: '100%', height: '100%' }}
         mapStyle={mapStyle}
         attributionControl={{ compact: false }}
-        interactiveLayerIds={['transit-stops', 'aqi-points']}
+        interactiveLayerIds={['transit-stops', 'aqi-points', 'water-gauges']}
         onClick={(e) => {
           const feature = e.features?.[0];
           if (!feature || !e.lngLat) return;
-          const domain = feature.layer?.id?.startsWith('aqi') ? 'airQuality' : 'transit';
+          const layerId = feature.layer?.id ?? '';
+          const domain: PopupInfo['domain'] = layerId.startsWith('aqi')
+            ? 'airQuality'
+            : layerId.startsWith('water')
+            ? 'water'
+            : 'transit';
           setPopupInfo({
             longitude: e.lngLat.lng,
             latitude: e.lngLat.lat,
@@ -89,6 +107,25 @@ export default function MapView({
       >
         <TransitLayer data={transitData} visible={layerVisibility.transit} />
         <AQILayer data={airQualityData} visible={layerVisibility.airQuality} />
+        <WaterLayer
+          data={waterData ?? null}
+          visible={layerVisibility.water}
+          lubwEnvVisible={layerVisibility.lubwEnv}
+        />
+        <WmsOverlayLayer
+          id="flood-hazard"
+          wmsUrl="https://rips-gdi.lubw.baden-wuerttemberg.de/arcgis/services/wms/UIS_0100000003900001/MapServer/WMSServer"
+          layers="0,1"
+          visible={layerVisibility.floodHazard}
+          opacity={0.65}
+        />
+        <WmsOverlayLayer
+          id="rail-noise"
+          wmsUrl="https://geoinformation.eisenbahn-bundesamt.de/wms/isophonen"
+          layers="isophonen_ek_lden"
+          visible={layerVisibility.railNoise}
+          opacity={0.6}
+        />
         {popupInfo && (
           <Popup
             longitude={popupInfo.longitude}
@@ -100,7 +137,13 @@ export default function MapView({
           >
             <FeaturePopup
               feature={popupInfo.feature}
-              lastFetched={popupInfo.domain === 'airQuality' ? airQualityLastFetched : transitLastFetched}
+              lastFetched={
+                popupInfo.domain === 'airQuality'
+                  ? airQualityLastFetched
+                  : popupInfo.domain === 'water'
+                  ? (waterLastFetched ?? null)
+                  : transitLastFetched
+              }
             />
           </Popup>
         )}

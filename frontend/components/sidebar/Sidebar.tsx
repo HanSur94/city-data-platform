@@ -6,10 +6,18 @@ import { Layers } from 'lucide-react';
 import LayerToggle from './LayerToggle';
 import AQILegend from './AQILegend';
 import TransitLegend from './TransitLegend';
+import WaterLegend from './WaterLegend';
 
 interface SidebarProps {
-  layerVisibility: { transit: boolean; airQuality: boolean };
-  onToggleLayer: (layer: 'transit' | 'airQuality') => void;
+  layerVisibility: {
+    transit: boolean;
+    airQuality: boolean;
+    water: boolean;
+    floodHazard: boolean;
+    railNoise: boolean;
+    lubwEnv: boolean;
+  };
+  onToggleLayer: (layer: 'transit' | 'airQuality' | 'water' | 'floodHazard' | 'railNoise' | 'lubwEnv') => void;
   transitError?: boolean;
   airQualityError?: boolean;
 }
@@ -44,6 +52,30 @@ export default function Sidebar({ layerVisibility, onToggleLayer, transitError, 
           onCheckedChange={() => onToggleLayer('airQuality')}
           freshnessError={airQualityError}
         />
+        <LayerToggle
+          id="water-toggle"
+          label="Pegel & Gewässer"
+          checked={layerVisibility.water}
+          onCheckedChange={() => onToggleLayer('water')}
+        />
+        <LayerToggle
+          id="flood-toggle"
+          label="Hochwassergefahr (HQ100)"
+          checked={layerVisibility.floodHazard}
+          onCheckedChange={() => onToggleLayer('floodHazard')}
+        />
+        <LayerToggle
+          id="rail-noise-toggle"
+          label="Bahnlärm (Lden)"
+          checked={layerVisibility.railNoise}
+          onCheckedChange={() => onToggleLayer('railNoise')}
+        />
+        <LayerToggle
+          id="lubw-env-toggle"
+          label="Schutzgebiete (LUBW)"
+          checked={layerVisibility.lubwEnv}
+          onCheckedChange={() => onToggleLayer('lubwEnv')}
+        />
       </div>
 
       <Separator className="mt-6" />
@@ -55,6 +87,7 @@ export default function Sidebar({ layerVisibility, onToggleLayer, transitError, 
         </p>
         <AQILegend />
         <TransitLegend />
+        {layerVisibility.water && <WaterLegend />}
       </div>
     </div>
   );
