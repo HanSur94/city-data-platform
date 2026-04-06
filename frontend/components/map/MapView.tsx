@@ -19,6 +19,7 @@ import TrafficLayer from './TrafficLayer';
 import TrafficFlowLayer from './TrafficFlowLayer';
 import AutobahnLayer from './AutobahnLayer';
 import EnergyLayer from './EnergyLayer';
+import SolarGlowLayer from './SolarGlowLayer';
 import CommunityLayer from './CommunityLayer';
 import InfrastructureLayer from './InfrastructureLayer';
 import GeospatialOverlayLayer from './GeospatialOverlayLayer';
@@ -30,7 +31,9 @@ import TrafficFlowPopup from './TrafficFlowPopup';
 import AutobahnPopup from './AutobahnPopup';
 import EnergyPopup from './EnergyPopup';
 import CommunityPopup from './CommunityPopup';
+import SolarPopup from './SolarPopup';
 import EvChargingPopup from './EvChargingPopup';
+import EvChargingLiveLayer from './EvChargingLiveLayer';
 import RoadworksPopup from './RoadworksPopup';
 import KocherPopup from './KocherPopup';
 import ParkingLayer from './ParkingLayer';
@@ -85,6 +88,7 @@ interface MapViewProps {
   kocherVisible?: boolean;
   parkingVisible?: boolean;
   busPositionVisible?: boolean;
+  solarGlowVisible?: boolean;
   baseLayer?: BaseLayer;
   cadastralVisible?: boolean;
   hillshadeVisible?: boolean;
@@ -95,7 +99,7 @@ interface PopupInfo {
   longitude: number;
   latitude: number;
   feature: GeoJSON.Feature;
-  domain: 'transit' | 'airQuality' | 'water' | 'traffic' | 'trafficFlow' | 'autobahn' | 'energy' | 'community' | 'evCharging' | 'roadworks' | 'kocher' | 'parking' | 'busPosition';
+  domain: 'transit' | 'airQuality' | 'water' | 'traffic' | 'trafficFlow' | 'autobahn' | 'energy' | 'community' | 'evCharging' | 'roadworks' | 'kocher' | 'parking' | 'busPosition' | 'solarGlow';
 }
 
 export default function MapView({
@@ -125,6 +129,7 @@ export default function MapView({
   kocherVisible = false,
   parkingVisible = false,
   busPositionVisible = false,
+  solarGlowVisible = false,
   baseLayer = 'osm',
   cadastralVisible = false,
   hillshadeVisible = false,
@@ -177,12 +182,17 @@ export default function MapView({
           'transit-stops', 'aqi-points', 'water-gauges', 'traffic-circles', 'traffic-flow-lines', 'autobahn-markers', 'energy-points', 'kocher-gauge', 'kocher-river-line',
           'community-schools-points', 'community-healthcare-points', 'community-parks-points', 'community-waste-points',
           'infrastructure-ev-points', 'infrastructure-roadworks-points', 'parking-points', 'bus-position-points',
+          'solar-glow-points', 'ev-charging-live-points',
         ]}
         onClick={(e) => {
           const feature = e.features?.[0];
           if (!feature || !e.lngLat) return;
           const layerId = feature.layer?.id ?? '';
-          const domain: PopupInfo['domain'] = layerId.startsWith('kocher')
+          const domain: PopupInfo['domain'] = layerId === 'solar-glow-points'
+            ? 'solarGlow'
+            : layerId === 'ev-charging-live-points'
+            ? 'evCharging'
+            : layerId.startsWith('kocher')
             ? 'kocher'
             : layerId.startsWith('aqi')
             ? 'airQuality'
@@ -253,6 +263,9 @@ export default function MapView({
         {(energyVisible ?? layerVisibility.energy) && (
           <EnergyLayer town={town} visible={true} />
         )}
+        {solarGlowVisible && (
+          <SolarGlowLayer town={town} visible={true} />
+        )}
         <CommunityLayer
           town={town}
           schoolsVisible={schoolsVisible}
@@ -266,6 +279,9 @@ export default function MapView({
           roadworksVisible={roadworksVisible}
           solarPotentialVisible={solarPotentialVisible}
         />
+        {evChargingVisible && (
+          <EvChargingLiveLayer town={town} visible={true} />
+        )}
         {parkingVisible && (
           <ParkingLayer town={town} visible={true} />
         )}
@@ -309,6 +325,8 @@ export default function MapView({
               <TrafficPopup feature={popupInfo.feature} lastFetched={null} />
             ) : popupInfo.domain === 'autobahn' ? (
               <AutobahnPopup feature={popupInfo.feature} />
+            ) : popupInfo.domain === 'solarGlow' ? (
+              <SolarPopup feature={popupInfo.feature} />
             ) : popupInfo.domain === 'energy' ? (
               <EnergyPopup feature={popupInfo.feature} />
             ) : popupInfo.domain === 'community' ? (

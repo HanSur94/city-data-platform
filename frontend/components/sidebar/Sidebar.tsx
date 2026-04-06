@@ -35,8 +35,9 @@ interface SidebarProps {
     kocher?: boolean;
     parking?: boolean;
     busPosition?: boolean;
+    solarGlow?: boolean;
   };
-  onToggleLayer: (layer: 'transit' | 'airQuality' | 'water' | 'floodHazard' | 'railNoise' | 'lubwEnv' | 'traffic' | 'autobahn' | 'mobiData' | 'energy' | 'schools' | 'healthcare' | 'parks' | 'waste' | 'evCharging' | 'roadworks' | 'solarPotential' | 'trafficFlow' | 'cadastral' | 'hillshade' | 'buildings3d' | 'kocher' | 'parking' | 'busPosition') => void;
+  onToggleLayer: (layer: 'transit' | 'airQuality' | 'water' | 'floodHazard' | 'railNoise' | 'lubwEnv' | 'traffic' | 'autobahn' | 'mobiData' | 'energy' | 'schools' | 'healthcare' | 'parks' | 'waste' | 'evCharging' | 'roadworks' | 'solarPotential' | 'trafficFlow' | 'cadastral' | 'hillshade' | 'buildings3d' | 'kocher' | 'parking' | 'busPosition' | 'solarGlow') => void;
   transitError?: boolean;
   airQualityError?: boolean;
   trafficError?: boolean;
@@ -165,6 +166,12 @@ export default function Sidebar({ layerVisibility, onToggleLayer, transitError, 
           onCheckedChange={() => onToggleLayer('energy')}
           freshnessError={energyError}
         />
+        <LayerToggle
+          id="solar-glow-toggle"
+          label="Solar-Erzeugung (live)"
+          checked={layerVisibility.solarGlow ?? false}
+          onCheckedChange={() => onToggleLayer('solarGlow')}
+        />
       </div>
 
       <Separator className="mt-6" />
@@ -211,7 +218,7 @@ export default function Sidebar({ layerVisibility, onToggleLayer, transitError, 
         />
         <LayerToggle
           id="ev-toggle"
-          label="E-Ladesaeulen (BNetzA)"
+          label="E-Ladesaeulen (live)"
           checked={layerVisibility.evCharging ?? false}
           onCheckedChange={() => onToggleLayer('evCharging')}
         />
