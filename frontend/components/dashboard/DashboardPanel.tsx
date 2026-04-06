@@ -1,5 +1,5 @@
 'use client'
-import { Wind, Thermometer, Bus, Car, Zap, Users } from 'lucide-react'
+import { Wind, Thermometer, Bus, Car, Zap, Users, CircleParking } from 'lucide-react'
 import { Separator } from '@/components/ui/separator'
 import { KpiTile } from './KpiTile'
 import { EnergyMixBar } from './EnergyMixBar'
@@ -147,6 +147,18 @@ export function DashboardPanel({
             )}
             {data?.water != null && (
               <KocherGaugeWidget water={data.water} />
+            )}
+            {data?.parking != null && (
+              <KpiTile
+                domain="parking"
+                icon={<CircleParking className="h-4 w-4" />}
+                label="Parken"
+                value={data.parking.total_free != null ? String(data.parking.total_free) : null}
+                unit={data.parking.total_capacity != null ? `von ${data.parking.total_capacity} frei` : 'Parkplaetze'}
+                trend={null}
+                active={activeDomain === 'parking'}
+                onSelect={handleSelect}
+              />
             )}
           </div>
         )}

@@ -31,8 +31,9 @@ interface SidebarProps {
     solarPotential?: boolean;
     trafficFlow?: boolean;
     kocher?: boolean;
+    parking?: boolean;
   };
-  onToggleLayer: (layer: 'transit' | 'airQuality' | 'water' | 'floodHazard' | 'railNoise' | 'lubwEnv' | 'traffic' | 'autobahn' | 'mobiData' | 'energy' | 'schools' | 'healthcare' | 'parks' | 'waste' | 'evCharging' | 'roadworks' | 'solarPotential' | 'trafficFlow' | 'cadastral' | 'hillshade' | 'buildings3d' | 'kocher') => void;
+  onToggleLayer: (layer: 'transit' | 'airQuality' | 'water' | 'floodHazard' | 'railNoise' | 'lubwEnv' | 'traffic' | 'autobahn' | 'mobiData' | 'energy' | 'schools' | 'healthcare' | 'parks' | 'waste' | 'evCharging' | 'roadworks' | 'solarPotential' | 'trafficFlow' | 'cadastral' | 'hillshade' | 'buildings3d' | 'kocher' | 'parking') => void;
   transitError?: boolean;
   airQualityError?: boolean;
   trafficError?: boolean;
@@ -205,6 +206,12 @@ export default function Sidebar({ layerVisibility, onToggleLayer, transitError, 
           label="Solarpotenzial Daecher"
           checked={layerVisibility.solarPotential ?? false}
           onCheckedChange={() => onToggleLayer('solarPotential')}
+        />
+        <LayerToggle
+          id="parking-toggle"
+          label="Parkhaeuser"
+          checked={layerVisibility.parking ?? false}
+          onCheckedChange={() => onToggleLayer('parking')}
         />
       </div>
 

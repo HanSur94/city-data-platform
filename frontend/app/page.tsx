@@ -45,6 +45,7 @@ function HomeInner() {
     solarPotential: state.layers.includes('solar_potential'),
     trafficFlow: state.layers.includes('traffic_flow'),
     kocher: state.layers.includes('kocher'),
+    parking: state.layers.includes('parking'),
     cadastral: state.layers.includes('cadastral'),
     hillshade: state.layers.includes('hillshade'),
     buildings3d: state.layers.includes('buildings3d'),
@@ -70,6 +71,7 @@ function HomeInner() {
     solarPotential: 'solar_potential',
     trafficFlow: 'traffic_flow',
     kocher: 'kocher',
+    parking: 'parking',
     cadastral: 'cadastral',
     hillshade: 'hillshade',
     buildings3d: 'buildings3d',
@@ -178,6 +180,7 @@ function HomeInner() {
             solarPotentialVisible={layerVisibility.solarPotential}
             trafficFlowVisible={layerVisibility.trafficFlow}
             kocherVisible={layerVisibility.kocher}
+            parkingVisible={layerVisibility.parking}
             baseLayer={state.baseLayer}
             cadastralVisible={layerVisibility.cadastral}
             hillshadeVisible={layerVisibility.hillshade}
