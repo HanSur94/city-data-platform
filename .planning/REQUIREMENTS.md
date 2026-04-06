@@ -30,9 +30,9 @@ Requirements for initial release. Each maps to roadmap phases.
 
 - [x] **TRAF-01**: Public transport routes and stops on map (NVBW GTFS — 3,688 routes, 55,284 stops)
 - [x] **TRAF-02**: Real-time transit positions/delays where available (GTFS-RT via gtfs.de)
-- [ ] **TRAF-03**: Traffic count stations on map with flow data (BASt permanent counters near Aalen)
-- [ ] **TRAF-04**: Autobahn roadworks, warnings, and closures for nearby A7 (Autobahn API)
-- [ ] **TRAF-05**: MobiData BW traffic counts and sharing/bike data integration
+- [x] **TRAF-03**: Traffic count stations on map with flow data (BASt permanent counters near Aalen)
+- [x] **TRAF-04**: Autobahn roadworks, warnings, and closures for nearby A7 (Autobahn API)
+- [x] **TRAF-05**: MobiData BW traffic counts and sharing/bike data integration
 
 ### Weather & Air Quality
 
@@ -45,8 +45,8 @@ Requirements for initial release. Each maps to roadmap phases.
 
 ### Energy
 
-- [ ] **ENRG-01**: Current German electricity generation mix by source (SMARD — 15-min resolution)
-- [ ] **ENRG-02**: Regional renewable energy installations on map (MaStR — every solar panel, wind turbine, battery in Ostalbkreis)
+- [x] **ENRG-01**: Current German electricity generation mix by source (SMARD — 15-min resolution)
+- [x] **ENRG-02**: Regional renewable energy installations on map (MaStR — every solar panel, wind turbine, battery in Ostalbkreis)
 - [ ] **ENRG-03**: Electricity wholesale price trend (SMARD)
 - [ ] **ENRG-04**: Energy statistics dashboard (Fraunhofer Energy-Charts data)
 
@@ -184,11 +184,11 @@ Which phases cover which requirements. Updated during roadmap creation.
 | WATR-03 | Phase 6 | Complete |
 | WATR-04 | Phase 6 | Complete |
 | WATR-05 | Phase 6 | Complete |
-| TRAF-03 | Phase 7 | Pending |
-| TRAF-04 | Phase 7 | Pending |
-| TRAF-05 | Phase 7 | Pending |
-| ENRG-01 | Phase 7 | Pending |
-| ENRG-02 | Phase 7 | Pending |
+| TRAF-03 | Phase 7 | Complete |
+| TRAF-04 | Phase 7 | Complete |
+| TRAF-05 | Phase 7 | Complete |
+| ENRG-01 | Phase 7 | Complete |
+| ENRG-02 | Phase 7 | Complete |
 | ENRG-03 | Phase 7 | Pending |
 | ENRG-04 | Phase 7 | Pending |
 | COMM-01 | Phase 8 | Pending |

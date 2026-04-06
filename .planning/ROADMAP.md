@@ -157,7 +157,7 @@ Plans:
 **UI hint**: yes
 
 Plans:
-- [ ] 07-01-PLAN.md — Foundation: migration 003, base.py traffic branch, schemas, VALID_DOMAINS, test stubs
+- [x] 07-01-PLAN.md — Foundation: migration 003, base.py traffic branch, schemas, VALID_DOMAINS, test stubs
 - [ ] 07-02-PLAN.md — Traffic connectors: BASt + Autobahn + MobiData BW (TRAF-03, TRAF-04, TRAF-05)
 - [ ] 07-03-PLAN.md — Energy connectors: SMARD + MaStR (ENRG-01, ENRG-02, ENRG-03)
 - [ ] 07-04-PLAN.md — API router extensions + aalen.yaml wiring (all requirements)
