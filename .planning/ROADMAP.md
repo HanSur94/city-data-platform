@@ -20,7 +20,7 @@ Decimal phases appear between their surrounding integers in numeric order.
 - [ ] **Phase 6: Weather & Environment Connectors** - Weather, AQI visualization, water levels, flood/noise/env overlays
 - [x] **Phase 7: Traffic & Energy Connectors** - Road traffic counts, Autobahn warnings, MobiData BW, SMARD energy mix (completed 2026-04-06)
 - [ ] **Phase 8: Community & Infrastructure Connectors** - Waste, schools, healthcare, parks, EV charging, roadworks, solar
-- [ ] **Phase 9: Geospatial Enrichment** - Cadastral data, 3D buildings, elevation, orthophotos, satellite imagery
+- [x] **Phase 9: Geospatial Enrichment** - Cadastral data, 3D buildings, elevation, orthophotos, satellite imagery (completed 2026-04-06)
 - [ ] **Phase 10: Operator & Multi-Town** - Admin health dashboard, demographics data, second-town validation, theming
 
 ## Phase Details
@@ -206,7 +206,7 @@ Plans:
 Plans:
 - [x] 09-01-PLAN.md — Base layer switching (OSM/Orthophoto/Satellite) + cadastral and hillshade WMS overlays
 - [x] 09-02-PLAN.md — 3D building extrusion layer with fill-extrusion and auto-tilt
-- [ ] 09-03-PLAN.md — Human verify: all 5 Phase 9 requirements
+- [x] 09-03-PLAN.md — Human verify: all 5 Phase 9 requirements
 
 ### Phase 10: Operator & Multi-Town
 **Goal**: An operator can monitor connector health, a second town can be onboarded via a single YAML file, and demographic statistics complete the data offering
@@ -234,5 +234,5 @@ Phases execute in numeric order: 1 -> 2 -> 3 -> 4 -> 5 -> 6 -> 7 -> 8 -> 9 -> 10
 | 6. Weather & Environment Connectors | 4/5 | In Progress|  |
 | 7. Traffic & Energy Connectors | 7/7 | Complete   | 2026-04-06 |
 | 8. Community & Infrastructure Connectors | 3/4 | In Progress|  |
-| 9. Geospatial Enrichment | 2/3 | In Progress|  |
+| 9. Geospatial Enrichment | 3/3 | Complete   | 2026-04-06 |
 | 10. Operator & Multi-Town | 0/TBD | Not started | - |
