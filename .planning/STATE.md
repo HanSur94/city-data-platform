@@ -3,14 +3,14 @@ gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
 status: executing
-stopped_at: Completed 06-weather-environment/06-03-PLAN.md
-last_updated: "2026-04-06T00:14:27.459Z"
-last_activity: 2026-04-05
+stopped_at: Completed 05-dashboard/05-07-PLAN.md
+last_updated: "2026-04-06T00:03:17.729Z"
+last_activity: 2026-04-06 -- Phase 06 execution started
 progress:
   total_phases: 10
   completed_phases: 4
   total_plans: 28
-  completed_plans: 25
+  completed_plans: 22
   percent: 0
 ---
 
@@ -21,14 +21,14 @@ progress:
 See: .planning/PROJECT.md (updated 2026-04-05)
 
 **Core value:** Citizens and city officials can see all publicly available city data in one place, on a map, updated live — no technical expertise required.
-**Current focus:** Phase 05 — dashboard
+**Current focus:** Phase 06 — weather-environment
 
 ## Current Position
 
-Phase: 6
-Plan: Not started
-Status: Ready to execute
-Last activity: 2026-04-05
+Phase: 06 (weather-environment) — EXECUTING
+Plan: 1 of 5
+Status: Executing Phase 06
+Last activity: 2026-04-06 -- Phase 06 execution started
 
 Progress: [░░░░░░░░░░] 0%
 
@@ -62,8 +62,6 @@ Progress: [░░░░░░░░░░] 0%
 | Phase 05-dashboard P05 | 2 | 2 tasks | 3 files |
 | Phase 05-dashboard P06 | 3 | 2 tasks | 2 files |
 | Phase 05-dashboard P07 | 2 | 1 tasks | 1 files |
-| Phase 06-weather-environment P02 | 209 | 2 tasks | 7 files |
-| Phase 06-weather-environment P03 | 4 | 2 tasks | 6 files |
 
 ## Accumulated Context
 
@@ -96,9 +94,6 @@ Recent decisions affecting current work:
 - [Phase 05-dashboard]: historicalTimestamp is optional prop on MapView — existing callers need no change until Plan 07
 - [Phase 05-dashboard]: page.tsx: useUrlState is single source of truth — no local useState for layerVisibility, domain, dateRange, or timestamp
 - [Phase 05-dashboard]: Suspense + HomeInner pattern for pages using useSearchParams-based hooks — enforced in page.tsx Plan 07
-- [Phase 06-weather-environment]: EEA EAQI breakpoints are upper-inclusive: pm25 tier boundaries [5,15,25,50,75,inf] mean values > 75 land in tier 5 (extremely_poor), values 51-75 in tier 4 (very_poor) — plan comments had wrong tier numbers
-- [Phase 06-weather-environment]: LubwWfsConnector.fetch() returns full FeatureCollection dicts for clean Pydantic validation in run()
-- [Phase 06-weather-environment]: LUBW WFS polygon features stored as POINT centroids (shapely-based) — full polygon WMS overlay deferred to Plan 04
 
 ### Pending Todos
 
@@ -113,6 +108,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-04-06T00:14:27.456Z
-Stopped at: Completed 06-weather-environment/06-03-PLAN.md
+Last session: 2026-04-05T23:36:46.779Z
+Stopped at: Completed 05-dashboard/05-07-PLAN.md
 Resume file: None
