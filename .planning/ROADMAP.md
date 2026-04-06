@@ -46,9 +46,9 @@ Implement all missing features from the AalenPulse requirements document to reac
   - [ ] Water readings stored in water_readings hypertable
   - [ ] Dashboard shows Kocher gauge widget with color-coded level
   - [ ] Map shows Kocher river colored by warning stage
-- **Plans:** 1/2 plans executed
+- **Plans:** 2/2 plans complete
   - [x] 12-01-PLAN.md -- LHP connector with Huttlingen gauge polling and water KPI endpoint
-  - [ ] 12-02-PLAN.md -- KocherGaugeWidget dashboard + KocherLayer map visualization
+  - [x] 12-02-PLAN.md -- KocherGaugeWidget dashboard + KocherLayer map visualization
 - **Status:** Planning Complete
 
 ### Phase 13: Parking Occupancy — Stadtwerke Scraper

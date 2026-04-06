@@ -3,14 +3,14 @@ gsd_state_version: 1.0
 milestone: v2.0
 milestone_name: — AalenPulse Feature Parity
 status: verifying
-stopped_at: Completed 12-01-PLAN.md (LHP Connector and Water KPI)
-last_updated: "2026-04-06T21:07:42.127Z"
+stopped_at: Completed 12-02-PLAN.md (Kocher Frontend)
+last_updated: "2026-04-06T21:12:53.913Z"
 last_activity: 2026-04-06
 progress:
   total_phases: 8
-  completed_phases: 1
+  completed_phases: 2
   total_plans: 4
-  completed_plans: 3
+  completed_plans: 4
   percent: 12
 ---
 
@@ -51,6 +51,7 @@ Progress: [█░░░░░░░░░] 12%
 - congestion_ratio in feature properties, speed_avg_kmh in traffic_readings for schema compat
 - [Phase 11]: Separate source ID traffic-flow to avoid conflict with existing traffic source for BASt circles
 - [Phase 12]: Used asyncio.to_thread for lhpapi since it is synchronous/blocking
+- [Phase 12]: Separate kocher-features source to avoid interfering with existing water-features source
 
 ### Pending Todos
 
@@ -64,6 +65,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-04-06T21:07:42.123Z
-Stopped at: Completed 12-01-PLAN.md (LHP Connector and Water KPI)
+Last session: 2026-04-06T21:12:53.909Z
+Stopped at: Completed 12-02-PLAN.md (Kocher Frontend)
 Resume file: None
