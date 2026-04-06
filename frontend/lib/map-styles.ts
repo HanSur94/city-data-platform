@@ -1,4 +1,4 @@
-import { layers, namedFlavor } from '@protomaps/basemaps';
+// import { layers, namedFlavor } from '@protomaps/basemaps'; // Re-enable when using PMTiles vector tiles
 import type { StyleSpecification } from 'maplibre-gl';
 
 export type BaseLayer = 'osm' | 'orthophoto' | 'satellite';
@@ -35,19 +35,24 @@ export const TRANSIT_COLORS: Record<string, string> = {
   tram:  '#2e7d32',
 };
 
-export function buildMapStyle(pmtilesUrl: string) {
+export function buildMapStyle(_pmtilesUrl: string): StyleSpecification {
+  // Use OSM raster tiles as default base layer.
+  // For vector tiles, download PMTiles and switch to the protomaps variant below.
   return {
-    version: 8 as const,
+    version: 8,
     glyphs: 'https://protomaps.github.io/basemaps-assets/fonts/{fontstack}/{range}.pbf',
     sprite: 'https://protomaps.github.io/basemaps-assets/sprites/v4/light',
     sources: {
-      protomaps: {
-        type: 'vector' as const,
-        url: pmtilesUrl,
-        attribution: '© OpenStreetMap contributors',
+      osm: {
+        type: 'raster',
+        tiles: [
+          'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
+        ],
+        tileSize: 256,
+        attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
       },
     },
-    layers: layers('protomaps', namedFlavor('light'), { lang: 'de' }),
+    layers: [{ id: 'osm-tiles', type: 'raster', source: 'osm' }],
   };
 }
 
