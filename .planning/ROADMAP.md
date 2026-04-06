@@ -2,12 +2,140 @@
 
 ## Completed Milestones
 
-### v1.0 — Full Platform (shipped 2026-04-06)
+<details>
+<summary>v1.0 — Full Platform (shipped 2026-04-06)</summary>
 
 10 phases, 46 plans, 241 files, ~47,700 lines. Foundation through operator dashboard + multi-town.
 
 See: [v1.0 Archive](.planning/milestones/v1.0-ROADMAP.md) | [v1.0 Requirements](.planning/milestones/v1.0-REQUIREMENTS.md) | [v1.0 Audit](.planning/milestones/v1.0-MILESTONE-AUDIT.md)
 
-## Current Milestone
+</details>
 
-No active milestone. Run `/gsd:new-milestone` to start the next version.
+## Current Milestone: v2.0 — AalenPulse Feature Parity
+
+Implement all missing features from the AalenPulse requirements document to reach full 30-layer parity with the specification.
+
+### Phase 11: Traffic Flow — TomTom Integration
+- **Goal:** Add real-time traffic flow visualization using TomTom Flow Segment Data API with road segment coloring by congestion ratio
+- **Requirements:**
+  - REQ-TRAFFIC-01: TomTom connector polling ~35 sample points on Aalen arterial roads (B29, B19, Friedrichstr., Gmunder Str.)
+  - REQ-TRAFFIC-02: Road segments colored by congestion ratio (currentSpeed/freeFlowSpeed): green >=0.75, yellow 0.50-0.75, orange 0.25-0.50, red <0.25
+  - REQ-TRAFFIC-03: Poll interval 10min rush hours (06-09, 16-19), 30min off-peak
+  - REQ-TRAFFIC-04: Store every poll result in traffic_readings for trend analysis
+  - REQ-TRAFFIC-05: Frontend TrafficFlowLayer showing colored road segments on map (2D + 3D)
+- **Success Criteria:**
+  - [ ] TomTom connector fetches speed data for Aalen road segments
+  - [ ] Road segments render with congestion-based color gradient on map
+  - [ ] Traffic readings stored in TimescaleDB
+  - [ ] Dashboard traffic KPI updated with flow status
+- **Status:** Not Started
+
+### Phase 12: Kocher Water Level — LHP Integration
+- **Goal:** Add Kocher river water level monitoring via LHP API with dashboard gauge widget and river visualization
+- **Requirements:**
+  - REQ-KOCHER-01: LHP connector polling Huttlingen gauge every 15 min via lhpapi
+  - REQ-KOCHER-02: Dashboard gauge widget: current cm reading, color-coded bar (green <80, yellow 80-120, orange 120-160, red >160)
+  - REQ-KOCHER-03: Trend arrow (rising/falling/stable) + sparkline last 7 days
+  - REQ-KOCHER-04: Warning badge when flood stage >= 1
+  - REQ-KOCHER-05: Kocher river line on map colored by warning stage
+- **Success Criteria:**
+  - [ ] LHP connector fetches water level, flow, stage for Huttlingen gauge
+  - [ ] Water readings stored in water_readings hypertable
+  - [ ] Dashboard shows Kocher gauge widget with color-coded level
+  - [ ] Map shows Kocher river colored by warning stage
+- **Status:** Not Started
+
+### Phase 13: Parking Occupancy — Stadtwerke Scraper
+- **Goal:** Add live parking garage occupancy by scraping sw-aalen.de and displaying on map + dashboard
+- **Requirements:**
+  - REQ-PARKING-01: Scraper for sw-aalen.de parking page
+  - REQ-PARKING-02: Scrape every 5-10 min, extract fill level per parking garage
+  - REQ-PARKING-03: Map pins colored green (free) -> yellow (filling) -> red (full)
+  - REQ-PARKING-04: Dashboard KPI widget showing parking availability summary
+  - REQ-PARKING-05: Click popup: "Parkhaus Stadtmitte: 45/120 frei"
+- **Success Criteria:**
+  - [ ] Parking scraper extracts occupancy from Stadtwerke website
+  - [ ] Parking features created with correct locations
+  - [ ] Map shows parking pins with occupancy coloring
+  - [ ] Dashboard shows parking KPI tile
+- **Status:** Not Started
+
+### Phase 14: Bus Position Interpolation
+- **Goal:** Implement interpolated bus positions from GTFS schedule + GTFS-RT delays, showing moving bus icons on routes
+- **Requirements:**
+  - REQ-BUS-01: Interpolation engine: for each active trip, calculate position along route shape based on schedule + delay offset
+  - REQ-BUS-02: Bus icons moving along route geometry, colored by delay (green <2min, yellow 2-5min, orange 5-10min, red >10min)
+  - REQ-BUS-03: Click/hover popup: line number, destination, current delay, next stop
+  - REQ-BUS-04: Faint route lines shown when bus layer active
+  - REQ-BUS-05: Handle edge cases: dwelling at stop, no delay data, trip not departed, trip completed
+  - REQ-BUS-06: Update every 30 seconds with smooth animation between updates
+- **Success Criteria:**
+  - [ ] Interpolation engine produces lat/lon positions for active OstalbMobil trips
+  - [ ] Frontend shows moving bus icons along routes
+  - [ ] Bus icons colored by delay status
+  - [ ] Popup shows trip details on click
+- **Status:** Not Started
+
+### Phase 15: Air Quality Heatmap — IDW Interpolation
+- **Goal:** Create continuous air quality surface across Aalen using IDW spatial interpolation from sensor points
+- **Requirements:**
+  - REQ-AIR-01: IDW interpolation on 50m x 50m grid from UBA + sensor.community readings
+  - REQ-AIR-02: 2D view: translucent color overlay (green -> yellow -> orange -> red -> purple)
+  - REQ-AIR-03: Toggle between pollutants: PM2.5 / PM10 / NO2 / O3
+  - REQ-AIR-04: Sensor points as pulsing dots with live readings
+  - REQ-AIR-05: Click sensor -> time-series popup chart
+  - REQ-AIR-06: Recalculate every 5 minutes
+- **Success Criteria:**
+  - [ ] IDW computation worker produces grid cell values
+  - [ ] Heatmap overlay renders on map with correct color ramp
+  - [ ] Pollutant toggle switches between PM2.5/PM10/NO2/O3
+  - [ ] Sensor point popups show time-series chart
+- **Status:** Not Started
+
+### Phase 16: Live Solar Production & EV Charging Status
+- **Goal:** Add computed live solar production per building and real-time EV charger availability
+- **Requirements:**
+  - REQ-SOLAR-01: Solar production computation: installed_kW (MaStR) x current_irradiance_factor (Bright Sky)
+  - REQ-SOLAR-02: 3D view: solar-equipped buildings glow proportional to current output
+  - REQ-SOLAR-03: Click building popup with potential vs installed vs current production
+  - REQ-EV-01: MobiData BW OCPDB connector for real-time charger status (AVAILABLE/OCCUPIED/INOPERATIVE)
+  - REQ-EV-02: Map pins: green=available, red=occupied, gray=offline
+  - REQ-EV-03: Icon size proportional to power (11kW AC small, 150kW DC large)
+- **Success Criteria:**
+  - [ ] Solar production computation runs every 15 min
+  - [ ] Buildings with solar show glow/badge in 3D view
+  - [ ] EV charger pins show real-time availability status
+  - [ ] Click popup shows connector types, operator, live status
+- **Status:** Not Started
+
+### Phase 17: Static Data Layers Expansion
+- **Goal:** Add remaining static data layers: heat demand, Fernwaerme coverage, cycling infrastructure, demographics grid, road noise map
+- **Requirements:**
+  - REQ-HEAT-01: Heat demand per building from KEA-BW Waermeatlas, color by kWh/m2/y (blue->green->yellow->orange->red)
+  - REQ-FERN-01: Fernwaerme coverage polygons for known neighborhoods
+  - REQ-CYCLE-01: Cycling infrastructure overlay from OSM tags (separated/lane/advisory/shared/none)
+  - REQ-DEMO-01: Zensus 2022 100m grid cell visualization on map (population density, age, rent, heating)
+  - REQ-NOISE-01: LUBW road noise WMS overlay (LDEN/LNight toggle)
+- **Success Criteria:**
+  - [ ] Heat demand coloring on buildings in 3D view
+  - [ ] Fernwaerme polygons visible on map
+  - [ ] Cycling infrastructure colors road segments
+  - [ ] Demographics grid cells render with choropleth colors
+  - [ ] Road noise bands visible from LUBW WMS
+- **Status:** Not Started
+
+### Phase 18: Data Transparency UI
+- **Goal:** Add data provenance badges, metadata popups, and freshness indicators per layer
+- **Requirements:**
+  - REQ-TRANS-01: Data type badges on every layer: LIVE / SCRAPED / INTERPOLATED / MODELED / STATIC
+  - REQ-TRANS-02: Layer toggle panel info icon -> metadata popup with source, data type, last updated, interval, license
+  - REQ-TRANS-03: Stale data warning badge when last update > 2x expected interval
+  - REQ-TRANS-04: Dashboard widget footer format: "SMARD . 14:30 . LIVE"
+  - REQ-TRANS-05: Per-feature popup includes data source section with full source name, link, data type badge, timestamp
+- **Success Criteria:**
+  - [ ] Every active layer shows data type badge
+  - [ ] Info icon opens metadata popup with 5 required fields
+  - [ ] Stale layers show warning indicator
+  - [ ] Widget footers show source + timestamp + badge
+  - [ ] Feature popups include data source section
+- **Status:** Not Started
