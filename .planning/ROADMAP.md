@@ -102,8 +102,8 @@ Implement all missing features from the AalenPulse requirements document to reac
   - [ ] Heatmap overlay renders on map with correct color ramp
   - [ ] Pollutant toggle switches between PM2.5/PM10/NO2/O3
   - [ ] Sensor point popups show time-series chart
-- **Plans:** 2 plans
-  - [ ] 15-01-PLAN.md -- AirQualityGridConnector with IDW interpolation algorithm and grid layer filter
+- **Plans:** 1/2 plans executed
+  - [x] 15-01-PLAN.md -- AirQualityGridConnector with IDW interpolation algorithm and grid layer filter
   - [ ] 15-02-PLAN.md -- AirQualityHeatmapLayer, pollutant toggle, pulsing sensors, time-series popup
 - **Status:** Planning Complete
 

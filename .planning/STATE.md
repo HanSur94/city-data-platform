@@ -3,14 +3,14 @@ gsd_state_version: 1.0
 milestone: v2.0
 milestone_name: — AalenPulse Feature Parity
 status: verifying
-stopped_at: Completed 14-02-PLAN.md (Bus Frontend Visualization)
-last_updated: "2026-04-06T21:49:32.133Z"
+stopped_at: Completed 15-01-PLAN.md (Air Quality Grid Backend)
+last_updated: "2026-04-06T22:00:35.324Z"
 last_activity: 2026-04-06
 progress:
   total_phases: 8
   completed_phases: 4
-  total_plans: 8
-  completed_plans: 8
+  total_plans: 10
+  completed_plans: 9
   percent: 12
 ---
 
@@ -58,6 +58,8 @@ Progress: [█░░░░░░░░░] 12%
 - [Phase 14]: Pure function extraction (shape_walk, interpolate_position) for direct unit testing of algorithms
 - [Phase 14]: Used inline fetchLayer with 30s setInterval instead of useLayerData (60s) for bus position refresh
 - [Phase 14]: Separate GeoJSON source IDs (bus-positions, bus-routes) to avoid transit source interference
+- [Phase 15]: Pure function extraction for IDW and grid generation enables unit testing without database
+- [Phase 15]: feature_type filter on layers endpoint separates grid cells from sensor points without new endpoint
 
 ### Pending Todos
 
@@ -71,6 +73,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-04-06T21:48:52.867Z
-Stopped at: Completed 14-02-PLAN.md (Bus Frontend Visualization)
+Last session: 2026-04-06T22:00:35.320Z
+Stopped at: Completed 15-01-PLAN.md (Air Quality Grid Backend)
 Resume file: None
