@@ -12,6 +12,8 @@ import WaterLegend from './WaterLegend';
 import TrafficLegend from './TrafficLegend';
 import EnergyLegend from './EnergyLegend';
 
+import type { DemographicMetric } from '@/components/map/DemographicsGridLayer';
+
 interface SidebarProps {
   layerVisibility: {
     transit: boolean;
@@ -36,8 +38,11 @@ interface SidebarProps {
     parking?: boolean;
     busPosition?: boolean;
     solarGlow?: boolean;
+    roadNoise?: boolean;
+    fernwaerme?: boolean;
+    demographics?: boolean;
   };
-  onToggleLayer: (layer: 'transit' | 'airQuality' | 'water' | 'floodHazard' | 'railNoise' | 'lubwEnv' | 'traffic' | 'autobahn' | 'mobiData' | 'energy' | 'schools' | 'healthcare' | 'parks' | 'waste' | 'evCharging' | 'roadworks' | 'solarPotential' | 'trafficFlow' | 'cadastral' | 'hillshade' | 'buildings3d' | 'kocher' | 'parking' | 'busPosition' | 'solarGlow') => void;
+  onToggleLayer: (layer: 'transit' | 'airQuality' | 'water' | 'floodHazard' | 'railNoise' | 'lubwEnv' | 'traffic' | 'autobahn' | 'mobiData' | 'energy' | 'schools' | 'healthcare' | 'parks' | 'waste' | 'evCharging' | 'roadworks' | 'solarPotential' | 'trafficFlow' | 'cadastral' | 'hillshade' | 'buildings3d' | 'kocher' | 'parking' | 'busPosition' | 'solarGlow' | 'roadNoise' | 'fernwaerme' | 'demographics') => void;
   transitError?: boolean;
   airQualityError?: boolean;
   trafficError?: boolean;
@@ -49,9 +54,13 @@ interface SidebarProps {
   buildings3dVisible?: boolean;
   activePollutant?: Pollutant;
   onPollutantChange?: (pollutant: Pollutant) => void;
+  noiseMetric?: 'lden' | 'lnight';
+  onNoiseMetricChange?: (metric: 'lden' | 'lnight') => void;
+  demographicMetric?: DemographicMetric;
+  onDemographicMetricChange?: (metric: DemographicMetric) => void;
 }
 
-export default function Sidebar({ layerVisibility, onToggleLayer, transitError, airQualityError, trafficError, energyError, baseLayer, onBaseLayerChange, cadastralVisible, hillshadeVisible, buildings3dVisible, activePollutant, onPollutantChange }: SidebarProps) {
+export default function Sidebar({ layerVisibility, onToggleLayer, transitError, airQualityError, trafficError, energyError, baseLayer, onBaseLayerChange, cadastralVisible, hillshadeVisible, buildings3dVisible, activePollutant, onPollutantChange, noiseMetric, onNoiseMetricChange, demographicMetric, onDemographicMetricChange }: SidebarProps) {
   const [drawerOpen, setDrawerOpen] = useState(false);
 
   const content = (
@@ -120,6 +129,25 @@ export default function Sidebar({ layerVisibility, onToggleLayer, transitError, 
           checked={layerVisibility.lubwEnv}
           onCheckedChange={() => onToggleLayer('lubwEnv')}
         />
+        <LayerToggle
+          id="road-noise-toggle"
+          label="Strassenlaerm (LUBW)"
+          checked={layerVisibility.roadNoise ?? false}
+          onCheckedChange={() => onToggleLayer('roadNoise')}
+        />
+        {layerVisibility.roadNoise && noiseMetric && onNoiseMetricChange && (
+          <div className="px-6 pb-1 flex gap-2">
+            {(['lden', 'lnight'] as const).map((m) => (
+              <button
+                key={m}
+                className={`text-[11px] px-2 py-0.5 rounded ${noiseMetric === m ? 'bg-primary text-white' : 'bg-slate-100 text-slate-600 hover:bg-slate-200'}`}
+                onClick={() => onNoiseMetricChange(m)}
+              >
+                {m === 'lden' ? 'LDEN (Tag)' : 'LNight (Nacht)'}
+              </button>
+            ))}
+          </div>
+        )}
       </div>
 
       <Separator className="mt-6" />
@@ -172,6 +200,12 @@ export default function Sidebar({ layerVisibility, onToggleLayer, transitError, 
           checked={layerVisibility.solarGlow ?? false}
           onCheckedChange={() => onToggleLayer('solarGlow')}
         />
+        <LayerToggle
+          id="fernwaerme-toggle"
+          label="Fernwaerme-Netz"
+          checked={layerVisibility.fernwaerme ?? false}
+          onCheckedChange={() => onToggleLayer('fernwaerme')}
+        />
       </div>
 
       <Separator className="mt-6" />
@@ -203,6 +237,30 @@ export default function Sidebar({ layerVisibility, onToggleLayer, transitError, 
           checked={layerVisibility.waste ?? false}
           onCheckedChange={() => onToggleLayer('waste')}
         />
+        <LayerToggle
+          id="demographics-toggle"
+          label="Demografie (Zensus)"
+          checked={layerVisibility.demographics ?? false}
+          onCheckedChange={() => onToggleLayer('demographics')}
+        />
+        {layerVisibility.demographics && demographicMetric && onDemographicMetricChange && (
+          <div className="px-6 pb-1 flex flex-wrap gap-1">
+            {([
+              { key: 'population' as const, label: 'Einwohner' },
+              { key: 'age' as const, label: 'Alter' },
+              { key: 'rent' as const, label: 'Miete' },
+              { key: 'heating' as const, label: 'Heizung' },
+            ]).map(({ key, label }) => (
+              <button
+                key={key}
+                className={`text-[11px] px-2 py-0.5 rounded ${demographicMetric === key ? 'bg-primary text-white' : 'bg-slate-100 text-slate-600 hover:bg-slate-200'}`}
+                onClick={() => onDemographicMetricChange(key)}
+              >
+                {label}
+              </button>
+            ))}
+          </div>
+        )}
       </div>
 
       <Separator className="mt-6" />

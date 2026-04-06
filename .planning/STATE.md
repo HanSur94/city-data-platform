@@ -3,8 +3,8 @@ gsd_state_version: 1.0
 milestone: v2.0
 milestone_name: — AalenPulse Feature Parity
 status: verifying
-stopped_at: Completed 17-01-PLAN.md (Heat Demand + Cycling Connectors)
-last_updated: "2026-04-06T22:37:51.898Z"
+stopped_at: Completed 17-02-PLAN.md (Static Layers Frontend)
+last_updated: "2026-04-06T22:38:26.730Z"
 last_activity: 2026-04-06
 progress:
   total_phases: 8
@@ -67,8 +67,8 @@ Progress: [█░░░░░░░░░] 12%
 - [Phase 16]: Added source query param to infrastructure layers endpoint for OCPDB vs BNetzA separation
 - [Phase 16]: Separate GeoJSON sources (solar-glow, ev-charging-live) to avoid conflicts with existing sources
 - [Phase 16]: EvChargingPopup backward-compatible: source=ocpdb shows live status, else legacy BNetzA fields
-- [Phase 17]: Deterministic seed from town ID for reproducible simulated heat demand data
-- [Phase 17]: Residential roads without cycling tags skipped (only major roads get infra_type=none)
+- [Phase 17-static-layers]: Dual WmsOverlayLayer instances for LDEN/LNight to avoid tile reload on metric toggle
+- [Phase 17-static-layers]: Zensus 2022 WMS for demographics grid instead of backend point data
 
 ### Pending Todos
 
@@ -82,6 +82,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-04-06T22:37:51.894Z
-Stopped at: Completed 17-01-PLAN.md (Heat Demand + Cycling Connectors)
+Last session: 2026-04-06T22:38:26.727Z
+Stopped at: Completed 17-02-PLAN.md (Static Layers Frontend)
 Resume file: None

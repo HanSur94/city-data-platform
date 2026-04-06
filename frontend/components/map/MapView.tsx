@@ -41,6 +41,11 @@ import ParkingPopup from './ParkingPopup';
 import BusPositionLayer from './BusPositionLayer';
 import BusRouteLayer from './BusRouteLayer';
 import BusPopup from './BusPopup';
+import NoiseWmsLayer from './NoiseWmsLayer';
+import FernwaermeLayer from './FernwaermeLayer';
+import DemographicsGridLayer from './DemographicsGridLayer';
+import DemographicsPopup from './DemographicsPopup';
+import type { DemographicMetric } from './DemographicsGridLayer';
 import type { LayerResponse } from '@/types/geojson';
 import type GeoJSON from 'geojson';
 
@@ -89,6 +94,11 @@ interface MapViewProps {
   parkingVisible?: boolean;
   busPositionVisible?: boolean;
   solarGlowVisible?: boolean;
+  roadNoiseVisible?: boolean;
+  fernwaermeVisible?: boolean;
+  demographicsVisible?: boolean;
+  noiseMetric?: 'lden' | 'lnight';
+  demographicMetric?: DemographicMetric;
   baseLayer?: BaseLayer;
   cadastralVisible?: boolean;
   hillshadeVisible?: boolean;
@@ -99,7 +109,7 @@ interface PopupInfo {
   longitude: number;
   latitude: number;
   feature: GeoJSON.Feature;
-  domain: 'transit' | 'airQuality' | 'water' | 'traffic' | 'trafficFlow' | 'autobahn' | 'energy' | 'community' | 'evCharging' | 'roadworks' | 'kocher' | 'parking' | 'busPosition' | 'solarGlow';
+  domain: 'transit' | 'airQuality' | 'water' | 'traffic' | 'trafficFlow' | 'autobahn' | 'energy' | 'community' | 'evCharging' | 'roadworks' | 'kocher' | 'parking' | 'busPosition' | 'solarGlow' | 'demographics';
 }
 
 export default function MapView({
@@ -130,6 +140,11 @@ export default function MapView({
   parkingVisible = false,
   busPositionVisible = false,
   solarGlowVisible = false,
+  roadNoiseVisible = false,
+  fernwaermeVisible = false,
+  demographicsVisible = false,
+  noiseMetric = 'lden',
+  demographicMetric = 'population',
   baseLayer = 'osm',
   cadastralVisible = false,
   hillshadeVisible = false,
@@ -291,6 +306,9 @@ export default function MapView({
             <BusPositionLayer town={town} visible={true} />
           </>
         )}
+        <NoiseWmsLayer visible={roadNoiseVisible} noiseMetric={noiseMetric} />
+        <FernwaermeLayer visible={fernwaermeVisible} />
+        <DemographicsGridLayer town={town} visible={demographicsVisible} activeMetric={demographicMetric} />
         <GeospatialOverlayLayer
           cadastralVisible={cadastralVisible}
           hillshadeVisible={hillshadeVisible}
@@ -339,6 +357,8 @@ export default function MapView({
               <ParkingPopup feature={popupInfo.feature} />
             ) : popupInfo.domain === 'roadworks' ? (
               <RoadworksPopup feature={popupInfo.feature} />
+            ) : popupInfo.domain === 'demographics' ? (
+              <DemographicsPopup feature={popupInfo.feature} />
             ) : (
               <FeaturePopup
                 feature={popupInfo.feature}

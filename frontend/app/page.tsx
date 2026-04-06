@@ -12,6 +12,7 @@ import { useGridLayerData } from '@/hooks/useGridLayerData'
 import { useUrlState } from '@/hooks/useUrlState'
 import { useTimeseries } from '@/hooks/useTimeseries'
 import type { Pollutant } from '@/components/map/AirQualityHeatmapLayer'
+import type { DemographicMetric } from '@/components/map/DemographicsGridLayer'
 
 const MapView = dynamic(() => import('@/components/map/MapView'), {
   ssr: false,
@@ -50,6 +51,9 @@ function HomeInner() {
     parking: state.layers.includes('parking'),
     busPosition: state.layers.includes('bus_position'),
     solarGlow: state.layers.includes('solar_glow'),
+    roadNoise: state.layers.includes('road_noise'),
+    fernwaerme: state.layers.includes('fernwaerme'),
+    demographics: state.layers.includes('demographics'),
     cadastral: state.layers.includes('cadastral'),
     hillshade: state.layers.includes('hillshade'),
     buildings3d: state.layers.includes('buildings3d'),
@@ -78,6 +82,9 @@ function HomeInner() {
     parking: 'parking',
     busPosition: 'bus_position',
     solarGlow: 'solar_glow',
+    roadNoise: 'road_noise',
+    fernwaerme: 'fernwaerme',
+    demographics: 'demographics',
     cadastral: 'cadastral',
     hillshade: 'hillshade',
     buildings3d: 'buildings3d',
@@ -94,6 +101,12 @@ function HomeInner() {
 
   // Pollutant toggle state for air quality heatmap grid
   const [activePollutant, setActivePollutant] = useState<Pollutant>('pm25')
+
+  // Noise metric toggle state for road noise WMS layer
+  const [noiseMetric, setNoiseMetric] = useState<'lden' | 'lnight'>('lden')
+
+  // Demographic metric toggle state for demographics grid layer
+  const [demographicMetric, setDemographicMetric] = useState<DemographicMetric>('population')
 
   // Data hooks — pass historicalTimestamp for time slider historical support
   const transit = useLayerData('transit', town, historicalTimestamp)
@@ -165,6 +178,10 @@ function HomeInner() {
         buildings3dVisible={layerVisibility.buildings3d}
         activePollutant={activePollutant}
         onPollutantChange={setActivePollutant}
+        noiseMetric={noiseMetric}
+        onNoiseMetricChange={setNoiseMetric}
+        demographicMetric={demographicMetric}
+        onDemographicMetricChange={setDemographicMetric}
       />
 
       {/* Map column — flex-1, fills space between sidebar and dashboard panel */}
@@ -198,6 +215,11 @@ function HomeInner() {
             parkingVisible={layerVisibility.parking}
             busPositionVisible={layerVisibility.busPosition}
             solarGlowVisible={layerVisibility.solarGlow}
+            roadNoiseVisible={layerVisibility.roadNoise}
+            fernwaermeVisible={layerVisibility.fernwaerme}
+            demographicsVisible={layerVisibility.demographics}
+            noiseMetric={noiseMetric}
+            demographicMetric={demographicMetric}
             baseLayer={state.baseLayer}
             cadastralVisible={layerVisibility.cadastral}
             hillshadeVisible={layerVisibility.hillshade}
