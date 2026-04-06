@@ -13,6 +13,8 @@ import TrafficLegend from './TrafficLegend';
 import EnergyLegend from './EnergyLegend';
 import HeatDemandLegend from './HeatDemandLegend';
 import CyclingLegend from './CyclingLegend';
+import { LAYER_METADATA } from '@/lib/layer-metadata';
+import { useLayerMetadata } from '@/hooks/useLayerMetadata';
 
 import type { DemographicMetric } from '@/components/map/DemographicsGridLayer';
 
@@ -66,6 +68,7 @@ interface SidebarProps {
 
 export default function Sidebar({ layerVisibility, onToggleLayer, transitError, airQualityError, trafficError, energyError, baseLayer, onBaseLayerChange, cadastralVisible, hillshadeVisible, buildings3dVisible, activePollutant, onPollutantChange, noiseMetric, onNoiseMetricChange, demographicMetric, onDemographicMetricChange }: SidebarProps) {
   const [drawerOpen, setDrawerOpen] = useState(false);
+  const { layerMeta } = useLayerMetadata();
 
   const content = (
     <div className="flex flex-col h-full bg-white w-[280px]">
@@ -82,38 +85,63 @@ export default function Sidebar({ layerVisibility, onToggleLayer, transitError, 
         </p>
         <LayerToggle
           id="transit-toggle"
-          label="ÖPNV (Bus & Bahn)"
+          label="OEPNV (Bus & Bahn)"
           checked={layerVisibility.transit}
           onCheckedChange={() => onToggleLayer('transit')}
           freshnessError={transitError}
+          layerKey="transit"
+          dataType={LAYER_METADATA['transit']?.dataType}
+          isStale={layerMeta['transit']?.isStale}
+          metadata={LAYER_METADATA['transit']}
+          lastUpdated={layerMeta['transit']?.lastUpdated}
         />
         <LayerToggle
           id="bus-position-toggle"
           label="Bus-Positionen (live)"
           checked={layerVisibility.busPosition ?? false}
           onCheckedChange={() => onToggleLayer('busPosition')}
+          layerKey="busPosition"
+          dataType={LAYER_METADATA['busPosition']?.dataType}
+          isStale={layerMeta['busPosition']?.isStale}
+          metadata={LAYER_METADATA['busPosition']}
+          lastUpdated={layerMeta['busPosition']?.lastUpdated}
         />
         <LayerToggle
           id="aqi-toggle"
-          label="Luftqualität"
+          label="Luftqualitaet"
           checked={layerVisibility.airQuality}
           onCheckedChange={() => onToggleLayer('airQuality')}
           freshnessError={airQualityError}
+          layerKey="airQuality"
+          dataType={LAYER_METADATA['airQuality']?.dataType}
+          isStale={layerMeta['airQuality']?.isStale}
+          metadata={LAYER_METADATA['airQuality']}
+          lastUpdated={layerMeta['airQuality']?.lastUpdated}
         />
         {layerVisibility.airQuality && activePollutant && onPollutantChange && (
           <PollutantToggle activePollutant={activePollutant} onPollutantChange={onPollutantChange} />
         )}
         <LayerToggle
           id="water-toggle"
-          label="Pegel & Gewässer"
+          label="Pegel & Gewaesser"
           checked={layerVisibility.water}
           onCheckedChange={() => onToggleLayer('water')}
+          layerKey="water"
+          dataType={LAYER_METADATA['water']?.dataType}
+          isStale={layerMeta['water']?.isStale}
+          metadata={LAYER_METADATA['water']}
+          lastUpdated={layerMeta['water']?.lastUpdated}
         />
         <LayerToggle
           id="kocher-toggle"
           label="Kocher Pegel (LHP)"
           checked={layerVisibility.kocher ?? false}
           onCheckedChange={() => onToggleLayer('kocher')}
+          layerKey="kocher"
+          dataType={LAYER_METADATA['kocher']?.dataType}
+          isStale={layerMeta['kocher']?.isStale}
+          metadata={LAYER_METADATA['kocher']}
+          lastUpdated={layerMeta['kocher']?.lastUpdated}
         />
         <LayerToggle
           id="flood-toggle"
@@ -123,7 +151,7 @@ export default function Sidebar({ layerVisibility, onToggleLayer, transitError, 
         />
         <LayerToggle
           id="rail-noise-toggle"
-          label="Bahnlärm (Lden)"
+          label="Bahnlaerm (Lden)"
           checked={layerVisibility.railNoise}
           onCheckedChange={() => onToggleLayer('railNoise')}
         />
@@ -138,6 +166,11 @@ export default function Sidebar({ layerVisibility, onToggleLayer, transitError, 
           label="Strassenlaerm (LUBW)"
           checked={layerVisibility.roadNoise ?? false}
           onCheckedChange={() => onToggleLayer('roadNoise')}
+          layerKey="roadNoise"
+          dataType={LAYER_METADATA['roadNoise']?.dataType}
+          isStale={layerMeta['roadNoise']?.isStale}
+          metadata={LAYER_METADATA['roadNoise']}
+          lastUpdated={layerMeta['roadNoise']?.lastUpdated}
         />
         {layerVisibility.roadNoise && noiseMetric && onNoiseMetricChange && (
           <div className="px-6 pb-1 flex gap-2">
@@ -165,30 +198,55 @@ export default function Sidebar({ layerVisibility, onToggleLayer, transitError, 
           checked={layerVisibility.traffic}
           onCheckedChange={() => onToggleLayer('traffic')}
           freshnessError={trafficError}
+          layerKey="traffic"
+          dataType={LAYER_METADATA['traffic']?.dataType}
+          isStale={layerMeta['traffic']?.isStale}
+          metadata={LAYER_METADATA['traffic']}
+          lastUpdated={layerMeta['traffic']?.lastUpdated}
         />
         <LayerToggle
           id="traffic-flow-toggle"
           label="Verkehrsfluss (TomTom)"
           checked={layerVisibility.trafficFlow ?? false}
           onCheckedChange={() => onToggleLayer('trafficFlow')}
+          layerKey="trafficFlow"
+          dataType={LAYER_METADATA['trafficFlow']?.dataType}
+          isStale={layerMeta['trafficFlow']?.isStale}
+          metadata={LAYER_METADATA['trafficFlow']}
+          lastUpdated={layerMeta['trafficFlow']?.lastUpdated}
         />
         <LayerToggle
           id="autobahn-toggle"
           label="Autobahn-Stoerungen (A7/A6)"
           checked={layerVisibility.autobahn}
           onCheckedChange={() => onToggleLayer('autobahn')}
+          layerKey="autobahn"
+          dataType={LAYER_METADATA['autobahn']?.dataType}
+          isStale={layerMeta['autobahn']?.isStale}
+          metadata={LAYER_METADATA['autobahn']}
+          lastUpdated={layerMeta['autobahn']?.lastUpdated}
         />
         <LayerToggle
           id="mobidata-toggle"
           label="MobiData BW"
           checked={layerVisibility.mobiData}
           onCheckedChange={() => onToggleLayer('mobiData')}
+          layerKey="mobiData"
+          dataType={LAYER_METADATA['mobiData']?.dataType}
+          isStale={layerMeta['mobiData']?.isStale}
+          metadata={LAYER_METADATA['mobiData']}
+          lastUpdated={layerMeta['mobiData']?.lastUpdated}
         />
         <LayerToggle
           id="cycling-toggle"
           label="Radinfrastruktur (OSM)"
           checked={layerVisibility.cycling ?? false}
           onCheckedChange={() => onToggleLayer('cycling')}
+          layerKey="cycling"
+          dataType={LAYER_METADATA['cycling']?.dataType}
+          isStale={layerMeta['cycling']?.isStale}
+          metadata={LAYER_METADATA['cycling']}
+          lastUpdated={layerMeta['cycling']?.lastUpdated}
         />
       </div>
 
@@ -203,24 +261,44 @@ export default function Sidebar({ layerVisibility, onToggleLayer, transitError, 
           checked={layerVisibility.energy}
           onCheckedChange={() => onToggleLayer('energy')}
           freshnessError={energyError}
+          layerKey="energy"
+          dataType={LAYER_METADATA['energy']?.dataType}
+          isStale={layerMeta['energy']?.isStale}
+          metadata={LAYER_METADATA['energy']}
+          lastUpdated={layerMeta['energy']?.lastUpdated}
         />
         <LayerToggle
           id="solar-glow-toggle"
           label="Solar-Erzeugung (live)"
           checked={layerVisibility.solarGlow ?? false}
           onCheckedChange={() => onToggleLayer('solarGlow')}
+          layerKey="solarGlow"
+          dataType={LAYER_METADATA['solarGlow']?.dataType}
+          isStale={layerMeta['solarGlow']?.isStale}
+          metadata={LAYER_METADATA['solarGlow']}
+          lastUpdated={layerMeta['solarGlow']?.lastUpdated}
         />
         <LayerToggle
           id="fernwaerme-toggle"
           label="Fernwaerme-Netz"
           checked={layerVisibility.fernwaerme ?? false}
           onCheckedChange={() => onToggleLayer('fernwaerme')}
+          layerKey="fernwaerme"
+          dataType={LAYER_METADATA['fernwaerme']?.dataType}
+          isStale={layerMeta['fernwaerme']?.isStale}
+          metadata={LAYER_METADATA['fernwaerme']}
+          lastUpdated={layerMeta['fernwaerme']?.lastUpdated}
         />
         <LayerToggle
           id="heat-demand-toggle"
           label="Waermebedarf (KEA-BW)"
           checked={layerVisibility.heatDemand ?? false}
           onCheckedChange={() => onToggleLayer('heatDemand')}
+          layerKey="heatDemand"
+          dataType={LAYER_METADATA['heatDemand']?.dataType}
+          isStale={layerMeta['heatDemand']?.isStale}
+          metadata={LAYER_METADATA['heatDemand']}
+          lastUpdated={layerMeta['heatDemand']?.lastUpdated}
         />
       </div>
 
@@ -234,30 +312,55 @@ export default function Sidebar({ layerVisibility, onToggleLayer, transitError, 
           label="Schulen & Kitas"
           checked={layerVisibility.schools ?? false}
           onCheckedChange={() => onToggleLayer('schools')}
+          layerKey="schools"
+          dataType={LAYER_METADATA['schools']?.dataType}
+          isStale={layerMeta['schools']?.isStale}
+          metadata={LAYER_METADATA['schools']}
+          lastUpdated={layerMeta['schools']?.lastUpdated}
         />
         <LayerToggle
           id="healthcare-toggle"
           label="Gesundheit"
           checked={layerVisibility.healthcare ?? false}
           onCheckedChange={() => onToggleLayer('healthcare')}
+          layerKey="healthcare"
+          dataType={LAYER_METADATA['healthcare']?.dataType}
+          isStale={layerMeta['healthcare']?.isStale}
+          metadata={LAYER_METADATA['healthcare']}
+          lastUpdated={layerMeta['healthcare']?.lastUpdated}
         />
         <LayerToggle
           id="parks-toggle"
           label="Parks & Spielplaetze"
           checked={layerVisibility.parks ?? false}
           onCheckedChange={() => onToggleLayer('parks')}
+          layerKey="parks"
+          dataType={LAYER_METADATA['parks']?.dataType}
+          isStale={layerMeta['parks']?.isStale}
+          metadata={LAYER_METADATA['parks']}
+          lastUpdated={layerMeta['parks']?.lastUpdated}
         />
         <LayerToggle
           id="waste-toggle"
           label="Wertstoffhoefe"
           checked={layerVisibility.waste ?? false}
           onCheckedChange={() => onToggleLayer('waste')}
+          layerKey="waste"
+          dataType={LAYER_METADATA['waste']?.dataType}
+          isStale={layerMeta['waste']?.isStale}
+          metadata={LAYER_METADATA['waste']}
+          lastUpdated={layerMeta['waste']?.lastUpdated}
         />
         <LayerToggle
           id="demographics-toggle"
           label="Demografie (Zensus)"
           checked={layerVisibility.demographics ?? false}
           onCheckedChange={() => onToggleLayer('demographics')}
+          layerKey="demographics"
+          dataType={LAYER_METADATA['demographics']?.dataType}
+          isStale={layerMeta['demographics']?.isStale}
+          metadata={LAYER_METADATA['demographics']}
+          lastUpdated={layerMeta['demographics']?.lastUpdated}
         />
         {layerVisibility.demographics && demographicMetric && onDemographicMetricChange && (
           <div className="px-6 pb-1 flex flex-wrap gap-1">
@@ -289,24 +392,44 @@ export default function Sidebar({ layerVisibility, onToggleLayer, transitError, 
           label="Baustellen (OSM)"
           checked={layerVisibility.roadworks ?? false}
           onCheckedChange={() => onToggleLayer('roadworks')}
+          layerKey="roadworks"
+          dataType={LAYER_METADATA['roadworks']?.dataType}
+          isStale={layerMeta['roadworks']?.isStale}
+          metadata={LAYER_METADATA['roadworks']}
+          lastUpdated={layerMeta['roadworks']?.lastUpdated}
         />
         <LayerToggle
           id="ev-toggle"
           label="E-Ladesaeulen (live)"
           checked={layerVisibility.evCharging ?? false}
           onCheckedChange={() => onToggleLayer('evCharging')}
+          layerKey="evCharging"
+          dataType={LAYER_METADATA['evCharging']?.dataType}
+          isStale={layerMeta['evCharging']?.isStale}
+          metadata={LAYER_METADATA['evCharging']}
+          lastUpdated={layerMeta['evCharging']?.lastUpdated}
         />
         <LayerToggle
           id="solar-toggle"
           label="Solarpotenzial Daecher"
           checked={layerVisibility.solarPotential ?? false}
           onCheckedChange={() => onToggleLayer('solarPotential')}
+          layerKey="solarPotential"
+          dataType={LAYER_METADATA['solarPotential']?.dataType}
+          isStale={layerMeta['solarPotential']?.isStale}
+          metadata={LAYER_METADATA['solarPotential']}
+          lastUpdated={layerMeta['solarPotential']?.lastUpdated}
         />
         <LayerToggle
           id="parking-toggle"
           label="Parkhaeuser"
           checked={layerVisibility.parking ?? false}
           onCheckedChange={() => onToggleLayer('parking')}
+          layerKey="parking"
+          dataType={LAYER_METADATA['parking']?.dataType}
+          isStale={layerMeta['parking']?.isStale}
+          metadata={LAYER_METADATA['parking']}
+          lastUpdated={layerMeta['parking']?.lastUpdated}
         />
       </div>
 
@@ -386,7 +509,7 @@ export default function Sidebar({ layerVisibility, onToggleLayer, transitError, 
           variant="secondary"
           size="icon"
           onClick={() => setDrawerOpen(v => !v)}
-          aria-label="Ebenen öffnen"
+          aria-label="Ebenen oeffnen"
         >
           <Layers className="h-5 w-5" />
         </Button>
