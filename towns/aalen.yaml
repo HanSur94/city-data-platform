@@ -144,6 +144,13 @@ connectors:
       wms_url: ""
       attribution: "LUBW Baden-Wuerttemberg"
 
+  - connector_class: ParkingConnector
+    poll_interval_seconds: 300
+    enabled: true
+    config:
+      url: "https://www.sw-aalen.de/privatkunden/dienstleistungen/parken/parkhausbelegung"
+      attribution: "Stadtwerke Aalen, scraping"
+
   # --- Demographics connectors (DEMO-01 through DEMO-04) ---
   # Daily refresh — demographic data changes slowly.
 

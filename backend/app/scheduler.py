@@ -48,6 +48,8 @@ _CONNECTOR_MODULES = {
     "TomTomConnector": "app.connectors.tomtom",
     # Phase 12: LHP water level
     "LhpConnector": "app.connectors.lhp",
+    # Phase 13: Parking occupancy
+    "ParkingConnector": "app.connectors.parking",
 }
 
 
