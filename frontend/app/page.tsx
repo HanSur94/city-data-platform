@@ -43,6 +43,8 @@ function HomeInner() {
     evCharging: state.layers.includes('ev_charging'),
     roadworks: state.layers.includes('roadworks'),
     solarPotential: state.layers.includes('solar_potential'),
+    cadastral: state.layers.includes('cadastral'),
+    hillshade: state.layers.includes('hillshade'),
   }
 
   const LAYER_KEYS: Record<string, string> = {
@@ -63,6 +65,8 @@ function HomeInner() {
     evCharging: 'ev_charging',
     roadworks: 'roadworks',
     solarPotential: 'solar_potential',
+    cadastral: 'cadastral',
+    hillshade: 'hillshade',
   }
 
   const toggleLayer = (layer: keyof typeof LAYER_KEYS) => {
@@ -101,6 +105,10 @@ function HomeInner() {
     update({ ts: ts ? ts.toISOString() : null })
   }
 
+  const handleBaseLayerChange = (base: 'osm' | 'orthophoto' | 'satellite') => {
+    update({ base: base === 'osm' ? null : base })
+  }
+
   // Dashboard panel chart slot: DomainDetailPanel if activeDomain, else default AQI chart
   const chartSlot = activeDomain ? (
     <DomainDetailPanel
@@ -132,6 +140,10 @@ function HomeInner() {
         airQualityError={airQuality.error}
         trafficError={traffic.error}
         energyError={energy.error}
+        baseLayer={state.baseLayer}
+        onBaseLayerChange={handleBaseLayerChange}
+        cadastralVisible={layerVisibility.cadastral}
+        hillshadeVisible={layerVisibility.hillshade}
       />
 
       {/* Map column — flex-1, fills space between sidebar and dashboard panel */}
@@ -157,6 +169,9 @@ function HomeInner() {
             evChargingVisible={layerVisibility.evCharging}
             roadworksVisible={layerVisibility.roadworks}
             solarPotentialVisible={layerVisibility.solarPotential}
+            baseLayer={state.baseLayer}
+            cadastralVisible={layerVisibility.cadastral}
+            hillshadeVisible={layerVisibility.hillshade}
           />
         </div>
 

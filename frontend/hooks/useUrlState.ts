@@ -13,6 +13,7 @@ export interface UrlState {
   to: Date
   ts: Date | null // null = live (time slider at rightmost)
   domain: string | null // active detail panel
+  baseLayer: 'osm' | 'orthophoto' | 'satellite'
 }
 
 // NOTE: useUrlState uses useSearchParams internally.
@@ -35,6 +36,7 @@ export function useUrlState(defaultTown = 'aalen'): {
     to: searchParams.get('to') ? new Date(searchParams.get('to')!) : endOfDay(new Date()),
     ts: searchParams.get('ts') ? new Date(searchParams.get('ts')!) : null,
     domain: searchParams.get('domain') ?? null,
+    baseLayer: (searchParams.get('base') as UrlState['baseLayer']) ?? 'osm',
   }
 
   const update = useCallback(

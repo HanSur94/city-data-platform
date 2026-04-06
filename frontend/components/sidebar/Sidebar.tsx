@@ -30,14 +30,18 @@ interface SidebarProps {
     roadworks?: boolean;
     solarPotential?: boolean;
   };
-  onToggleLayer: (layer: 'transit' | 'airQuality' | 'water' | 'floodHazard' | 'railNoise' | 'lubwEnv' | 'traffic' | 'autobahn' | 'mobiData' | 'energy' | 'schools' | 'healthcare' | 'parks' | 'waste' | 'evCharging' | 'roadworks' | 'solarPotential') => void;
+  onToggleLayer: (layer: 'transit' | 'airQuality' | 'water' | 'floodHazard' | 'railNoise' | 'lubwEnv' | 'traffic' | 'autobahn' | 'mobiData' | 'energy' | 'schools' | 'healthcare' | 'parks' | 'waste' | 'evCharging' | 'roadworks' | 'solarPotential' | 'cadastral' | 'hillshade') => void;
   transitError?: boolean;
   airQualityError?: boolean;
   trafficError?: boolean;
   energyError?: boolean;
+  baseLayer: 'osm' | 'orthophoto' | 'satellite';
+  onBaseLayerChange: (base: 'osm' | 'orthophoto' | 'satellite') => void;
+  cadastralVisible?: boolean;
+  hillshadeVisible?: boolean;
 }
 
-export default function Sidebar({ layerVisibility, onToggleLayer, transitError, airQualityError, trafficError, energyError }: SidebarProps) {
+export default function Sidebar({ layerVisibility, onToggleLayer, transitError, airQualityError, trafficError, energyError, baseLayer, onBaseLayerChange, cadastralVisible, hillshadeVisible }: SidebarProps) {
   const [drawerOpen, setDrawerOpen] = useState(false);
 
   const content = (
@@ -186,6 +190,42 @@ export default function Sidebar({ layerVisibility, onToggleLayer, transitError, 
           label="Solarpotenzial Daecher"
           checked={layerVisibility.solarPotential ?? false}
           onCheckedChange={() => onToggleLayer('solarPotential')}
+        />
+      </div>
+
+      <Separator className="mt-6" />
+
+      {/* Geospatial group */}
+      <div className="pt-2">
+        <p className="px-4 text-[12px] font-normal text-muted-foreground uppercase tracking-wide mb-2 mt-6">Geospatial</p>
+        <p className="px-4 text-[11px] text-muted-foreground mb-1">Basiskarte</p>
+        {(['osm', 'orthophoto', 'satellite'] as const).map((base) => (
+          <label key={base} className="flex items-center gap-2 px-4 py-1.5 cursor-pointer hover:bg-slate-50">
+            <input
+              type="radio"
+              name="base-layer"
+              value={base}
+              checked={baseLayer === base}
+              onChange={() => onBaseLayerChange(base)}
+              className="accent-primary"
+            />
+            <span className="text-[13px]">
+              {base === 'osm' ? 'OpenStreetMap' : base === 'orthophoto' ? 'Luftbild (LGL)' : 'Satellit (Sentinel-2)'}
+            </span>
+          </label>
+        ))}
+        <p className="px-4 text-[11px] text-muted-foreground mb-1 mt-3">Overlays</p>
+        <LayerToggle
+          id="cadastral-toggle"
+          label="Kataster (ALKIS)"
+          checked={cadastralVisible ?? false}
+          onCheckedChange={() => onToggleLayer('cadastral')}
+        />
+        <LayerToggle
+          id="hillshade-toggle"
+          label="Gelaenderelief (DGM)"
+          checked={hillshadeVisible ?? false}
+          onCheckedChange={() => onToggleLayer('hillshade')}
         />
       </div>
 
