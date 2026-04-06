@@ -44,6 +44,15 @@ export interface EnergyKPI {
   last_updated: string | null
 }
 
+export interface DemographicsKPI {
+  population: number | null
+  population_year: number | null
+  age_under_18_pct: number | null
+  age_over_65_pct: number | null
+  unemployment_rate: number | null
+  last_updated: string | null
+}
+
 export interface KPIResponse {
   town: string
   air_quality: AirQualityKPI
@@ -51,6 +60,7 @@ export interface KPIResponse {
   transit: TransitKPI
   traffic: TrafficKPI | null
   energy: EnergyKPI | null
+  demographics: DemographicsKPI | null
   attribution: Attribution[]
   last_updated: string | null
 }

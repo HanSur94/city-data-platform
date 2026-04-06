@@ -1,5 +1,5 @@
 'use client'
-import { Wind, Thermometer, Bus, Car, Zap } from 'lucide-react'
+import { Wind, Thermometer, Bus, Car, Zap, Users } from 'lucide-react'
 import { Separator } from '@/components/ui/separator'
 import { KpiTile } from './KpiTile'
 import { EnergyMixBar } from './EnergyMixBar'
@@ -51,6 +51,14 @@ export function DashboardPanel({
   const energyValue = data?.energy?.renewable_percent != null
     ? `${Math.round(data.energy.renewable_percent)}%`
     : null
+
+  const demographicsValue = data?.demographics?.population != null
+    ? data.demographics.population.toLocaleString('de-DE')
+    : null
+
+  const demographicsUnit = data?.demographics?.population_year != null
+    ? `Einw. (${data.demographics.population_year})`
+    : 'Einw.'
 
   return (
     <aside className="hidden lg:flex w-[320px] flex-shrink-0 flex-col h-screen overflow-y-auto border-l bg-background">
@@ -124,6 +132,18 @@ export function DashboardPanel({
                 <EnergyMixBar mix={data.energy.generation_mix} compact />
               )}
             </KpiTile>
+            {data?.demographics != null && (
+              <KpiTile
+                domain="demographics"
+                icon={<Users className="h-4 w-4" />}
+                label="Demografie"
+                value={demographicsValue}
+                unit={demographicsUnit}
+                trend={null}
+                active={activeDomain === 'demographics'}
+                onSelect={handleSelect}
+              />
+            )}
           </div>
         )}
       </div>

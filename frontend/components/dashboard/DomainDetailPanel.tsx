@@ -2,6 +2,7 @@
 import { useMemo } from 'react'
 import { ChevronLeft } from 'lucide-react'
 import { format } from 'date-fns'
+import { useKpi } from '@/hooks/useKpi'
 import {
   AreaChart,
   Area,
@@ -22,6 +23,7 @@ const DOMAIN_TITLES: Record<string, string> = {
   transit: 'ÖPNV',
   traffic: 'Verkehr — Zaehlstellen & Stoerungen',
   energy: 'Energie — Erzeugungsmix & Preise',
+  demographics: 'Demografie — Bevoelkerung & Arbeitsmarkt',
 }
 
 const CHART_DOMAIN: Record<string, 'air_quality' | 'weather'> = {
@@ -72,6 +74,24 @@ function xTickFormat(time: string, from: Date, to: Date): string {
     : format(new Date(time), 'dd.MM')
 }
 
+interface StatCardProps {
+  label: string
+  value: string | null
+  unit?: string
+}
+
+function StatCard({ label, value, unit }: StatCardProps) {
+  return (
+    <div className="rounded-lg border bg-muted/30 px-4 py-3">
+      <div className="text-xs text-muted-foreground mb-1">{label}</div>
+      <div className="text-xl font-semibold leading-none">
+        {value ?? '—'}
+        {unit && value !== null && <span className="text-sm font-normal text-muted-foreground ml-1">{unit}</span>}
+      </div>
+    </div>
+  )
+}
+
 interface DomainDetailPanelProps {
   domain: string
   dateRange: { from: Date; to: Date }
@@ -81,6 +101,7 @@ interface DomainDetailPanelProps {
 
 export function DomainDetailPanel({ domain, dateRange, town = 'aalen', onBack }: DomainDetailPanelProps) {
   const chartDomain = CHART_DOMAIN[domain]
+  const { data: kpiData } = useKpi(town)
   const { data, loading, error } = useTimeseries(
     domain === 'traffic' ? 'traffic'
     : domain === 'energy' ? 'energy'
@@ -255,6 +276,52 @@ export function DomainDetailPanel({ domain, dateRange, town = 'aalen', onBack }:
                 </LineChart>
               </ChartContainer>
             </>
+          )}
+        </>
+      ) : domain === 'demographics' ? (
+        <>
+          {kpiData?.demographics ? (
+            <div className="flex flex-col gap-3">
+              <div className="grid grid-cols-2 gap-2">
+                <StatCard
+                  label="Bevölkerung"
+                  value={kpiData.demographics.population != null
+                    ? kpiData.demographics.population.toLocaleString('de-DE')
+                    : null}
+                  unit={kpiData.demographics.population_year != null
+                    ? `(${kpiData.demographics.population_year})`
+                    : undefined}
+                />
+                <StatCard
+                  label="Unter 18"
+                  value={kpiData.demographics.age_under_18_pct != null
+                    ? kpiData.demographics.age_under_18_pct.toFixed(1)
+                    : null}
+                  unit="%"
+                />
+                <StatCard
+                  label="Über 65"
+                  value={kpiData.demographics.age_over_65_pct != null
+                    ? kpiData.demographics.age_over_65_pct.toFixed(1)
+                    : null}
+                  unit="%"
+                />
+                <StatCard
+                  label="Arbeitslosenquote"
+                  value={kpiData.demographics.unemployment_rate != null
+                    ? kpiData.demographics.unemployment_rate.toFixed(1)
+                    : null}
+                  unit="%"
+                />
+              </div>
+              <p className="text-[11px] text-muted-foreground">
+                Quelle: Wegweiser Kommune, Statistik BW, Zensus 2022, Bundesagentur für Arbeit
+              </p>
+            </div>
+          ) : (
+            <p className="text-[14px] text-muted-foreground py-4">
+              Keine Demographiedaten verfügbar.
+            </p>
           )}
         </>
       ) : chartDomain ? (
