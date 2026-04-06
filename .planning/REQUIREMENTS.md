@@ -40,7 +40,7 @@ Requirements for initial release. Each maps to roadmap phases.
 - [x] **WAIR-02**: Weather forecast overlay (MOSMIX point forecasts from DWD)
 - [x] **WAIR-03**: Air quality readings from UBA station in Aalen (PM10, PM2.5, NO₂, O₃)
 - [x] **WAIR-04**: Citizen-science air quality sensors (Sensor.community — multiple sensors in Ostalbkreis)
-- [ ] **WAIR-05**: Air quality index (AQI) visualization with health-based color scale
+- [x] **WAIR-05**: Air quality index (AQI) visualization with health-based color scale
 - [ ] **WAIR-06**: Historical air quality trends (time-series from UBA + Sensor.community)
 
 ### Energy
@@ -177,7 +177,7 @@ Which phases cover which requirements. Updated during roadmap creation.
 | DASH-04 | Phase 5 | Complete |
 | DASH-05 | Phase 5 | Complete |
 | MAP-06 | Phase 5 | Complete |
-| WAIR-05 | Phase 6 | Pending |
+| WAIR-05 | Phase 6 | Complete |
 | WAIR-06 | Phase 6 | Pending |
 | WATR-01 | Phase 6 | Complete |
 | WATR-02 | Phase 6 | Complete |

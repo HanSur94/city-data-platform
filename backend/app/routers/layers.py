@@ -18,7 +18,7 @@ from app.schemas.geojson import (
     LayerResponse,
     VALID_DOMAINS,
     CONNECTOR_ATTRIBUTION,
-    aqi_tier,
+    eaqi_from_readings,
 )
 
 router = APIRouter(tags=["layers"])
@@ -141,11 +141,16 @@ async def get_layer(
         else:
             props = dict(props)
 
-        # Inject AQI tier data for air_quality domain
+        # Inject EEA EAQI tier data for air_quality domain
         if domain == "air_quality":
-            aqi_val = row.get("aqi")
-            tier_label, tier_color = aqi_tier(aqi_val)
+            tier_idx, tier_label, tier_color = eaqi_from_readings(
+                pm25=row.get("pm25"),
+                pm10=row.get("pm10"),
+                no2=row.get("no2"),
+                o3=row.get("o3"),
+            )
             props["aqi_tier"] = tier_label
+            props["aqi_tier_index"] = tier_idx
             props["aqi_color"] = tier_color
             # Also include raw readings in properties if available
             for field in ("pm25", "pm10", "no2", "o3", "aqi"):

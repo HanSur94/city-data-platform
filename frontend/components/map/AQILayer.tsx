@@ -16,29 +16,46 @@ const aqiHeatmapLayer: HeatmapLayerSpecification = {
   source: 'air-quality',
   layout: { visibility: 'visible' },
   paint: {
-    'heatmap-weight': ['interpolate', ['linear'], ['get', 'aqi'], 0, 0, 80, 1],
+    'heatmap-weight': ['interpolate', ['linear'], ['get', 'aqi_tier_index'], 0, 0, 5, 1],
     'heatmap-intensity': 0.8,
     'heatmap-radius': ['interpolate', ['linear'], ['zoom'], 10, 20, 14, 40],
     'heatmap-color': [
       'interpolate', ['linear'], ['heatmap-density'],
-      0,    'rgba(0,200,83,0)',
-      0.25, '#00c853',
-      0.5,  '#ffeb3b',
-      0.75, '#ff9800',
-      1.0,  '#b71c1c',
+      0,   'rgba(80,240,230,0)',
+      0.2, '#50F0E6',
+      0.4, '#50CCAA',
+      0.6, '#F0E641',
+      0.8, '#FF5050',
+      0.9, '#960032',
+      1.0, '#7D2181',
     ],
     'heatmap-opacity': 0.8,
   },
 };
 
-// Transparent click-target circles — REQUIRED because heatmap layers don't fire click events (Pitfall 4)
+// Colored EEA EAQI circles — color driven by aqi_color property from backend
+const aqiColorLayer: CircleLayerSpecification = {
+  id: 'aqi-circles',
+  type: 'circle',
+  source: 'air-quality',
+  layout: { visibility: 'visible' },
+  paint: {
+    'circle-radius': 8,
+    'circle-color': ['get', 'aqi_color'],
+    'circle-opacity': 0.85,
+    'circle-stroke-width': 1,
+    'circle-stroke-color': '#ffffff',
+  },
+};
+
+// Transparent click-target circles — REQUIRED because heatmap layers don't fire click events
 const aqiPointLayer: CircleLayerSpecification = {
   id: 'aqi-points',
   type: 'circle',
   source: 'air-quality',
   layout: { visibility: 'visible' },
   paint: {
-    'circle-radius': 8,
+    'circle-radius': 12,
     'circle-color': 'rgba(0,0,0,0)',
   },
 };
@@ -49,6 +66,7 @@ export default function AQILayer({ data, visible }: AQILayerProps) {
   return (
     <Source id="air-quality" type="geojson" data={data}>
       <Layer {...aqiHeatmapLayer} layout={{ ...aqiHeatmapLayer.layout, visibility: vis }} />
+      <Layer {...aqiColorLayer} layout={{ ...aqiColorLayer.layout, visibility: vis }} />
       <Layer {...aqiPointLayer} layout={{ ...aqiPointLayer.layout, visibility: vis }} />
     </Source>
   );
