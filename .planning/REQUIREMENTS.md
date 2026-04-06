@@ -47,8 +47,8 @@ Requirements for initial release. Each maps to roadmap phases.
 
 - [x] **ENRG-01**: Current German electricity generation mix by source (SMARD — 15-min resolution)
 - [x] **ENRG-02**: Regional renewable energy installations on map (MaStR — every solar panel, wind turbine, battery in Ostalbkreis)
-- [ ] **ENRG-03**: Electricity wholesale price trend (SMARD)
-- [ ] **ENRG-04**: Energy statistics dashboard (Fraunhofer Energy-Charts data)
+- [x] **ENRG-03**: Electricity wholesale price trend (SMARD)
+- [x] **ENRG-04**: Energy statistics dashboard (Fraunhofer Energy-Charts data)
 
 ### Water & Environment
 
@@ -189,8 +189,8 @@ Which phases cover which requirements. Updated during roadmap creation.
 | TRAF-05 | Phase 7 | Complete |
 | ENRG-01 | Phase 7 | Complete |
 | ENRG-02 | Phase 7 | Complete |
-| ENRG-03 | Phase 7 | Pending |
-| ENRG-04 | Phase 7 | Pending |
+| ENRG-03 | Phase 7 | Complete |
+| ENRG-04 | Phase 7 | Complete |
 | COMM-01 | Phase 8 | Pending |
 | COMM-02 | Phase 8 | Pending |
 | COMM-03 | Phase 8 | Pending |

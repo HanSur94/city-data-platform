@@ -11,9 +11,10 @@ interface KpiTileProps {
   trend: number | null   // % change vs yesterday; null = no trend (transit)
   active: boolean        // is this tile's domain the activeDomain?
   onSelect: (domain: string) => void
+  children?: React.ReactNode  // optional slot for compact sub-charts (e.g. EnergyMixBar)
 }
 
-export function KpiTile({ domain, label, icon, value, unit, trend, active, onSelect }: KpiTileProps) {
+export function KpiTile({ domain, label, icon, value, unit, trend, active, onSelect, children }: KpiTileProps) {
   return (
     <Card
       role="button"
@@ -38,6 +39,7 @@ export function KpiTile({ domain, label, icon, value, unit, trend, active, onSel
         ) : (
           <span className="text-[14px] text-muted-foreground">Kein aktueller Messwert</span>
         )}
+        {children && <div className="mt-1">{children}</div>}
       </CardContent>
     </Card>
   )

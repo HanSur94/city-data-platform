@@ -70,10 +70,10 @@ export default function MapView({
   waterLastFetched,
   historicalTimestamp,
   town = 'aalen',
-  trafficVisible,
-  autobahnVisible,
+  trafficVisible = false,
+  autobahnVisible = false,
   mobiDataVisible: _mobiDataVisible,
-  energyVisible,
+  energyVisible = false,
 }: MapViewProps) {
   // Register PMTiles protocol BEFORE Map renders (Pitfall 3)
   // Register at module scope to avoid double-registration on re-renders

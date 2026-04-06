@@ -3,8 +3,8 @@ gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
 status: executing
-stopped_at: "Completed 07-05-PLAN.md (traffic+energy map layers: TrafficLayer, AutobahnLayer, EnergyLayer + popups + MapView wiring)"
-last_updated: "2026-04-06T18:00:53.223Z"
+stopped_at: Completed 07-06-PLAN.md (EnergyMixBar, Sidebar Verkehr/Energie groups, DomainDetailPanel traffic+energy, DashboardPanel KPI tiles, page.tsx wiring)
+last_updated: "2026-04-06T18:03:16.293Z"
 last_activity: 2026-04-06
 progress:
   total_phases: 10
@@ -65,7 +65,7 @@ Progress: [░░░░░░░░░░] 0%
 | Phase 06-weather-environment P04 | 230 | 2 tasks | 6 files |
 | Phase 07-traffic-energy-connectors P03 | 3 | 2 tasks | 7 files |
 | Phase 07 P04 | 8 | 2 tasks | 4 files |
-| Phase 07-traffic-energy-connectors P05 | 4 | 2 tasks | 7 files |
+| Phase 07-traffic-energy-connectors P06 | 6 | 2 tasks | 9 files |
 
 ## Accumulated Context
 
@@ -105,8 +105,9 @@ Recent decisions affecting current work:
 - [Phase 07-traffic-energy-connectors]: open-mastr download cached for 24h via SQLite mtime check to avoid repeated bulk downloads; MastrConnector.normalize() returns empty list (features-only connector)
 - [Phase 07]: Energy layer (MaStR installations) uses features-only query — no LATERAL join needed as MaStR data is static with no per-installation time-series in energy_readings
 - [Phase 07]: kpi.py: _to_float()/_to_datetime() helpers added for graceful degradation when DB returns non-typed values; KPI Pydantic construction wrapped per-domain in try/except
-- [Phase 07-traffic-energy-connectors]: TrafficLayer and AutobahnLayer both use useLayerData('traffic') and split features by properties.type
-- [Phase 07-traffic-energy-connectors]: MapView popup routing extended via layerId prefix matching for traffic/autobahn/energy domains
+- [Phase 07]: KpiTile extended with optional children prop to support embedded compact sub-charts without a new component
+- [Phase 07]: MapView extended with optional trafficVisible/autobahnVisible/energyVisible props defaulting to false for future traffic/energy layer rendering
+- [Phase 07]: EnergyMixBar uses Recharts BarChart + ResponsiveContainer directly to avoid tooltip formatter type incompatibility in shadcn ChartContainer with multi-series stacked format
 
 ### Pending Todos
 
@@ -121,6 +122,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-04-06T18:00:53.220Z
-Stopped at: Completed 07-05-PLAN.md (traffic+energy map layers: TrafficLayer, AutobahnLayer, EnergyLayer + popups + MapView wiring)
+Last session: 2026-04-06T18:03:16.289Z
+Stopped at: Completed 07-06-PLAN.md (EnergyMixBar, Sidebar Verkehr/Energie groups, DomainDetailPanel traffic+energy, DashboardPanel KPI tiles, page.tsx wiring)
 Resume file: None
