@@ -1,21 +1,25 @@
 import { layers, namedFlavor } from '@protomaps/basemaps';
 
+// EEA EAQI 6-tier heatmap color ramp (density 0→1 mapped to tier colors)
 export const AQI_COLOR_RAMP = [
-  { threshold: 0,    color: 'rgba(0,200,83,0)' },
-  { threshold: 0.25, color: '#00c853' },
-  { threshold: 0.5,  color: '#ffeb3b' },
-  { threshold: 0.75, color: '#ff9800' },
-  { threshold: 1.0,  color: '#b71c1c' },
+  { threshold: 0,   color: 'rgba(80,240,230,0)' },
+  { threshold: 0.2, color: '#50F0E6' },
+  { threshold: 0.4, color: '#50CCAA' },
+  { threshold: 0.6, color: '#F0E641' },
+  { threshold: 0.8, color: '#FF5050' },
+  { threshold: 0.9, color: '#960032' },
+  { threshold: 1.0, color: '#7D2181' },
 ] as const;
 
-// AQI tier colors matching AQI_TIERS in backend/app/schemas/geojson.py
+// EEA EAQI tier colors matching EAQI_TIER_COLORS in backend/app/schemas/geojson.py
 export const AQI_TIER_COLORS: Record<string, string> = {
-  good:     '#00c853',
-  moderate: '#ffeb3b',
-  poor:     '#ff9800',
-  bad:      '#f44336',
-  very_bad: '#b71c1c',
-  unknown:  '#9e9e9e',
+  good:            '#50F0E6',
+  fair:            '#50CCAA',
+  moderate:        '#F0E641',
+  poor:            '#FF5050',
+  very_poor:       '#960032',
+  extremely_poor:  '#7D2181',
+  unknown:         '#9e9e9e',
 };
 
 // Transit route type colors (per CONTEXT.md: bus=blue, train=red, tram=green)
