@@ -67,11 +67,11 @@ Requirements for initial release. Each maps to roadmap phases.
 
 ### Geospatial & 3D
 
-- [ ] **GEO-01**: Cadastral and topographic base data from LGL Baden-Württemberg
+- [x] **GEO-01**: Cadastral and topographic base data from LGL Baden-Württemberg
 - [ ] **GEO-02**: 3D building models (LoD1/LoD2) from LGL — visualized on map
-- [ ] **GEO-03**: Digital elevation model (1m DEM from LGL)
-- [ ] **GEO-04**: Aerial orthophotos from LGL as optional base layer
-- [ ] **GEO-05**: Satellite imagery layer (Copernicus Sentinel-2, 10m resolution)
+- [x] **GEO-03**: Digital elevation model (1m DEM from LGL)
+- [x] **GEO-04**: Aerial orthophotos from LGL as optional base layer
+- [x] **GEO-05**: Satellite imagery layer (Copernicus Sentinel-2, 10m resolution)
 - [x] **GEO-06**: Administrative boundaries (BKG VG250)
 
 ### Community & Services
@@ -199,11 +199,11 @@ Which phases cover which requirements. Updated during roadmap creation.
 | INFR-02 | Phase 8 | Complete |
 | INFR-03 | Phase 8 | Complete |
 | INFR-04 | Phase 8 | Complete |
-| GEO-01 | Phase 9 | Pending |
+| GEO-01 | Phase 9 | Complete |
 | GEO-02 | Phase 9 | Pending |
-| GEO-03 | Phase 9 | Pending |
-| GEO-04 | Phase 9 | Pending |
-| GEO-05 | Phase 9 | Pending |
+| GEO-03 | Phase 9 | Complete |
+| GEO-04 | Phase 9 | Complete |
+| GEO-05 | Phase 9 | Complete |
 | PLAT-09 | Phase 10 | Pending |
 | DEMO-01 | Phase 10 | Pending |
 | DEMO-02 | Phase 10 | Pending |

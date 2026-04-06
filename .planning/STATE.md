@@ -3,14 +3,14 @@ gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
 status: verifying
-stopped_at: Completed 08-03-PLAN.md — frontend layer components and wiring for community and infrastructure data
-last_updated: "2026-04-06T19:01:52.468Z"
+stopped_at: Completed 09-01-PLAN.md — base layer switching and geospatial WMS overlays
+last_updated: "2026-04-06T19:26:29.719Z"
 last_activity: 2026-04-06
 progress:
   total_phases: 10
-  completed_phases: 5
-  total_plans: 39
-  completed_plans: 36
+  completed_phases: 6
+  total_plans: 42
+  completed_plans: 38
   percent: 0
 ---
 
@@ -70,6 +70,7 @@ Progress: [░░░░░░░░░░] 0%
 | Phase 07-traffic-energy-connectors P07 | 20 | 2 tasks | 2 files |
 | Phase 08-community-infrastructure-connectors P02 | 222 | 2 tasks | 5 files |
 | Phase 08-community-infrastructure-connectors P03 | 4 | 2 tasks | 8 files |
+| Phase 09-geospatial-enrichment P01 | 15 | 2 tasks | 5 files |
 
 ## Accumulated Context
 
@@ -119,6 +120,8 @@ Recent decisions affecting current work:
 - [Phase 08-community-infrastructure-connectors]: INFR-04 covered by Phase 7 MaStrConnector solar_rooftop classification — no additional connector needed
 - [Phase 08-community-infrastructure-connectors]: CommunityLayer renders conditional sub-Sources per category for independent toggling without re-fetching
 - [Phase 08-community-infrastructure-connectors]: InfrastructureLayer uses opacity toggle for solar WMS overlay to avoid tile re-fetch on mount/unmount
+- [Phase 09-geospatial-enrichment]: EOX Sentinel-2 cloudless WMTS used for satellite layer — free, no API key, global mosaic
+- [Phase 09-geospatial-enrichment]: Base layer uses separate 'base' URL param (not layers CSV) — cleaner URL structure
 
 ### Pending Todos
 
@@ -133,6 +136,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-04-06T19:01:52.464Z
-Stopped at: Completed 08-03-PLAN.md — frontend layer components and wiring for community and infrastructure data
+Last session: 2026-04-06T19:26:29.714Z
+Stopped at: Completed 09-01-PLAN.md — base layer switching and geospatial WMS overlays
 Resume file: None
