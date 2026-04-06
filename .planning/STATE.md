@@ -4,7 +4,7 @@ milestone: v2.0
 milestone_name: — AalenPulse Feature Parity
 status: verifying
 stopped_at: Completed 17-03-PLAN.md (Heat Demand + Cycling Frontend Layers)
-last_updated: "2026-04-06T22:43:52.066Z"
+last_updated: "2026-04-06T22:44:19.018Z"
 last_activity: 2026-04-06
 progress:
   total_phases: 8
@@ -25,7 +25,7 @@ See: .planning/PROJECT.md (updated 2026-04-06)
 
 ## Current Position
 
-Phase: 17
+Phase: 18
 Plan: Not started
 Status: Phase complete — ready for verification
 Last activity: 2026-04-06
