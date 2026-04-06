@@ -32,6 +32,7 @@ _CONNECTOR_MODULES = {
     "GTFSConnector": "app.connectors.gtfs",
     "GTFSRealtimeConnector": "app.connectors.gtfs_rt",
     "PegelonlineConnector": "app.connectors.pegelonline",
+    "LubwWfsConnector": "app.connectors.lubw_wfs",
 }
 
 

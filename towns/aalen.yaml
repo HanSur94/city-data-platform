@@ -61,3 +61,11 @@ connectors:
       # station_uuids: [] means fetch all Neckar stations dynamically at runtime.
       station_uuids: []
       attribution: "PEGELONLINE (WSV / BfG), Datenlizenz Deutschland – Zero – Version 2.0"
+
+  - connector_class: LubwWfsConnector
+    poll_interval_seconds: 86400
+    enabled: true
+    config:
+      # WATR-05: LUBW WFS environmental layers — Naturschutzgebiet + Wasserschutzgebiet
+      # Uses town bbox (9.97,48.76,10.22,48.90) from town config automatically.
+      attribution: "Landesanstalt für Umwelt Baden-Württemberg (LUBW), DL-DE-BY-2.0"
