@@ -98,7 +98,7 @@ Requirements for initial release. Each maps to roadmap phases.
 - [x] **PLAT-06**: Plugin-based connector architecture (BaseConnector pattern)
 - [ ] **PLAT-07**: Time-series storage with retention policies (TimescaleDB)
 - [ ] **PLAT-08**: Spatial query support (PostGIS)
-- [ ] **PLAT-09**: Admin health dashboard — connector status, data freshness, error rates
+- [x] **PLAT-09**: Admin health dashboard — connector status, data freshness, error rates
 
 ## v2 Requirements
 
@@ -204,7 +204,7 @@ Which phases cover which requirements. Updated during roadmap creation.
 | GEO-03 | Phase 9 | Complete |
 | GEO-04 | Phase 9 | Complete |
 | GEO-05 | Phase 9 | Complete |
-| PLAT-09 | Phase 10 | Pending |
+| PLAT-09 | Phase 10 | Complete |
 | DEMO-01 | Phase 10 | Pending |
 | DEMO-02 | Phase 10 | Pending |
 | DEMO-03 | Phase 10 | Pending |
