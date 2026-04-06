@@ -140,9 +140,9 @@ Implement all missing features from the AalenPulse requirements document to reac
   - [ ] Cycling infrastructure colors road segments
   - [ ] Demographics grid cells render with choropleth colors
   - [ ] Road noise bands visible from LUBW WMS
-- **Plans:** 3 plans
+- **Plans:** 1/3 plans executed
   - [ ] 17-01-PLAN.md -- HeatDemandConnector + CyclingInfraConnector backend with tests
-  - [ ] 17-02-PLAN.md -- NoiseWmsLayer, FernwaermeLayer, DemographicsGridLayer frontend
+  - [x] 17-02-PLAN.md -- NoiseWmsLayer, FernwaermeLayer, DemographicsGridLayer frontend
   - [ ] 17-03-PLAN.md -- HeatDemandLayer + CyclingLayer frontend with popups and legends
 - **Status:** Planning Complete
 
