@@ -160,7 +160,7 @@ Implement all missing features from the AalenPulse requirements document to reac
   - [ ] Stale layers show warning indicator
   - [ ] Widget footers show source + timestamp + badge
   - [ ] Feature popups include data source section
-- **Plans:** 1/2 plans executed
+- **Plans:** 2/2 plans complete
   - [x] 18-01-PLAN.md -- Backend metadata endpoint, frontend metadata registry, DataTypeBadge and DataSourceSection components
-  - [ ] 18-02-PLAN.md -- Sidebar badges + info icons, KPI widget footers, popup DataSourceSection wiring
+  - [x] 18-02-PLAN.md -- Sidebar badges + info icons, KPI widget footers, popup DataSourceSection wiring
 - **Status:** Planning Complete
