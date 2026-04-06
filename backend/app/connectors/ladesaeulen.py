@@ -154,41 +154,69 @@ class LadesaeulenConnector(BaseConnector):
         except UnicodeDecodeError:
             text = raw.decode("latin-1")
 
-        reader = csv.DictReader(io.StringIO(text), delimiter=";")
+        # BNetzA CSV has ~10 metadata lines before the actual column headers.
+        # Skip lines until we find the real header row (contains "Ladeeinrichtungs-ID").
+        lines = text.split("\n")
+        header_idx = 0
+        for i, line in enumerate(lines):
+            if "Ladeeinrichtungs-ID" in line or (
+                "Betreiber" in line and "Postleitzahl" in line
+            ):
+                header_idx = i
+                break
+        data_text = "\n".join(lines[header_idx:])
+
+        reader = csv.DictReader(io.StringIO(data_text), delimiter=";")
         upserted = 0
         skipped_kreis = 0
         skipped_coords = 0
 
         for idx, row in enumerate(reader):
-            # Filter by Kreis
-            if row.get("Kreis/kreisfreie Stadt", "").strip() != kreis_filter:
+            # Filter by Kreis — BNetzA CSV uses "Landkreis Ostalbkreis" format;
+            # use substring match to handle variations (e.g. "Ostalbkreis" vs
+            # "Landkreis Ostalbkreis").
+            kreis_cell = row.get("Kreis/kreisfreie Stadt", "").strip()
+            if kreis_filter not in kreis_cell:
                 skipped_kreis += 1
                 continue
 
-            # Parse coordinates
-            lat = _parse_german_float(row.get("Breitengrad", ""))
-            lon = _parse_german_float(row.get("Laengengrad", ""))
+            # Parse coordinates — BNetzA CSV uses "Längengrad" (with umlaut),
+            # not "Laengengrad". Also supports the umlaut-less fallback.
+            lat = _parse_german_float(
+                row.get("Breitengrad", "") or row.get("Breitengrad", "")
+            )
+            lon = _parse_german_float(
+                row.get("Längengrad", "") or row.get("Laengengrad", "")
+            )
             if lat is None or lon is None:
                 skipped_coords += 1
                 continue
 
-            # Aggregate plug types (Steckertypen1..4), exclude empty strings
+            # Aggregate plug types (Steckertypen1..6), exclude empty strings
             plug_types = [
                 t.strip()
-                for key in ("Steckertypen1", "Steckertypen2", "Steckertypen3", "Steckertypen4")
+                for key in (
+                    "Steckertypen1", "Steckertypen2", "Steckertypen3",
+                    "Steckertypen4", "Steckertypen5", "Steckertypen6",
+                )
                 if (t := row.get(key, "").strip())
             ]
 
-            # Aggregate power values (P1..P4 [kW]), take max of non-None values
+            # Aggregate power values — BNetzA uses "Nennleistung Stecker1..6" columns,
+            # not "P1..P4 [kW]". Take max of non-None values.
             power_values = []
-            for key in ("P1 [kW]", "P2 [kW]", "P3 [kW]", "P4 [kW]"):
+            for key in (
+                "Nennleistung Stecker1", "Nennleistung Stecker2",
+                "Nennleistung Stecker3", "Nennleistung Stecker4",
+                "Nennleistung Stecker5", "Nennleistung Stecker6",
+            ):
                 p = _parse_german_float(row.get(key, ""))
                 if p is not None:
                     power_values.append(p)
             max_power_kw = max(power_values) if power_values else None
 
-            # Build address string
-            strasse = row.get("Strasse", "").strip()
+            # Build address string — BNetzA uses "Straße" (with ß), not "Strasse"
+            strasse = (row.get("Straße", "") or row.get("Strasse", "")).strip()
             hausnummer = row.get("Hausnummer", "").strip()
             plz = row.get("Postleitzahl", "").strip()
             ort = row.get("Ort", "").strip()

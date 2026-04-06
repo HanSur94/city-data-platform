@@ -33,6 +33,17 @@ _CONNECTOR_MODULES = {
     "GTFSRealtimeConnector": "app.connectors.gtfs_rt",
     "PegelonlineConnector": "app.connectors.pegelonline",
     "LubwWfsConnector": "app.connectors.lubw_wfs",
+    # Phase 7: traffic + energy connectors
+    "BastConnector": "app.connectors.bast",
+    "AutobahnConnector": "app.connectors.autobahn",
+    "MobiDataBWConnector": "app.connectors.mobidata_bw",
+    "SmardConnector": "app.connectors.smard",
+    "MastrConnector": "app.connectors.mastr",
+    # Phase 8: community + infrastructure connectors
+    "OverpassCommunityConnector": "app.connectors.overpass_community",
+    "OverpassRoadworksConnector": "app.connectors.overpass_roadworks",
+    "LadesaeulenConnector": "app.connectors.ladesaeulen",
+    "SolarPotentialConnector": "app.connectors.solar_potential",
 }
 
 

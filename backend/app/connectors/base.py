@@ -253,7 +253,7 @@ class BaseConnector(ABC):
                 text(
                     "INSERT INTO features (town_id, domain, source_id, geometry, properties) "
                     "VALUES (:town_id, :domain, :source_id, "
-                    "ST_GeomFromText(:geom, 4326), :properties::jsonb) "
+                    "ST_GeomFromText(:geom, 4326), CAST(:properties AS jsonb)) "
                     "ON CONFLICT (town_id, domain, source_id) "
                     "DO UPDATE SET geometry = EXCLUDED.geometry, "
                     "properties = EXCLUDED.properties "
