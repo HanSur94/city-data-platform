@@ -38,8 +38,8 @@ Decimal phases appear between their surrounding integers in numeric order.
 **Plans**: 4 plans
 
 Plans:
-- [x] 08-01-PLAN.md — Backend: domain registration + Overpass community/roadworks connectors + tests
-- [ ] 08-02-PLAN.md — Backend: LadesaeulenConnector + SolarPotentialConnector + aalen.yaml wiring
+- [ ] 08-01-PLAN.md — Backend: domain registration + Overpass community/roadworks connectors + tests
+- [x] 08-02-PLAN.md — Backend: LadesaeulenConnector + SolarPotentialConnector + aalen.yaml wiring
 - [ ] 08-03-PLAN.md — Frontend: community/infrastructure layers, popups, sidebar, MapView, page.tsx
 - [ ] 08-04-PLAN.md — Human verify: all 8 Phase 8 requirements
 
@@ -228,6 +228,6 @@ Phases execute in numeric order: 1 -> 2 -> 3 -> 4 -> 5 -> 6 -> 7 -> 8 -> 9 -> 10
 | 5. Dashboard | 7/8 | In Progress|  |
 | 6. Weather & Environment Connectors | 4/5 | In Progress|  |
 | 7. Traffic & Energy Connectors | 7/7 | Complete   | 2026-04-06 |
-| 8. Community & Infrastructure Connectors | 1/4 | In Progress|  |
+| 8. Community & Infrastructure Connectors | 0/4 | Not started | - |
 | 9. Geospatial Enrichment | 0/TBD | Not started | - |
 | 10. Operator & Multi-Town | 0/TBD | Not started | - |

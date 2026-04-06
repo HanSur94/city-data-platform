@@ -76,17 +76,17 @@ Requirements for initial release. Each maps to roadmap phases.
 
 ### Community & Services
 
-- [x] **COMM-01**: Waste collection schedules and recycling locations/Wertstoffhöfe on map
-- [x] **COMM-02**: Schools and childcare (Kita/Schule) — locations, types on map
-- [x] **COMM-03**: Healthcare facilities — doctors, pharmacies, hospitals, emergency services on map
-- [x] **COMM-04**: Public spaces — parks, playgrounds, sports facilities on map
+- [ ] **COMM-01**: Waste collection schedules and recycling locations/Wertstoffhöfe on map
+- [ ] **COMM-02**: Schools and childcare (Kita/Schule) — locations, types on map
+- [ ] **COMM-03**: Healthcare facilities — doctors, pharmacies, hospitals, emergency services on map
+- [ ] **COMM-04**: Public spaces — parks, playgrounds, sports facilities on map
 
 ### Infrastructure & Construction
 
-- [x] **INFR-01**: Active construction sites and roadworks with detour info
-- [ ] **INFR-02**: EV charging stations on map (Bundesnetzagentur Ladesäulenregister)
-- [ ] **INFR-03**: Roof solar potential map (where available from BW/municipal data)
-- [ ] **INFR-04**: Existing solar installations on buildings (from MaStR registry — shows which buildings already have solar)
+- [ ] **INFR-01**: Active construction sites and roadworks with detour info
+- [x] **INFR-02**: EV charging stations on map (Bundesnetzagentur Ladesäulenregister)
+- [x] **INFR-03**: Roof solar potential map (where available from BW/municipal data)
+- [x] **INFR-04**: Existing solar installations on buildings (from MaStR registry — shows which buildings already have solar)
 
 ### Platform & Infrastructure
 
@@ -191,14 +191,14 @@ Which phases cover which requirements. Updated during roadmap creation.
 | ENRG-02 | Phase 7 | Complete |
 | ENRG-03 | Phase 7 | Complete |
 | ENRG-04 | Phase 7 | Complete |
-| COMM-01 | Phase 8 | Complete |
-| COMM-02 | Phase 8 | Complete |
-| COMM-03 | Phase 8 | Complete |
-| COMM-04 | Phase 8 | Complete |
-| INFR-01 | Phase 8 | Complete |
-| INFR-02 | Phase 8 | Pending |
-| INFR-03 | Phase 8 | Pending |
-| INFR-04 | Phase 8 | Pending |
+| COMM-01 | Phase 8 | Pending |
+| COMM-02 | Phase 8 | Pending |
+| COMM-03 | Phase 8 | Pending |
+| COMM-04 | Phase 8 | Pending |
+| INFR-01 | Phase 8 | Pending |
+| INFR-02 | Phase 8 | Complete |
+| INFR-03 | Phase 8 | Complete |
+| INFR-04 | Phase 8 | Complete |
 | GEO-01 | Phase 9 | Pending |
 | GEO-02 | Phase 9 | Pending |
 | GEO-03 | Phase 9 | Pending |

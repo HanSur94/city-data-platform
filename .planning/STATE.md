@@ -3,8 +3,8 @@ gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
 status: executing
-stopped_at: Completed 08-01-PLAN.md — community and infrastructure connectors with 16 passing unit tests
-last_updated: "2026-04-06T18:54:41.123Z"
+stopped_at: Completed 08-02-PLAN.md — LadesaeulenConnector and SolarPotentialConnector implemented
+last_updated: "2026-04-06T18:54:05.737Z"
 last_activity: 2026-04-06
 progress:
   total_phases: 10
@@ -68,7 +68,7 @@ Progress: [░░░░░░░░░░] 0%
 | Phase 07-traffic-energy-connectors P06 | 6 | 2 tasks | 9 files |
 | Phase 07 P07 | 4 | 1 tasks | 2 files |
 | Phase 07-traffic-energy-connectors P07 | 20 | 2 tasks | 2 files |
-| Phase 08-community-infrastructure-connectors P01 | 4 | 2 tasks | 7 files |
+| Phase 08-community-infrastructure-connectors P02 | 222 | 2 tasks | 5 files |
 
 ## Accumulated Context
 
@@ -113,7 +113,9 @@ Recent decisions affecting current work:
 - [Phase 07]: EnergyMixBar uses Recharts BarChart + ResponsiveContainer directly to avoid tooltip formatter type incompatibility in shadcn ChartContainer with multi-series stacked format
 - [Phase 07]: greenlet added as explicit dependency to pyproject.toml — SQLAlchemy async requires it but was previously only transitive
 - [Phase 07]: pytest slow marker convention: NVBW GTFS live-network tests excluded from standard CI run
-- [Phase 08-community-infrastructure-connectors]: Consolidated single Overpass query for all community POI types; _extract_mappings() extracted as public method for testability; __init__.py kept minimal to avoid eager import failures in test env
+- [Phase 08-community-infrastructure-connectors]: _parse_german_float returns None on empty/invalid — not 0.0 — so rows with missing coords are correctly skipped
+- [Phase 08-community-infrastructure-connectors]: SolarPotentialConnector is probe-only with enabled: false in aalen.yaml — INFR-03 deferred until LUBW WMS endpoint confirmed
+- [Phase 08-community-infrastructure-connectors]: INFR-04 covered by Phase 7 MaStrConnector solar_rooftop classification — no additional connector needed
 
 ### Pending Todos
 
@@ -128,6 +130,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-04-06T18:54:41.120Z
-Stopped at: Completed 08-01-PLAN.md — community and infrastructure connectors with 16 passing unit tests
+Last session: 2026-04-06T18:54:05.734Z
+Stopped at: Completed 08-02-PLAN.md — LadesaeulenConnector and SolarPotentialConnector implemented
 Resume file: None
