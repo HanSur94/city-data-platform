@@ -60,6 +60,15 @@ class EnergyKPI(BaseModel):
     last_updated: datetime | None
 
 
+class DemographicsKPI(BaseModel):
+    population: int | None
+    population_year: int | None
+    age_under_18_pct: float | None
+    age_over_65_pct: float | None
+    unemployment_rate: float | None
+    last_updated: datetime | None
+
+
 class KPIResponse(BaseModel):
     town: str
     air_quality: AirQualityKPI
@@ -67,6 +76,7 @@ class KPIResponse(BaseModel):
     transit: TransitKPI
     traffic: TrafficKPI | None = None
     energy: EnergyKPI | None = None
+    demographics: DemographicsKPI | None = None
     attribution: list[dict[str, str]]
     last_updated: datetime | None
 

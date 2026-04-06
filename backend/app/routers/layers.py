@@ -163,6 +163,41 @@ async def get_layer(
         )
         rows = result.mappings().all()
 
+    elif domain == "demographics":
+        # Demographics features with latest readings joined via LATERAL
+        result = await db.execute(
+            text("""
+                SELECT
+                    f.id::text                     AS id,
+                    ST_AsGeoJSON(f.geometry)::text AS geometry,
+                    f.properties,
+                    f.source_id,
+                    s.connector_class,
+                    r.values                       AS reading_values,
+                    r.time                         AS reading_time
+                FROM features f
+                LEFT JOIN sources s ON s.town_id = f.town_id AND s.domain = f.domain
+                LEFT JOIN LATERAL (
+                    SELECT values, time
+                    FROM demographics_readings
+                    WHERE feature_id = f.id
+                      AND (:at IS NULL OR time <= :at)
+                    ORDER BY time DESC
+                    LIMIT 1
+                ) r ON true
+                WHERE f.town_id = :town_id
+                  AND f.domain   = 'demographics'
+            """),
+            {"town_id": current_town.id, "at": at_aware},
+        )
+        rows = result.mappings().all()
+        # Get last_updated from reading_time
+        for row in rows:
+            row_ts = row.get("reading_time")
+            if row_ts is not None:
+                if last_updated is None or row_ts > last_updated:
+                    last_updated = row_ts
+
     elif domain in ("community", "infrastructure"):
         # Community POIs and infrastructure (roadworks) — features only, no time-series join
         result = await db.execute(
@@ -221,6 +256,17 @@ async def get_layer(
                 val = row.get(field)
                 if val is not None:
                     props[field] = val
+
+        # Inject demographics reading values into properties
+        if domain == "demographics":
+            reading_vals = row.get("reading_values")
+            if reading_vals:
+                if isinstance(reading_vals, str):
+                    reading_vals = json.loads(reading_vals)
+                if isinstance(reading_vals, dict):
+                    for k, v in reading_vals.items():
+                        if v is not None:
+                            props[k] = v
 
         # Inject EEA EAQI tier data for air_quality domain
         if domain == "air_quality":

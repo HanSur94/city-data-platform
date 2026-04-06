@@ -110,11 +110,38 @@ CONNECTOR_ATTRIBUTION: dict[str, dict[str, str]] = {
         "license_url": "https://www.lubw.baden-wuerttemberg.de",
         "url": "https://www.lubw.baden-wuerttemberg.de",
     },
+    "WegweiserKommuneConnector": {
+        "source_name": "Wegweiser Kommune (Bertelsmann Stiftung)",
+        "license": "CC0",
+        "license_url": "https://creativecommons.org/publicdomain/zero/1.0/",
+        "url": "https://www.wegweiser-kommune.de/",
+    },
+    "StatistikBWConnector": {
+        "source_name": "Statistisches Landesamt Baden-Wuerttemberg",
+        "license": "Datenlizenz Deutschland - Namensnennung - Version 2.0",
+        "license_url": "https://www.govdata.de/dl-de/by-2-0",
+        "url": "https://www.statistik-bw.de/",
+    },
+    "ZensusConnector": {
+        "source_name": "Statistisches Bundesamt, Zensus 2022",
+        "license": "Datenlizenz Deutschland - Namensnennung - Version 2.0",
+        "license_url": "https://www.govdata.de/dl-de/by-2-0",
+        "url": "https://www.zensus2022.de/",
+    },
+    "BundesagenturConnector": {
+        "source_name": "Bundesagentur fuer Arbeit",
+        "license": "Datenlizenz Deutschland - Zero - Version 2.0",
+        "license_url": "https://www.govdata.de/dl-de/zero-2-0",
+        "url": "https://statistik.arbeitsagentur.de/",
+    },
 }
 
 # Valid domain values for path parameter validation
 VALID_DOMAINS: frozenset[str] = frozenset(
-    {"air_quality", "transit", "weather", "water", "energy", "traffic", "community", "infrastructure"}
+    {
+        "air_quality", "transit", "weather", "water", "energy",
+        "traffic", "community", "infrastructure", "demographics",
+    }
 )
 
 # EEA European Air Quality Index (EAQI) 6-tier per-pollutant thresholds

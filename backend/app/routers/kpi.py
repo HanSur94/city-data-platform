@@ -21,6 +21,7 @@ from app.schemas.responses import (
     TransitKPI,
     TrafficKPI,
     EnergyKPI,
+    DemographicsKPI,
 )
 
 router = APIRouter(tags=["kpi"])
@@ -213,6 +214,66 @@ async def get_kpi(
             last_updated=None,
         )
 
+    # --- Demographics KPI ---
+    demographics_kpi: DemographicsKPI | None = None
+    try:
+        # Query latest demographics_readings for each key indicator
+        # Uses demographics_readings JSONB values column
+        demo_result = await db.execute(
+            text("""
+                SELECT
+                    dr.values,
+                    dr.time AS reading_time
+                FROM demographics_readings dr
+                JOIN features f ON dr.feature_id = f.id
+                WHERE f.town_id = :town_id
+                  AND f.domain = 'demographics'
+                  AND dr.time > NOW() - INTERVAL '8 days'
+                ORDER BY dr.time DESC
+                LIMIT 20
+            """),
+            {"town_id": current_town.id},
+        )
+        demo_rows = demo_result.fetchall()
+
+        if demo_rows:
+            # Merge all latest readings into a single values dict
+            merged: dict = {}
+            last_demo_time: datetime | None = None
+            for row in demo_rows:
+                vals = row.values if isinstance(row.values, dict) else {}
+                for k, v in vals.items():
+                    if k not in merged and v is not None:
+                        merged[k] = v
+                if last_demo_time is None and row.reading_time is not None:
+                    last_demo_time = row.reading_time
+
+            def _to_int(v: object) -> int | None:
+                if v is None:
+                    return None
+                try:
+                    return int(float(str(v)))
+                except (TypeError, ValueError):
+                    return None
+
+            demographics_kpi = DemographicsKPI(
+                population=_to_int(merged.get("population")),
+                population_year=_to_int(merged.get("population_year")),
+                age_under_18_pct=_to_float(merged.get("age_under_18_pct")),
+                age_over_65_pct=_to_float(merged.get("age_over_65_pct")),
+                unemployment_rate=_to_float(merged.get("unemployment_rate")),
+                last_updated=last_demo_time,
+            )
+    except Exception:
+        demographics_kpi = DemographicsKPI(
+            population=None,
+            population_year=None,
+            age_under_18_pct=None,
+            age_over_65_pct=None,
+            unemployment_rate=None,
+            last_updated=None,
+        )
+
     # --- Attribution ---
     attributions: list[dict[str, str]] = []
     try:
@@ -246,6 +307,7 @@ async def get_kpi(
         _to_datetime(tr_row["last_updated"]) if tr_row else None,
         traffic_kpi.last_updated,
         energy_kpi.last_updated,
+        demographics_kpi.last_updated if demographics_kpi else None,
     ]
     last_updated: datetime | None = max(
         filter(None, candidate_times),
@@ -300,6 +362,7 @@ async def get_kpi(
         transit=transit_kpi,
         traffic=traffic_kpi,
         energy=energy_kpi,
+        demographics=demographics_kpi,
         attribution=attributions,
         last_updated=last_updated,
     )
