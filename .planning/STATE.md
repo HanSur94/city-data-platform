@@ -3,14 +3,14 @@ gsd_state_version: 1.0
 milestone: v2.0
 milestone_name: — AalenPulse Feature Parity
 status: verifying
-stopped_at: Completed 17-03-PLAN.md (Heat Demand + Cycling Frontend Layers)
-last_updated: "2026-04-06T22:44:19.018Z"
+stopped_at: Completed 18-01-PLAN.md (Data Transparency Foundation)
+last_updated: "2026-04-06T22:54:13.087Z"
 last_activity: 2026-04-06
 progress:
   total_phases: 8
   completed_phases: 7
-  total_plans: 15
-  completed_plans: 15
+  total_plans: 17
+  completed_plans: 16
   percent: 12
 ---
 
@@ -70,6 +70,7 @@ Progress: [█░░░░░░░░░] 12%
 - [Phase 17-static-layers]: Dual WmsOverlayLayer instances for LDEN/LNight to avoid tile reload on metric toggle
 - [Phase 17-static-layers]: Zensus 2022 WMS for demographics grid instead of backend point data
 - [Phase 17-static-layers]: CyclingLayer uses inline fetch with source=cycling query param for API sub-filtering
+- [Phase 18]: Static LAYER_METADATA_REGISTRY with DB merge for last_updated only
 
 ### Pending Todos
 
@@ -83,6 +84,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-04-06T22:43:52.062Z
-Stopped at: Completed 17-03-PLAN.md (Heat Demand + Cycling Frontend Layers)
+Last session: 2026-04-06T22:54:13.084Z
+Stopped at: Completed 18-01-PLAN.md (Data Transparency Foundation)
 Resume file: None
