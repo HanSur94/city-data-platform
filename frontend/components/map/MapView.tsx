@@ -45,6 +45,10 @@ import NoiseWmsLayer from './NoiseWmsLayer';
 import FernwaermeLayer from './FernwaermeLayer';
 import DemographicsGridLayer from './DemographicsGridLayer';
 import DemographicsPopup from './DemographicsPopup';
+import HeatDemandLayer from './HeatDemandLayer';
+import HeatDemandPopup from './HeatDemandPopup';
+import CyclingLayer from './CyclingLayer';
+import CyclingPopup from './CyclingPopup';
 import type { DemographicMetric } from './DemographicsGridLayer';
 import type { LayerResponse } from '@/types/geojson';
 import type GeoJSON from 'geojson';
@@ -97,6 +101,8 @@ interface MapViewProps {
   roadNoiseVisible?: boolean;
   fernwaermeVisible?: boolean;
   demographicsVisible?: boolean;
+  heatDemandVisible?: boolean;
+  cyclingVisible?: boolean;
   noiseMetric?: 'lden' | 'lnight';
   demographicMetric?: DemographicMetric;
   baseLayer?: BaseLayer;
@@ -109,7 +115,7 @@ interface PopupInfo {
   longitude: number;
   latitude: number;
   feature: GeoJSON.Feature;
-  domain: 'transit' | 'airQuality' | 'water' | 'traffic' | 'trafficFlow' | 'autobahn' | 'energy' | 'community' | 'evCharging' | 'roadworks' | 'kocher' | 'parking' | 'busPosition' | 'solarGlow' | 'demographics';
+  domain: 'transit' | 'airQuality' | 'water' | 'traffic' | 'trafficFlow' | 'autobahn' | 'energy' | 'community' | 'evCharging' | 'roadworks' | 'kocher' | 'parking' | 'busPosition' | 'solarGlow' | 'demographics' | 'heatDemand' | 'cycling';
 }
 
 export default function MapView({
@@ -143,6 +149,8 @@ export default function MapView({
   roadNoiseVisible = false,
   fernwaermeVisible = false,
   demographicsVisible = false,
+  heatDemandVisible = false,
+  cyclingVisible = false,
   noiseMetric = 'lden',
   demographicMetric = 'population',
   baseLayer = 'osm',
@@ -198,12 +206,17 @@ export default function MapView({
           'community-schools-points', 'community-healthcare-points', 'community-parks-points', 'community-waste-points',
           'infrastructure-ev-points', 'infrastructure-roadworks-points', 'parking-points', 'bus-position-points',
           'solar-glow-points', 'ev-charging-live-points',
+          'heat-demand-points', 'cycling-infra-lines',
         ]}
         onClick={(e) => {
           const feature = e.features?.[0];
           if (!feature || !e.lngLat) return;
           const layerId = feature.layer?.id ?? '';
-          const domain: PopupInfo['domain'] = layerId === 'solar-glow-points'
+          const domain: PopupInfo['domain'] = layerId === 'heat-demand-points'
+            ? 'heatDemand'
+            : layerId === 'cycling-infra-lines'
+            ? 'cycling'
+            : layerId === 'solar-glow-points'
             ? 'solarGlow'
             : layerId === 'ev-charging-live-points'
             ? 'evCharging'
@@ -308,6 +321,12 @@ export default function MapView({
         )}
         <NoiseWmsLayer visible={roadNoiseVisible} noiseMetric={noiseMetric} />
         <FernwaermeLayer visible={fernwaermeVisible} />
+        {heatDemandVisible && (
+          <HeatDemandLayer town={town} visible={true} />
+        )}
+        {cyclingVisible && (
+          <CyclingLayer town={town} visible={true} />
+        )}
         <DemographicsGridLayer town={town} visible={demographicsVisible} activeMetric={demographicMetric} />
         <GeospatialOverlayLayer
           cadastralVisible={cadastralVisible}
@@ -357,6 +376,10 @@ export default function MapView({
               <ParkingPopup feature={popupInfo.feature} />
             ) : popupInfo.domain === 'roadworks' ? (
               <RoadworksPopup feature={popupInfo.feature} />
+            ) : popupInfo.domain === 'heatDemand' ? (
+              <HeatDemandPopup feature={popupInfo.feature} />
+            ) : popupInfo.domain === 'cycling' ? (
+              <CyclingPopup feature={popupInfo.feature} />
             ) : popupInfo.domain === 'demographics' ? (
               <DemographicsPopup feature={popupInfo.feature} />
             ) : (

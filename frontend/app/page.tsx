@@ -54,6 +54,8 @@ function HomeInner() {
     roadNoise: state.layers.includes('road_noise'),
     fernwaerme: state.layers.includes('fernwaerme'),
     demographics: state.layers.includes('demographics'),
+    heatDemand: state.layers.includes('heat_demand'),
+    cycling: state.layers.includes('cycling'),
     cadastral: state.layers.includes('cadastral'),
     hillshade: state.layers.includes('hillshade'),
     buildings3d: state.layers.includes('buildings3d'),
@@ -85,6 +87,8 @@ function HomeInner() {
     roadNoise: 'road_noise',
     fernwaerme: 'fernwaerme',
     demographics: 'demographics',
+    heatDemand: 'heat_demand',
+    cycling: 'cycling',
     cadastral: 'cadastral',
     hillshade: 'hillshade',
     buildings3d: 'buildings3d',
@@ -218,6 +222,8 @@ function HomeInner() {
             roadNoiseVisible={layerVisibility.roadNoise}
             fernwaermeVisible={layerVisibility.fernwaerme}
             demographicsVisible={layerVisibility.demographics}
+            heatDemandVisible={layerVisibility.heatDemand}
+            cyclingVisible={layerVisibility.cycling}
             noiseMetric={noiseMetric}
             demographicMetric={demographicMetric}
             baseLayer={state.baseLayer}

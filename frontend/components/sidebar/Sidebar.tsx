@@ -11,6 +11,8 @@ import TransitLegend from './TransitLegend';
 import WaterLegend from './WaterLegend';
 import TrafficLegend from './TrafficLegend';
 import EnergyLegend from './EnergyLegend';
+import HeatDemandLegend from './HeatDemandLegend';
+import CyclingLegend from './CyclingLegend';
 
 import type { DemographicMetric } from '@/components/map/DemographicsGridLayer';
 
@@ -41,8 +43,10 @@ interface SidebarProps {
     roadNoise?: boolean;
     fernwaerme?: boolean;
     demographics?: boolean;
+    heatDemand?: boolean;
+    cycling?: boolean;
   };
-  onToggleLayer: (layer: 'transit' | 'airQuality' | 'water' | 'floodHazard' | 'railNoise' | 'lubwEnv' | 'traffic' | 'autobahn' | 'mobiData' | 'energy' | 'schools' | 'healthcare' | 'parks' | 'waste' | 'evCharging' | 'roadworks' | 'solarPotential' | 'trafficFlow' | 'cadastral' | 'hillshade' | 'buildings3d' | 'kocher' | 'parking' | 'busPosition' | 'solarGlow' | 'roadNoise' | 'fernwaerme' | 'demographics') => void;
+  onToggleLayer: (layer: 'transit' | 'airQuality' | 'water' | 'floodHazard' | 'railNoise' | 'lubwEnv' | 'traffic' | 'autobahn' | 'mobiData' | 'energy' | 'schools' | 'healthcare' | 'parks' | 'waste' | 'evCharging' | 'roadworks' | 'solarPotential' | 'trafficFlow' | 'cadastral' | 'hillshade' | 'buildings3d' | 'kocher' | 'parking' | 'busPosition' | 'solarGlow' | 'roadNoise' | 'fernwaerme' | 'demographics' | 'heatDemand' | 'cycling') => void;
   transitError?: boolean;
   airQualityError?: boolean;
   trafficError?: boolean;
@@ -180,6 +184,12 @@ export default function Sidebar({ layerVisibility, onToggleLayer, transitError, 
           checked={layerVisibility.mobiData}
           onCheckedChange={() => onToggleLayer('mobiData')}
         />
+        <LayerToggle
+          id="cycling-toggle"
+          label="Radinfrastruktur (OSM)"
+          checked={layerVisibility.cycling ?? false}
+          onCheckedChange={() => onToggleLayer('cycling')}
+        />
       </div>
 
       <Separator className="mt-6" />
@@ -205,6 +215,12 @@ export default function Sidebar({ layerVisibility, onToggleLayer, transitError, 
           label="Fernwaerme-Netz"
           checked={layerVisibility.fernwaerme ?? false}
           onCheckedChange={() => onToggleLayer('fernwaerme')}
+        />
+        <LayerToggle
+          id="heat-demand-toggle"
+          label="Waermebedarf (KEA-BW)"
+          checked={layerVisibility.heatDemand ?? false}
+          onCheckedChange={() => onToggleLayer('heatDemand')}
         />
       </div>
 
@@ -351,6 +367,8 @@ export default function Sidebar({ layerVisibility, onToggleLayer, transitError, 
           <TrafficLegend trafficFlowVisible={layerVisibility.trafficFlow} />
         )}
         {layerVisibility.energy && <EnergyLegend />}
+        {layerVisibility.heatDemand && <HeatDemandLegend />}
+        {layerVisibility.cycling && <CyclingLegend />}
       </div>
     </div>
   );
