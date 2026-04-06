@@ -60,10 +60,10 @@ Requirements for initial release. Each maps to roadmap phases.
 
 ### Demographics & Statistics
 
-- [ ] **DEMO-01**: Population and demographic data for configured town (Statistik BW via GENESIS API)
-- [ ] **DEMO-02**: Zensus 2022 data at municipal level + 100m grid (REST API + WMS)
-- [ ] **DEMO-03**: Wegweiser Kommune indicators (700+ indicators, CC0 license)
-- [ ] **DEMO-04**: Employment/unemployment data (Bundesagentur für Arbeit)
+- [x] **DEMO-01**: Population and demographic data for configured town (Statistik BW via GENESIS API)
+- [x] **DEMO-02**: Zensus 2022 data at municipal level + 100m grid (REST API + WMS)
+- [x] **DEMO-03**: Wegweiser Kommune indicators (700+ indicators, CC0 license)
+- [x] **DEMO-04**: Employment/unemployment data (Bundesagentur für Arbeit)
 
 ### Geospatial & 3D
 
@@ -205,10 +205,10 @@ Which phases cover which requirements. Updated during roadmap creation.
 | GEO-04 | Phase 9 | Complete |
 | GEO-05 | Phase 9 | Complete |
 | PLAT-09 | Phase 10 | Pending |
-| DEMO-01 | Phase 10 | Pending |
-| DEMO-02 | Phase 10 | Pending |
-| DEMO-03 | Phase 10 | Pending |
-| DEMO-04 | Phase 10 | Pending |
+| DEMO-01 | Phase 10 | Complete |
+| DEMO-02 | Phase 10 | Complete |
+| DEMO-03 | Phase 10 | Complete |
+| DEMO-04 | Phase 10 | Complete |
 
 **Coverage:**
 - v1 requirements: 53 total

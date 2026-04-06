@@ -220,7 +220,7 @@ Plans:
 **Plans**: 4 plans
 
 Plans:
-- [ ] 10-01-PLAN.md — Backend: demographics connectors (Wegweiser Kommune, Statistik BW, Zensus, Bundesagentur) + migration + KPI endpoint
+- [x] 10-01-PLAN.md — Backend: demographics connectors (Wegweiser Kommune, Statistik BW, Zensus, Bundesagentur) + migration + KPI endpoint
 - [ ] 10-02-PLAN.md — Backend: admin health router with per-domain staleness thresholds + Ulm stub town config
 - [ ] 10-03-PLAN.md — Frontend: admin health page, demographics KPI tile + detail panel, attribution footer
 - [ ] 10-04-PLAN.md — Human verify: all 5 Phase 10 requirements
@@ -241,4 +241,4 @@ Phases execute in numeric order: 1 -> 2 -> 3 -> 4 -> 5 -> 6 -> 7 -> 8 -> 9 -> 10
 | 7. Traffic & Energy Connectors | 7/7 | Complete   | 2026-04-06 |
 | 8. Community & Infrastructure Connectors | 3/4 | In Progress|  |
 | 9. Geospatial Enrichment | 3/3 | Complete   | 2026-04-06 |
-| 10. Operator & Multi-Town | 0/4 | Not started | - |
+| 10. Operator & Multi-Town | 1/4 | In Progress|  |
