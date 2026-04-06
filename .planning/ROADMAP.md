@@ -217,7 +217,13 @@ Plans:
   2. A second town (e.g., a stub Ulm config) can be added by creating a new YAML file in `towns/`; running `docker-compose up` with `TOWN=ulm` serves that town's data with zero code changes
   3. Population and demographic data (Statistik BW, Zensus 2022, Wegweiser Kommune, Bundesagentur) are available in a demographics domain detail panel with time-series indicators
   4. Data source attribution is displayed in the UI per active layer, compliant with Datenlizenz Deutschland requirements
-**Plans**: TBD
+**Plans**: 4 plans
+
+Plans:
+- [ ] 10-01-PLAN.md — Backend: demographics connectors (Wegweiser Kommune, Statistik BW, Zensus, Bundesagentur) + migration + KPI endpoint
+- [ ] 10-02-PLAN.md — Backend: admin health router with per-domain staleness thresholds + Ulm stub town config
+- [ ] 10-03-PLAN.md — Frontend: admin health page, demographics KPI tile + detail panel, attribution footer
+- [ ] 10-04-PLAN.md — Human verify: all 5 Phase 10 requirements
 
 ## Progress
 
@@ -235,4 +241,4 @@ Phases execute in numeric order: 1 -> 2 -> 3 -> 4 -> 5 -> 6 -> 7 -> 8 -> 9 -> 10
 | 7. Traffic & Energy Connectors | 7/7 | Complete   | 2026-04-06 |
 | 8. Community & Infrastructure Connectors | 3/4 | In Progress|  |
 | 9. Geospatial Enrichment | 3/3 | Complete   | 2026-04-06 |
-| 10. Operator & Multi-Town | 0/TBD | Not started | - |
+| 10. Operator & Multi-Town | 0/4 | Not started | - |
