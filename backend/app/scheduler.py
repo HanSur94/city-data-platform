@@ -31,6 +31,7 @@ _CONNECTOR_MODULES = {
     "WeatherConnector": "app.connectors.weather",
     "GTFSConnector": "app.connectors.gtfs",
     "GTFSRealtimeConnector": "app.connectors.gtfs_rt",
+    "PegelonlineConnector": "app.connectors.pegelonline",
 }
 
 

@@ -49,3 +49,15 @@ connectors:
       # See RESEARCH.md open question 1. Set this once the URL is found.
       # Connector skips gracefully when empty.
       attribution: "NVBW - Nahverkehrsgesellschaft Baden-Württemberg mbH, CC BY-SA 4.0"
+
+  - connector_class: PegelonlineConnector
+    poll_interval_seconds: 900
+    enabled: true
+    config:
+      # WATR-01: Neckar federal gauging stations near Aalen (via PEGELONLINE).
+      # NOTE WATR-02: Kocher is a Baden-Württemberg state river — not in PEGELONLINE
+      # (federal waterways only). HVZ BW has no public machine-readable API.
+      # Scope for WATR-02 is therefore the closest available federal stations on Neckar.
+      # station_uuids: [] means fetch all Neckar stations dynamically at runtime.
+      station_uuids: []
+      attribution: "PEGELONLINE (WSV / BfG), Datenlizenz Deutschland – Zero – Version 2.0"
