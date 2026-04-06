@@ -83,8 +83,8 @@ Implement all missing features from the AalenPulse requirements document to reac
   - [ ] Frontend shows moving bus icons along routes
   - [ ] Bus icons colored by delay status
   - [ ] Popup shows trip details on click
-- **Plans:** 2 plans
-  - [ ] 14-01-PLAN.md -- BusInterpolationConnector with shape-walking algorithm and scheduler registration
+- **Plans:** 1/2 plans executed
+  - [x] 14-01-PLAN.md -- BusInterpolationConnector with shape-walking algorithm and scheduler registration
   - [ ] 14-02-PLAN.md -- BusPositionLayer, BusRouteLayer, BusPopup frontend components and wiring
 - **Status:** Planning Complete
 
