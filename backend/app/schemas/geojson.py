@@ -146,6 +146,12 @@ CONNECTOR_ATTRIBUTION: dict[str, dict[str, str]] = {
         "license_url": "https://www.govdata.de/dl-de/by-2-0",
         "url": "https://www.nvbw.de/",
     },
+    "AirQualityGridConnector": {
+        "source_name": "IDW Interpolation",
+        "license": "Computed from UBA + Sensor.community data",
+        "license_url": "https://www.govdata.de/dl-de/by-2-0",
+        "url": "https://sensor.community/",
+    },
 }
 
 # Valid domain values for path parameter validation

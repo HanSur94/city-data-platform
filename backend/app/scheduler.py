@@ -52,6 +52,8 @@ _CONNECTOR_MODULES = {
     "ParkingConnector": "app.connectors.parking",
     # Phase 14: Bus position interpolation
     "BusInterpolationConnector": "app.connectors.bus_interpolation",
+    # Phase 15: Air quality grid interpolation
+    "AirQualityGridConnector": "app.connectors.air_quality_grid",
 }
 
 

@@ -29,6 +29,7 @@ async def get_layer(
     domain: str,
     town: str = Query(...),
     at: datetime | None = Query(None, description="Historical snapshot timestamp (ISO 8601). If omitted, returns latest readings."),
+    feature_type: str | None = Query(None, description="Filter by feature_type (e.g. 'air_grid' for grid cells, 'sensor' for sensor points)."),
     db: AsyncSession = Depends(get_db),
     current_town: Town = Depends(get_current_town),
 ) -> dict:
@@ -75,8 +76,15 @@ async def get_layer(
                     last_updated = row_ts
 
     elif domain == "air_quality":
+        # feature_type filter: "air_grid" returns only grid cells,
+        # None or "sensor" returns only non-grid features (sensors).
+        if feature_type == "air_grid":
+            ft_filter = "AND f.properties->>'feature_type' = 'air_grid'"
+        else:
+            ft_filter = "AND f.properties->>'feature_type' IS DISTINCT FROM 'air_grid'"
+
         result = await db.execute(
-            text("""
+            text(f"""
                 SELECT
                     f.id::text                     AS id,
                     ST_AsGeoJSON(f.geometry)::text AS geometry,
@@ -97,6 +105,7 @@ async def get_layer(
                 ) r ON true
                 WHERE f.town_id = :town_id
                   AND f.domain   = 'air_quality'
+                  {ft_filter}
             """),
             {"town_id": current_town.id, "at": at_aware},
         )

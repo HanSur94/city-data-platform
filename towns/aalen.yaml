@@ -151,6 +151,13 @@ connectors:
       gtfs_url: "https://www.nvbw.de/fileadmin/user_upload/service/open_data/fahrplandaten_mit_liniennetz/bwgesamt.zip"
       attribution: "NVBW via GTFS schedule interpolation"
 
+  - connector_class: AirQualityGridConnector
+    poll_interval_seconds: 300
+    enabled: true
+    config:
+      grid_step_deg: 0.005
+      attribution: "IDW interpolation from UBA + Sensor.community"
+
   - connector_class: ParkingConnector
     poll_interval_seconds: 300
     enabled: true
