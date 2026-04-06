@@ -3,14 +3,14 @@ gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
 status: executing
-stopped_at: Completed 07-06-PLAN.md (EnergyMixBar, Sidebar Verkehr/Energie groups, DomainDetailPanel traffic+energy, DashboardPanel KPI tiles, page.tsx wiring)
-last_updated: "2026-04-06T18:03:16.293Z"
+stopped_at: Completed 07-07-PLAN.md Task 1 — awaiting human visual verification at checkpoint Task 2
+last_updated: "2026-04-06T18:10:29.818Z"
 last_activity: 2026-04-06
 progress:
   total_phases: 10
-  completed_phases: 4
+  completed_phases: 5
   total_plans: 35
-  completed_plans: 31
+  completed_plans: 33
   percent: 0
 ---
 
@@ -26,7 +26,7 @@ See: .planning/PROJECT.md (updated 2026-04-05)
 ## Current Position
 
 Phase: 07 (traffic-energy-connectors) — EXECUTING
-Plan: 4 of 7
+Plan: 5 of 7
 Status: Ready to execute
 Last activity: 2026-04-06
 
@@ -66,6 +66,7 @@ Progress: [░░░░░░░░░░] 0%
 | Phase 07-traffic-energy-connectors P03 | 3 | 2 tasks | 7 files |
 | Phase 07 P04 | 8 | 2 tasks | 4 files |
 | Phase 07-traffic-energy-connectors P06 | 6 | 2 tasks | 9 files |
+| Phase 07 P07 | 4 | 1 tasks | 2 files |
 
 ## Accumulated Context
 
@@ -108,6 +109,8 @@ Recent decisions affecting current work:
 - [Phase 07]: KpiTile extended with optional children prop to support embedded compact sub-charts without a new component
 - [Phase 07]: MapView extended with optional trafficVisible/autobahnVisible/energyVisible props defaulting to false for future traffic/energy layer rendering
 - [Phase 07]: EnergyMixBar uses Recharts BarChart + ResponsiveContainer directly to avoid tooltip formatter type incompatibility in shadcn ChartContainer with multi-series stacked format
+- [Phase 07]: greenlet added as explicit dependency to pyproject.toml — SQLAlchemy async requires it but was previously only transitive
+- [Phase 07]: pytest slow marker convention: NVBW GTFS live-network tests excluded from standard CI run
 
 ### Pending Todos
 
@@ -122,6 +125,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-04-06T18:03:16.289Z
-Stopped at: Completed 07-06-PLAN.md (EnergyMixBar, Sidebar Verkehr/Energie groups, DomainDetailPanel traffic+energy, DashboardPanel KPI tiles, page.tsx wiring)
+Last session: 2026-04-06T18:10:29.814Z
+Stopped at: Completed 07-07-PLAN.md Task 1 — awaiting human visual verification at checkpoint Task 2
 Resume file: None

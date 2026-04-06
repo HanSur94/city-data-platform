@@ -18,7 +18,7 @@ Decimal phases appear between their surrounding integers in numeric order.
 - [ ] **Phase 4: Map Frontend** - Next.js + MapLibre map with transit and air quality layers, layer toggle, freshness indicators
 - [ ] **Phase 5: Dashboard** - KPI tiles, time-series charts, date range picker, and permalink URLs alongside the map
 - [ ] **Phase 6: Weather & Environment Connectors** - Weather, AQI visualization, water levels, flood/noise/env overlays
-- [ ] **Phase 7: Traffic & Energy Connectors** - Road traffic counts, Autobahn warnings, MobiData BW, SMARD energy mix
+- [x] **Phase 7: Traffic & Energy Connectors** - Road traffic counts, Autobahn warnings, MobiData BW, SMARD energy mix (completed 2026-04-06)
 - [ ] **Phase 8: Community & Infrastructure Connectors** - Waste, schools, healthcare, parks, EV charging, roadworks, solar
 - [ ] **Phase 9: Geospatial Enrichment** - Cadastral data, 3D buildings, elevation, orthophotos, satellite imagery
 - [ ] **Phase 10: Operator & Multi-Town** - Admin health dashboard, demographics data, second-town validation, theming
@@ -161,9 +161,9 @@ Plans:
 - [x] 07-02-PLAN.md — Traffic connectors: BASt + Autobahn + MobiData BW (TRAF-03, TRAF-04, TRAF-05)
 - [x] 07-03-PLAN.md — Energy connectors: SMARD + MaStR (ENRG-01, ENRG-02, ENRG-03)
 - [x] 07-04-PLAN.md — API router extensions + aalen.yaml wiring (all requirements)
-- [ ] 07-05-PLAN.md — Frontend: map layers + popups (TrafficLayer, AutobahnLayer, EnergyLayer)
+- [x] 07-05-PLAN.md — Frontend: map layers + popups (TrafficLayer, AutobahnLayer, EnergyLayer)
 - [x] 07-06-PLAN.md — Frontend: dashboard (EnergyMixBar, KPI tiles, detail panels, Sidebar, page.tsx)
-- [ ] 07-07-PLAN.md — Human verify: all 7 Phase 7 requirements
+- [x] 07-07-PLAN.md — Human verify: all 7 Phase 7 requirements
 
 ### Phase 8: Community & Infrastructure Connectors
 **Goal**: Citizens can use the map to find waste collection, schools, healthcare, parks, EV charging, roadworks, and solar potential
@@ -215,7 +215,7 @@ Phases execute in numeric order: 1 -> 2 -> 3 -> 4 -> 5 -> 6 -> 7 -> 8 -> 9 -> 10
 | 4. Map Frontend | 2/3 | In Progress|  |
 | 5. Dashboard | 7/8 | In Progress|  |
 | 6. Weather & Environment Connectors | 4/5 | In Progress|  |
-| 7. Traffic & Energy Connectors | 5/7 | In Progress|  |
+| 7. Traffic & Energy Connectors | 7/7 | Complete   | 2026-04-06 |
 | 8. Community & Infrastructure Connectors | 0/TBD | Not started | - |
 | 9. Geospatial Enrichment | 0/TBD | Not started | - |
 | 10. Operator & Multi-Town | 0/TBD | Not started | - |
