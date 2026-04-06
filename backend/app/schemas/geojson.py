@@ -56,11 +56,41 @@ CONNECTOR_ATTRIBUTION: dict[str, dict[str, str]] = {
         "license_url": "https://www.govdata.de/dl-de/by-2-0",
         "url": "https://www.lubw.baden-wuerttemberg.de/",
     },
+    "BastConnector": {
+        "source_name": "BASt (Bundesanstalt fuer Strassenwesen)",
+        "license": "Datenlizenz Deutschland - Zero - Version 2.0",
+        "license_url": "https://www.govdata.de/dl-de/zero-2-0",
+        "url": "https://www.bast.de/",
+    },
+    "AutobahnConnector": {
+        "source_name": "Autobahn GmbH des Bundes",
+        "license": "Datenlizenz Deutschland - Zero - Version 2.0",
+        "license_url": "https://www.govdata.de/dl-de/zero-2-0",
+        "url": "https://verkehr.autobahn.de/",
+    },
+    "MobiDataBWConnector": {
+        "source_name": "MobiData BW",
+        "license": "Datenlizenz Deutschland - Namensnennung - Version 2.0",
+        "license_url": "https://www.govdata.de/dl-de/by-2-0",
+        "url": "https://www.mobidata-bw.de/",
+    },
+    "SmardConnector": {
+        "source_name": "SMARD (Bundesnetzagentur)",
+        "license": "Datenlizenz Deutschland - Zero - Version 2.0",
+        "license_url": "https://www.govdata.de/dl-de/zero-2-0",
+        "url": "https://www.smard.de/",
+    },
+    "MastrConnector": {
+        "source_name": "Marktstammdatenregister (BNetzA)",
+        "license": "Datenlizenz Deutschland - Zero - Version 2.0",
+        "license_url": "https://www.govdata.de/dl-de/zero-2-0",
+        "url": "https://www.marktstammdatenregister.de/",
+    },
 }
 
 # Valid domain values for path parameter validation
 VALID_DOMAINS: frozenset[str] = frozenset(
-    {"air_quality", "transit", "weather", "water", "energy"}
+    {"air_quality", "transit", "weather", "water", "energy", "traffic"}
 )
 
 # EEA European Air Quality Index (EAQI) 6-tier per-pollutant thresholds

@@ -41,7 +41,7 @@ class Observation:
     `feature_id` must reference an existing row in the `features` table.
     """
     feature_id: str
-    domain: str       # "air_quality", "transit", "water", "energy", "weather"
+    domain: str       # "air_quality", "transit", "water", "energy", "weather", "traffic"
     values: dict      # domain-specific key-value pairs (e.g. {"pm10": 12.5})
     timestamp: datetime | None = field(default=None)
     source_id: str | None = field(default=None)
@@ -193,6 +193,25 @@ class BaseConnector(ABC):
                             "feature_id": obs.feature_id,
                             "level_cm": obs.values.get("level_cm"),
                             "flow_m3s": obs.values.get("flow_m3s"),
+                        },
+                    )
+                elif obs.domain == "traffic":
+                    await session.execute(
+                        text(
+                            "INSERT INTO traffic_readings "
+                            "(time, feature_id, vehicle_count_total, vehicle_count_hgv, "
+                            "speed_avg_kmh, congestion_level) "
+                            "VALUES (:time, :feature_id, :vehicle_count_total, :vehicle_count_hgv, "
+                            ":speed_avg_kmh, :congestion_level) "
+                            "ON CONFLICT DO NOTHING"
+                        ),
+                        {
+                            "time": ts,
+                            "feature_id": obs.feature_id,
+                            "vehicle_count_total": obs.values.get("vehicle_count_total"),
+                            "vehicle_count_hgv": obs.values.get("vehicle_count_hgv"),
+                            "speed_avg_kmh": obs.values.get("speed_avg_kmh"),
+                            "congestion_level": obs.values.get("congestion_level"),
                         },
                     )
             await session.commit()
