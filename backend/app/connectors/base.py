@@ -214,6 +214,21 @@ class BaseConnector(ABC):
                             "congestion_level": obs.values.get("congestion_level"),
                         },
                     )
+                elif obs.domain == "energy":
+                    await session.execute(
+                        text(
+                            "INSERT INTO energy_readings "
+                            "(time, feature_id, value_kw, source_type) "
+                            "VALUES (:time, :feature_id, :value_kw, :source_type) "
+                            "ON CONFLICT DO NOTHING"
+                        ),
+                        {
+                            "time": ts,
+                            "feature_id": obs.feature_id,
+                            "value_kw": obs.values.get("value_kw"),
+                            "source_type": obs.values.get("source_type"),
+                        },
+                    )
             await session.commit()
 
     async def upsert_feature(

@@ -158,8 +158,8 @@ Plans:
 
 Plans:
 - [x] 07-01-PLAN.md — Foundation: migration 003, base.py traffic branch, schemas, VALID_DOMAINS, test stubs
-- [x] 07-02-PLAN.md — Traffic connectors: BASt + Autobahn + MobiData BW (TRAF-03, TRAF-04, TRAF-05)
-- [ ] 07-03-PLAN.md — Energy connectors: SMARD + MaStR (ENRG-01, ENRG-02, ENRG-03)
+- [ ] 07-02-PLAN.md — Traffic connectors: BASt + Autobahn + MobiData BW (TRAF-03, TRAF-04, TRAF-05)
+- [x] 07-03-PLAN.md — Energy connectors: SMARD + MaStR (ENRG-01, ENRG-02, ENRG-03)
 - [ ] 07-04-PLAN.md — API router extensions + aalen.yaml wiring (all requirements)
 - [ ] 07-05-PLAN.md — Frontend: map layers + popups (TrafficLayer, AutobahnLayer, EnergyLayer)
 - [ ] 07-06-PLAN.md — Frontend: dashboard (EnergyMixBar, KPI tiles, detail panels, Sidebar, page.tsx)
