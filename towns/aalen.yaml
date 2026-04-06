@@ -214,3 +214,17 @@ connectors:
     config:
       radius_km: 15
       attribution: "MobiData BW OCPDB, open data"
+
+  # --- Phase 17: Static layers (heat demand + cycling infrastructure) ---
+
+  - connector_class: HeatDemandConnector
+    poll_interval_seconds: 86400
+    enabled: true
+    config:
+      attribution: "KEA-BW Waermeatlas (simulated)"
+
+  - connector_class: CyclingInfraConnector
+    poll_interval_seconds: 86400
+    enabled: true
+    config:
+      attribution: "OpenStreetMap contributors, ODbL"

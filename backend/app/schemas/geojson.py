@@ -164,6 +164,18 @@ CONNECTOR_ATTRIBUTION: dict[str, dict[str, str]] = {
         "license_url": "https://www.mobidata-bw.de/",
         "url": "https://ocpdb.2hat.de/",
     },
+    "HeatDemandConnector": {
+        "source_name": "KEA-BW Waermeatlas (simulated)",
+        "license": "Datenlizenz Deutschland – Namensnennung – Version 2.0",
+        "license_url": "https://www.govdata.de/dl-de/by-2-0",
+        "url": "https://www.kea-bw.de/waermeatlas",
+    },
+    "CyclingInfraConnector": {
+        "source_name": "OpenStreetMap (cycling)",
+        "license": "ODbL 1.0",
+        "license_url": "https://opendatacommons.org/licenses/odbl/",
+        "url": "https://www.openstreetmap.org/",
+    },
 }
 
 # Valid domain values for path parameter validation
