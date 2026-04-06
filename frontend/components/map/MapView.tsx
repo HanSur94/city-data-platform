@@ -20,6 +20,7 @@ import CommunityLayer from './CommunityLayer';
 import InfrastructureLayer from './InfrastructureLayer';
 import GeospatialOverlayLayer from './GeospatialOverlayLayer';
 import BuildingsLayer from './BuildingsLayer';
+import KocherLayer from './KocherLayer';
 import FeaturePopup from './FeaturePopup';
 import TrafficPopup from './TrafficPopup';
 import TrafficFlowPopup from './TrafficFlowPopup';
@@ -28,6 +29,7 @@ import EnergyPopup from './EnergyPopup';
 import CommunityPopup from './CommunityPopup';
 import EvChargingPopup from './EvChargingPopup';
 import RoadworksPopup from './RoadworksPopup';
+import KocherPopup from './KocherPopup';
 import type { LayerResponse } from '@/types/geojson';
 import type GeoJSON from 'geojson';
 
@@ -70,6 +72,7 @@ interface MapViewProps {
   roadworksVisible?: boolean;
   solarPotentialVisible?: boolean;
   trafficFlowVisible?: boolean;
+  kocherVisible?: boolean;
   baseLayer?: BaseLayer;
   cadastralVisible?: boolean;
   hillshadeVisible?: boolean;
@@ -80,7 +83,7 @@ interface PopupInfo {
   longitude: number;
   latitude: number;
   feature: GeoJSON.Feature;
-  domain: 'transit' | 'airQuality' | 'water' | 'traffic' | 'trafficFlow' | 'autobahn' | 'energy' | 'community' | 'evCharging' | 'roadworks';
+  domain: 'transit' | 'airQuality' | 'water' | 'traffic' | 'trafficFlow' | 'autobahn' | 'energy' | 'community' | 'evCharging' | 'roadworks' | 'kocher';
 }
 
 export default function MapView({
@@ -105,6 +108,7 @@ export default function MapView({
   roadworksVisible = false,
   solarPotentialVisible = false,
   trafficFlowVisible = false,
+  kocherVisible = false,
   baseLayer = 'osm',
   cadastralVisible = false,
   hillshadeVisible = false,
@@ -154,7 +158,7 @@ export default function MapView({
         mapStyle={mapStyle}
         attributionControl={{ compact: false }}
         interactiveLayerIds={[
-          'transit-stops', 'aqi-points', 'water-gauges', 'traffic-circles', 'traffic-flow-lines', 'autobahn-markers', 'energy-points',
+          'transit-stops', 'aqi-points', 'water-gauges', 'traffic-circles', 'traffic-flow-lines', 'autobahn-markers', 'energy-points', 'kocher-gauge', 'kocher-river-line',
           'community-schools-points', 'community-healthcare-points', 'community-parks-points', 'community-waste-points',
           'infrastructure-ev-points', 'infrastructure-roadworks-points',
         ]}
@@ -162,7 +166,9 @@ export default function MapView({
           const feature = e.features?.[0];
           if (!feature || !e.lngLat) return;
           const layerId = feature.layer?.id ?? '';
-          const domain: PopupInfo['domain'] = layerId.startsWith('aqi')
+          const domain: PopupInfo['domain'] = layerId.startsWith('kocher')
+            ? 'kocher'
+            : layerId.startsWith('aqi')
             ? 'airQuality'
             : layerId.startsWith('water')
             ? 'water'
@@ -244,6 +250,7 @@ export default function MapView({
           hillshadeVisible={hillshadeVisible}
         />
         <BuildingsLayer visible={buildings3dVisible} />
+        <KocherLayer data={waterData ?? null} visible={kocherVisible} />
         {popupInfo && (
           <Popup
             longitude={popupInfo.longitude}
@@ -253,7 +260,9 @@ export default function MapView({
             maxWidth="200px"
             anchor="bottom"
           >
-            {popupInfo.domain === 'trafficFlow' ? (
+            {popupInfo.domain === 'kocher' ? (
+              <KocherPopup feature={popupInfo.feature} />
+            ) : popupInfo.domain === 'trafficFlow' ? (
               <TrafficFlowPopup feature={popupInfo.feature} />
             ) : popupInfo.domain === 'traffic' ? (
               <TrafficPopup feature={popupInfo.feature} lastFetched={null} />

@@ -30,8 +30,9 @@ interface SidebarProps {
     roadworks?: boolean;
     solarPotential?: boolean;
     trafficFlow?: boolean;
+    kocher?: boolean;
   };
-  onToggleLayer: (layer: 'transit' | 'airQuality' | 'water' | 'floodHazard' | 'railNoise' | 'lubwEnv' | 'traffic' | 'autobahn' | 'mobiData' | 'energy' | 'schools' | 'healthcare' | 'parks' | 'waste' | 'evCharging' | 'roadworks' | 'solarPotential' | 'trafficFlow' | 'cadastral' | 'hillshade' | 'buildings3d') => void;
+  onToggleLayer: (layer: 'transit' | 'airQuality' | 'water' | 'floodHazard' | 'railNoise' | 'lubwEnv' | 'traffic' | 'autobahn' | 'mobiData' | 'energy' | 'schools' | 'healthcare' | 'parks' | 'waste' | 'evCharging' | 'roadworks' | 'solarPotential' | 'trafficFlow' | 'cadastral' | 'hillshade' | 'buildings3d' | 'kocher') => void;
   transitError?: boolean;
   airQualityError?: boolean;
   trafficError?: boolean;
@@ -78,6 +79,12 @@ export default function Sidebar({ layerVisibility, onToggleLayer, transitError, 
           label="Pegel & Gewässer"
           checked={layerVisibility.water}
           onCheckedChange={() => onToggleLayer('water')}
+        />
+        <LayerToggle
+          id="kocher-toggle"
+          label="Kocher Pegel (LHP)"
+          checked={layerVisibility.kocher ?? false}
+          onCheckedChange={() => onToggleLayer('kocher')}
         />
         <LayerToggle
           id="flood-toggle"

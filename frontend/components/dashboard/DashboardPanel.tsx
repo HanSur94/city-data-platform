@@ -3,6 +3,7 @@ import { Wind, Thermometer, Bus, Car, Zap, Users } from 'lucide-react'
 import { Separator } from '@/components/ui/separator'
 import { KpiTile } from './KpiTile'
 import { EnergyMixBar } from './EnergyMixBar'
+import { KocherGaugeWidget } from './KocherGaugeWidget'
 import { useKpi } from '@/hooks/useKpi'
 
 interface DashboardPanelProps {
@@ -143,6 +144,9 @@ export function DashboardPanel({
                 active={activeDomain === 'demographics'}
                 onSelect={handleSelect}
               />
+            )}
+            {data?.water != null && (
+              <KocherGaugeWidget water={data.water} />
             )}
           </div>
         )}
