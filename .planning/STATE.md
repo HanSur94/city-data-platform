@@ -2,15 +2,15 @@
 gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
-status: executing
-stopped_at: Completed 08-02-PLAN.md — LadesaeulenConnector and SolarPotentialConnector implemented
-last_updated: "2026-04-06T18:54:05.737Z"
+status: verifying
+stopped_at: Completed 08-03-PLAN.md — frontend layer components and wiring for community and infrastructure data
+last_updated: "2026-04-06T19:01:52.468Z"
 last_activity: 2026-04-06
 progress:
   total_phases: 10
   completed_phases: 5
   total_plans: 39
-  completed_plans: 34
+  completed_plans: 36
   percent: 0
 ---
 
@@ -27,7 +27,7 @@ See: .planning/PROJECT.md (updated 2026-04-05)
 
 Phase: 07 (traffic-energy-connectors) — EXECUTING
 Plan: 7 of 7
-Status: Ready to execute
+Status: Phase complete — ready for verification
 Last activity: 2026-04-06
 
 Progress: [░░░░░░░░░░] 0%
@@ -69,6 +69,7 @@ Progress: [░░░░░░░░░░] 0%
 | Phase 07 P07 | 4 | 1 tasks | 2 files |
 | Phase 07-traffic-energy-connectors P07 | 20 | 2 tasks | 2 files |
 | Phase 08-community-infrastructure-connectors P02 | 222 | 2 tasks | 5 files |
+| Phase 08-community-infrastructure-connectors P03 | 4 | 2 tasks | 8 files |
 
 ## Accumulated Context
 
@@ -116,6 +117,8 @@ Recent decisions affecting current work:
 - [Phase 08-community-infrastructure-connectors]: _parse_german_float returns None on empty/invalid — not 0.0 — so rows with missing coords are correctly skipped
 - [Phase 08-community-infrastructure-connectors]: SolarPotentialConnector is probe-only with enabled: false in aalen.yaml — INFR-03 deferred until LUBW WMS endpoint confirmed
 - [Phase 08-community-infrastructure-connectors]: INFR-04 covered by Phase 7 MaStrConnector solar_rooftop classification — no additional connector needed
+- [Phase 08-community-infrastructure-connectors]: CommunityLayer renders conditional sub-Sources per category for independent toggling without re-fetching
+- [Phase 08-community-infrastructure-connectors]: InfrastructureLayer uses opacity toggle for solar WMS overlay to avoid tile re-fetch on mount/unmount
 
 ### Pending Todos
 
@@ -130,6 +133,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-04-06T18:54:05.734Z
-Stopped at: Completed 08-02-PLAN.md — LadesaeulenConnector and SolarPotentialConnector implemented
+Last session: 2026-04-06T19:01:52.464Z
+Stopped at: Completed 08-03-PLAN.md — frontend layer components and wiring for community and infrastructure data
 Resume file: None
