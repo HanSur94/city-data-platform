@@ -50,6 +50,12 @@ CONNECTOR_ATTRIBUTION: dict[str, dict[str, str]] = {
         "license_url": "https://www.govdata.de/dl-de/zero-2-0",
         "url": "https://www.pegelonline.wsv.de/",
     },
+    "LubwWfsConnector": {
+        "source_name": "Landesanstalt für Umwelt Baden-Württemberg (LUBW)",
+        "license": "Datenlizenz Deutschland – Namensnennung – Version 2.0",
+        "license_url": "https://www.govdata.de/dl-de/by-2-0",
+        "url": "https://www.lubw.baden-wuerttemberg.de/",
+    },
 }
 
 # Valid domain values for path parameter validation
