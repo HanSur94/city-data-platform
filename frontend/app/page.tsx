@@ -43,6 +43,7 @@ function HomeInner() {
     evCharging: state.layers.includes('ev_charging'),
     roadworks: state.layers.includes('roadworks'),
     solarPotential: state.layers.includes('solar_potential'),
+    trafficFlow: state.layers.includes('traffic_flow'),
     cadastral: state.layers.includes('cadastral'),
     hillshade: state.layers.includes('hillshade'),
     buildings3d: state.layers.includes('buildings3d'),
@@ -66,6 +67,7 @@ function HomeInner() {
     evCharging: 'ev_charging',
     roadworks: 'roadworks',
     solarPotential: 'solar_potential',
+    trafficFlow: 'traffic_flow',
     cadastral: 'cadastral',
     hillshade: 'hillshade',
     buildings3d: 'buildings3d',
@@ -172,6 +174,7 @@ function HomeInner() {
             evChargingVisible={layerVisibility.evCharging}
             roadworksVisible={layerVisibility.roadworks}
             solarPotentialVisible={layerVisibility.solarPotential}
+            trafficFlowVisible={layerVisibility.trafficFlow}
             baseLayer={state.baseLayer}
             cadastralVisible={layerVisibility.cadastral}
             hillshadeVisible={layerVisibility.hillshade}

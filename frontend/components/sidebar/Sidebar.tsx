@@ -29,8 +29,9 @@ interface SidebarProps {
     evCharging?: boolean;
     roadworks?: boolean;
     solarPotential?: boolean;
+    trafficFlow?: boolean;
   };
-  onToggleLayer: (layer: 'transit' | 'airQuality' | 'water' | 'floodHazard' | 'railNoise' | 'lubwEnv' | 'traffic' | 'autobahn' | 'mobiData' | 'energy' | 'schools' | 'healthcare' | 'parks' | 'waste' | 'evCharging' | 'roadworks' | 'solarPotential' | 'cadastral' | 'hillshade' | 'buildings3d') => void;
+  onToggleLayer: (layer: 'transit' | 'airQuality' | 'water' | 'floodHazard' | 'railNoise' | 'lubwEnv' | 'traffic' | 'autobahn' | 'mobiData' | 'energy' | 'schools' | 'healthcare' | 'parks' | 'waste' | 'evCharging' | 'roadworks' | 'solarPotential' | 'trafficFlow' | 'cadastral' | 'hillshade' | 'buildings3d') => void;
   transitError?: boolean;
   airQualityError?: boolean;
   trafficError?: boolean;
@@ -109,6 +110,12 @@ export default function Sidebar({ layerVisibility, onToggleLayer, transitError, 
           checked={layerVisibility.traffic}
           onCheckedChange={() => onToggleLayer('traffic')}
           freshnessError={trafficError}
+        />
+        <LayerToggle
+          id="traffic-flow-toggle"
+          label="Verkehrsfluss (TomTom)"
+          checked={layerVisibility.trafficFlow ?? false}
+          onCheckedChange={() => onToggleLayer('trafficFlow')}
         />
         <LayerToggle
           id="autobahn-toggle"
@@ -247,7 +254,9 @@ export default function Sidebar({ layerVisibility, onToggleLayer, transitError, 
         <AQILegend />
         <TransitLegend />
         {layerVisibility.water && <WaterLegend />}
-        {(layerVisibility.traffic || layerVisibility.autobahn) && <TrafficLegend />}
+        {(layerVisibility.traffic || layerVisibility.autobahn || layerVisibility.trafficFlow) && (
+          <TrafficLegend trafficFlowVisible={layerVisibility.trafficFlow} />
+        )}
         {layerVisibility.energy && <EnergyLegend />}
       </div>
     </div>

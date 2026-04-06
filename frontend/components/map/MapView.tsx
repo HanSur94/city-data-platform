@@ -13,6 +13,7 @@ import AQILayer from './AQILayer';
 import WaterLayer from './WaterLayer';
 import WmsOverlayLayer from './WmsOverlayLayer';
 import TrafficLayer from './TrafficLayer';
+import TrafficFlowLayer from './TrafficFlowLayer';
 import AutobahnLayer from './AutobahnLayer';
 import EnergyLayer from './EnergyLayer';
 import CommunityLayer from './CommunityLayer';
@@ -21,6 +22,7 @@ import GeospatialOverlayLayer from './GeospatialOverlayLayer';
 import BuildingsLayer from './BuildingsLayer';
 import FeaturePopup from './FeaturePopup';
 import TrafficPopup from './TrafficPopup';
+import TrafficFlowPopup from './TrafficFlowPopup';
 import AutobahnPopup from './AutobahnPopup';
 import EnergyPopup from './EnergyPopup';
 import CommunityPopup from './CommunityPopup';
@@ -67,6 +69,7 @@ interface MapViewProps {
   evChargingVisible?: boolean;
   roadworksVisible?: boolean;
   solarPotentialVisible?: boolean;
+  trafficFlowVisible?: boolean;
   baseLayer?: BaseLayer;
   cadastralVisible?: boolean;
   hillshadeVisible?: boolean;
@@ -77,7 +80,7 @@ interface PopupInfo {
   longitude: number;
   latitude: number;
   feature: GeoJSON.Feature;
-  domain: 'transit' | 'airQuality' | 'water' | 'traffic' | 'autobahn' | 'energy' | 'community' | 'evCharging' | 'roadworks';
+  domain: 'transit' | 'airQuality' | 'water' | 'traffic' | 'trafficFlow' | 'autobahn' | 'energy' | 'community' | 'evCharging' | 'roadworks';
 }
 
 export default function MapView({
@@ -101,6 +104,7 @@ export default function MapView({
   evChargingVisible = false,
   roadworksVisible = false,
   solarPotentialVisible = false,
+  trafficFlowVisible = false,
   baseLayer = 'osm',
   cadastralVisible = false,
   hillshadeVisible = false,
@@ -150,7 +154,7 @@ export default function MapView({
         mapStyle={mapStyle}
         attributionControl={{ compact: false }}
         interactiveLayerIds={[
-          'transit-stops', 'aqi-points', 'water-gauges', 'traffic-circles', 'autobahn-markers', 'energy-points',
+          'transit-stops', 'aqi-points', 'water-gauges', 'traffic-circles', 'traffic-flow-lines', 'autobahn-markers', 'energy-points',
           'community-schools-points', 'community-healthcare-points', 'community-parks-points', 'community-waste-points',
           'infrastructure-ev-points', 'infrastructure-roadworks-points',
         ]}
@@ -162,6 +166,8 @@ export default function MapView({
             ? 'airQuality'
             : layerId.startsWith('water')
             ? 'water'
+            : layerId === 'traffic-flow-lines'
+            ? 'trafficFlow'
             : layerId.startsWith('traffic')
             ? 'traffic'
             : layerId.startsWith('autobahn')
@@ -211,6 +217,9 @@ export default function MapView({
             timestamp={historicalTimestamp}
           />
         )}
+        {trafficFlowVisible && (
+          <TrafficFlowLayer town={town} visible={true} timestamp={historicalTimestamp} />
+        )}
         {(autobahnVisible ?? layerVisibility.autobahn) && (
           <AutobahnLayer town={town} visible={true} />
         )}
@@ -244,7 +253,9 @@ export default function MapView({
             maxWidth="200px"
             anchor="bottom"
           >
-            {popupInfo.domain === 'traffic' ? (
+            {popupInfo.domain === 'trafficFlow' ? (
+              <TrafficFlowPopup feature={popupInfo.feature} />
+            ) : popupInfo.domain === 'traffic' ? (
               <TrafficPopup feature={popupInfo.feature} lastFetched={null} />
             ) : popupInfo.domain === 'autobahn' ? (
               <AutobahnPopup feature={popupInfo.feature} />
