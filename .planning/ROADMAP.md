@@ -64,9 +64,9 @@ Implement all missing features from the AalenPulse requirements document to reac
   - [ ] Parking features created with correct locations
   - [ ] Map shows parking pins with occupancy coloring
   - [ ] Dashboard shows parking KPI tile
-- **Plans:** 1/2 plans executed
+- **Plans:** 2/2 plans complete
   - [x] 13-01-PLAN.md -- ParkingConnector scraper, KPI endpoint, TypeScript types
-  - [ ] 13-02-PLAN.md -- ParkingLayer map component, popup, sidebar toggle, dashboard KPI tile
+  - [x] 13-02-PLAN.md -- ParkingLayer map component, popup, sidebar toggle, dashboard KPI tile
 - **Status:** Planning Complete
 
 ### Phase 14: Bus Position Interpolation
