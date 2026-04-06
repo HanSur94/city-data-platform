@@ -7,6 +7,8 @@ import LayerToggle from './LayerToggle';
 import AQILegend from './AQILegend';
 import TransitLegend from './TransitLegend';
 import WaterLegend from './WaterLegend';
+import TrafficLegend from './TrafficLegend';
+import EnergyLegend from './EnergyLegend';
 
 interface SidebarProps {
   layerVisibility: {
@@ -16,13 +18,19 @@ interface SidebarProps {
     floodHazard: boolean;
     railNoise: boolean;
     lubwEnv: boolean;
+    traffic: boolean;
+    autobahn: boolean;
+    mobiData: boolean;
+    energy: boolean;
   };
-  onToggleLayer: (layer: 'transit' | 'airQuality' | 'water' | 'floodHazard' | 'railNoise' | 'lubwEnv') => void;
+  onToggleLayer: (layer: 'transit' | 'airQuality' | 'water' | 'floodHazard' | 'railNoise' | 'lubwEnv' | 'traffic' | 'autobahn' | 'mobiData' | 'energy') => void;
   transitError?: boolean;
   airQualityError?: boolean;
+  trafficError?: boolean;
+  energyError?: boolean;
 }
 
-export default function Sidebar({ layerVisibility, onToggleLayer, transitError, airQualityError }: SidebarProps) {
+export default function Sidebar({ layerVisibility, onToggleLayer, transitError, airQualityError, trafficError, energyError }: SidebarProps) {
   const [drawerOpen, setDrawerOpen] = useState(false);
 
   const content = (
@@ -80,6 +88,46 @@ export default function Sidebar({ layerVisibility, onToggleLayer, transitError, 
 
       <Separator className="mt-6" />
 
+      {/* Verkehr group */}
+      <div className="pt-2">
+        <p className="px-4 text-[12px] font-normal text-muted-foreground uppercase tracking-wide mb-2 mt-6">Verkehr</p>
+        <LayerToggle
+          id="traffic-toggle"
+          label="Verkehrszaehlstellen (BASt)"
+          checked={layerVisibility.traffic}
+          onCheckedChange={() => onToggleLayer('traffic')}
+          freshnessError={trafficError}
+        />
+        <LayerToggle
+          id="autobahn-toggle"
+          label="Autobahn-Stoerungen (A7/A6)"
+          checked={layerVisibility.autobahn}
+          onCheckedChange={() => onToggleLayer('autobahn')}
+        />
+        <LayerToggle
+          id="mobidata-toggle"
+          label="MobiData BW"
+          checked={layerVisibility.mobiData}
+          onCheckedChange={() => onToggleLayer('mobiData')}
+        />
+      </div>
+
+      <Separator className="mt-6" />
+
+      {/* Energie group */}
+      <div className="pt-2">
+        <p className="px-4 text-[12px] font-normal text-muted-foreground uppercase tracking-wide mb-2 mt-6">Energie</p>
+        <LayerToggle
+          id="energy-toggle"
+          label="Erneuerbare Anlagen (MaStR)"
+          checked={layerVisibility.energy}
+          onCheckedChange={() => onToggleLayer('energy')}
+          freshnessError={energyError}
+        />
+      </div>
+
+      <Separator className="mt-6" />
+
       {/* Legend */}
       <div className="pt-6 space-y-4">
         <p className="px-4 text-[12px] font-normal text-muted-foreground uppercase tracking-wide">
@@ -88,6 +136,8 @@ export default function Sidebar({ layerVisibility, onToggleLayer, transitError, 
         <AQILegend />
         <TransitLegend />
         {layerVisibility.water && <WaterLegend />}
+        {(layerVisibility.traffic || layerVisibility.autobahn) && <TrafficLegend />}
+        {layerVisibility.energy && <EnergyLegend />}
       </div>
     </div>
   );
