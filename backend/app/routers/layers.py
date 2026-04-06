@@ -108,8 +108,63 @@ async def get_layer(
                 if last_updated is None or row_ts > last_updated:
                     last_updated = row_ts
 
+    elif domain == "traffic":
+        result = await db.execute(
+            text("""
+                SELECT
+                    f.id::text                     AS id,
+                    ST_AsGeoJSON(f.geometry)::text AS geometry,
+                    f.properties,
+                    f.source_id,
+                    s.connector_class,
+                    r.time                         AS reading_time,
+                    r.vehicle_count_total, r.vehicle_count_hgv,
+                    r.speed_avg_kmh, r.congestion_level
+                FROM features f
+                LEFT JOIN sources s ON s.town_id = f.town_id AND s.domain = f.domain
+                LEFT JOIN LATERAL (
+                    SELECT time, vehicle_count_total, vehicle_count_hgv,
+                           speed_avg_kmh, congestion_level
+                    FROM traffic_readings
+                    WHERE feature_id = f.id
+                      AND (:at IS NULL OR time <= :at)
+                    ORDER BY time DESC
+                    LIMIT 1
+                ) r ON true
+                WHERE f.town_id = :town_id
+                  AND f.domain   = 'traffic'
+            """),
+            {"town_id": current_town.id, "at": at_aware},
+        )
+        rows = result.mappings().all()
+        # Get last_updated from reading_time
+        for row in rows:
+            row_ts = row.get("reading_time")
+            if row_ts is not None:
+                if last_updated is None or row_ts > last_updated:
+                    last_updated = row_ts
+
+    elif domain == "energy":
+        # Energy layer = MaStR installations (features only, no time-series join)
+        result = await db.execute(
+            text("""
+                SELECT
+                    f.id::text                     AS id,
+                    ST_AsGeoJSON(f.geometry)::text AS geometry,
+                    f.properties,
+                    f.source_id,
+                    s.connector_class
+                FROM features f
+                LEFT JOIN sources s ON s.town_id = f.town_id AND s.domain = f.domain
+                WHERE f.town_id = :town_id
+                  AND f.domain   = 'energy'
+            """),
+            {"town_id": current_town.id},
+        )
+        rows = result.mappings().all()
+
     else:
-        # Generic: weather, water, energy — plain features, no reading join
+        # Generic: weather, water — plain features, no reading join
         result = await db.execute(
             text("""
                 SELECT
@@ -140,6 +195,13 @@ async def get_layer(
             props = json.loads(props)
         else:
             props = dict(props)
+
+        # Inject traffic reading fields into properties
+        if domain == "traffic":
+            for field in ("vehicle_count_total", "vehicle_count_hgv", "speed_avg_kmh", "congestion_level"):
+                val = row.get(field)
+                if val is not None:
+                    props[field] = val
 
         # Inject EEA EAQI tier data for air_quality domain
         if domain == "air_quality":

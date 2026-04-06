@@ -117,7 +117,68 @@ async def get_timeseries(
                 values=values,
             ))
 
-    # Other domains (transit, water, energy) — tables may be empty in Phase 3
+    elif domain == "traffic":
+        result = await db.execute(
+            text("""
+                SELECT
+                    r.time, r.feature_id::text AS feature_id,
+                    r.vehicle_count_total, r.vehicle_count_hgv,
+                    r.speed_avg_kmh, r.congestion_level
+                FROM traffic_readings r
+                JOIN features f ON r.feature_id = f.id
+                WHERE f.town_id = :town_id
+                  AND r.time >= :start
+                  AND r.time <  :end
+                ORDER BY r.time ASC
+                LIMIT 10000
+            """),
+            {"town_id": current_town.id, "start": start_aware, "end": end_aware},
+        )
+        rows = result.mappings().all()
+        for row in rows:
+            values = {
+                k: v for k, v in {
+                    "vehicle_count_total": row["vehicle_count_total"],
+                    "vehicle_count_hgv": row["vehicle_count_hgv"],
+                    "speed_avg_kmh": row["speed_avg_kmh"],
+                    "congestion_level": row["congestion_level"],
+                }.items() if v is not None
+            }
+            points.append(TimeseriesPoint(
+                time=row["time"],
+                feature_id=row["feature_id"],
+                values=values,
+            ))
+
+    elif domain == "energy":
+        result = await db.execute(
+            text("""
+                SELECT
+                    r.time, r.feature_id::text AS feature_id,
+                    r.value_kw, r.source_type
+                FROM energy_readings r
+                WHERE r.time >= :start
+                  AND r.time <  :end
+                ORDER BY r.time ASC
+                LIMIT 10000
+            """),
+            {"town_id": current_town.id, "start": start_aware, "end": end_aware},
+        )
+        rows = result.mappings().all()
+        for row in rows:
+            values = {
+                k: v for k, v in {
+                    "value_kw": row["value_kw"],
+                    "source_type": row["source_type"],
+                }.items() if v is not None
+            }
+            points.append(TimeseriesPoint(
+                time=row["time"],
+                feature_id=row["feature_id"],
+                values=values,
+            ))
+
+    # Other domains (transit, water) — tables may be empty in Phase 3
     # Return empty response, no error.
 
     # Attribution: query sources table for this town+domain
