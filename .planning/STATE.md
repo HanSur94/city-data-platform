@@ -3,14 +3,14 @@ gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
 status: executing
-stopped_at: Completed 05-dashboard/05-07-PLAN.md
-last_updated: "2026-04-05T23:42:04.480Z"
+stopped_at: Completed 06-weather-environment/06-01-PLAN.md
+last_updated: "2026-04-06T00:08:46.832Z"
 last_activity: 2026-04-05
 progress:
   total_phases: 10
   completed_phases: 4
-  total_plans: 23
-  completed_plans: 22
+  total_plans: 28
+  completed_plans: 23
   percent: 0
 ---
 
@@ -62,6 +62,7 @@ Progress: [░░░░░░░░░░] 0%
 | Phase 05-dashboard P05 | 2 | 2 tasks | 3 files |
 | Phase 05-dashboard P06 | 3 | 2 tasks | 2 files |
 | Phase 05-dashboard P07 | 2 | 1 tasks | 1 files |
+| Phase 06-weather-environment P01 | 4 | 3 tasks | 9 files |
 
 ## Accumulated Context
 
@@ -94,6 +95,8 @@ Recent decisions affecting current work:
 - [Phase 05-dashboard]: historicalTimestamp is optional prop on MapView — existing callers need no change until Plan 07
 - [Phase 05-dashboard]: page.tsx: useUrlState is single source of truth — no local useState for layerVisibility, domain, dateRange, or timestamp
 - [Phase 05-dashboard]: Suspense + HomeInner pattern for pages using useSearchParams-based hooks — enforced in page.tsx Plan 07
+- [Phase 06-weather-environment]: WATR-02: Kocher is a state river (BW) — not in PEGELONLINE (federal only). HVZ BW has no public machine-readable API. WATR-02 fulfilled via Neckar federal stations.
+- [Phase 06-weather-environment]: station_uuids: [] in aalen.yaml fetches all Neckar stations dynamically — avoids hardcoding UUIDs that may change
 
 ### Pending Todos
 
@@ -108,6 +111,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-04-05T23:36:46.779Z
-Stopped at: Completed 05-dashboard/05-07-PLAN.md
+Last session: 2026-04-06T00:08:46.828Z
+Stopped at: Completed 06-weather-environment/06-01-PLAN.md
 Resume file: None
