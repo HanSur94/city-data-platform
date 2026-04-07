@@ -10,22 +10,18 @@ const buildingsLayer: FillExtrusionLayerSpecification = {
   id: 'buildings-3d',
   type: 'fill-extrusion',
   source: 'protomaps',
-  'source-layer': 'building',
+  'source-layer': 'buildings',
   paint: {
     'fill-extrusion-color': '#d4c4a8',
     'fill-extrusion-height': [
       'coalesce',
-      ['get', 'render_height'],
+      ['get', 'height'],
       10,
     ],
-    'fill-extrusion-base': [
-      'coalesce',
-      ['get', 'render_min_height'],
-      0,
-    ],
+    'fill-extrusion-base': 0,
     'fill-extrusion-opacity': 0.7,
   },
-  minzoom: 14,
+  minzoom: 13,
 };
 
 export default function BuildingsLayer({ visible }: BuildingsLayerProps) {
