@@ -164,7 +164,6 @@ class FeatureDomainCount(BaseModel):
     domain: str
     total_features: int
     with_semantic_id: int
-    with_address: int
 
 
 class SystemInfo(BaseModel):

@@ -409,8 +409,7 @@ async def _query_feature_registry(
                 SELECT
                     domain,
                     count(*) as total_features,
-                    count(semantic_id) as with_semantic_id,
-                    count(address) as with_address
+                    count(semantic_id) as with_semantic_id
                 FROM features
                 WHERE town_id = :town_id
                 GROUP BY domain
@@ -424,7 +423,6 @@ async def _query_feature_registry(
                 domain=row["domain"],
                 total_features=int(row["total_features"]),
                 with_semantic_id=int(row["with_semantic_id"]),
-                with_address=int(row["with_address"]),
             ))
     except Exception:
         logger.exception("Failed to query feature registry")
