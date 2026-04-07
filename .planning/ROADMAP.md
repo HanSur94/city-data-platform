@@ -224,6 +224,17 @@ Implement all missing features from the AalenPulse requirements document to reac
 - **Plans:** 0 plans
   - [ ] TBD (promote with /gsd:review-backlog when ready)
 
+### Phase 999.3: Bus Movement Along Route Path (BACKLOG)
+- **Goal:** Ensure interpolated bus positions follow the actual GTFS route shape geometry instead of moving in straight lines between stops.
+- **Requirements:**
+  - Bus dot animation must walk along the route shape polyline, not interpolate linearly between stop coordinates
+  - Use GTFS shapes.txt geometry for path-following interpolation
+  - Smooth animation along curves, turns, and road geometry
+  - Handle shape_dist_traveled for accurate position along shape
+- **Status:** Backlog
+- **Plans:** 0 plans
+  - [ ] TBD (promote with /gsd:review-backlog when ready)
+
 ### Phase 999.2: Construction Site Icon Redesign (BACKLOG)
 - **Goal:** Replace the orange dot construction site symbol with a triangle or circle containing a construction site icon (similar to Google Maps style).
 - **Requirements:**
