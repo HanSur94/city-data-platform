@@ -83,8 +83,8 @@ export function DashboardPanel({
       >
         {collapsed ? <ChevronLeft className="h-4 w-4 text-slate-600" /> : <ChevronRight className="h-4 w-4 text-slate-600" />}
       </button>
-    <aside className={`flex w-[320px] flex-shrink-0 flex-col h-screen overflow-y-auto border-l bg-background transition-all duration-300 ease-in-out ${
-      collapsed ? 'w-0 overflow-hidden translate-x-full' : ''
+    <aside className={`flex flex-shrink-0 flex-col h-screen overflow-y-auto border-l bg-background transition-all duration-300 ease-in-out ${
+      collapsed ? 'w-0 overflow-hidden translate-x-full' : 'w-[320px]'
     }`}>
       {/* Panel header */}
       <div className="px-4 pt-8 pb-4">

@@ -1,6 +1,6 @@
 'use client'
 import { useSearchParams, useRouter } from 'next/navigation'
-import { useCallback } from 'react'
+import { useCallback, useMemo } from 'react'
 import { subDays, endOfDay } from 'date-fns'
 
 export interface UrlState {
@@ -26,14 +26,21 @@ export function useUrlState(defaultTown = 'aalen'): {
   const searchParams = useSearchParams()
   const router = useRouter()
 
+  // Memoize default dates to prevent new Date() on every render,
+  // which would cause infinite re-fetch loops in useTimeseries
+  const fromParam = searchParams.get('from')
+  const toParam = searchParams.get('to')
+  const defaultFrom = useMemo(() => subDays(new Date(), 1), [])
+  const defaultTo = useMemo(() => endOfDay(new Date()), [])
+
   const state: UrlState = {
     town: searchParams.get('town') ?? defaultTown,
     layers: (searchParams.get('layers') ?? 'transit,aqi,buildings3d').split(',').filter(Boolean),
     zoom: searchParams.get('zoom') ? Number(searchParams.get('zoom')) : null,
     lat: searchParams.get('lat') ? Number(searchParams.get('lat')) : null,
     lng: searchParams.get('lng') ? Number(searchParams.get('lng')) : null,
-    from: searchParams.get('from') ? new Date(searchParams.get('from')!) : subDays(new Date(), 1),
-    to: searchParams.get('to') ? new Date(searchParams.get('to')!) : endOfDay(new Date()),
+    from: fromParam ? new Date(fromParam) : defaultFrom,
+    to: toParam ? new Date(toParam) : defaultTo,
     ts: searchParams.get('ts') ? new Date(searchParams.get('ts')!) : null,
     domain: searchParams.get('domain') ?? null,
     baseLayer: (searchParams.get('base') as UrlState['baseLayer']) ?? 'osm',
