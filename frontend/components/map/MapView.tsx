@@ -223,6 +223,32 @@ export default function MapView({
 
   const [popupInfo, setPopupInfo] = useState<PopupInfo | null>(null);
 
+  // Track bus popup position — update coordinates as the bus dot animates
+  useEffect(() => {
+    if (!popupInfo || popupInfo.domain !== 'busPosition') return;
+    const tripId = popupInfo.feature.properties?.trip_id;
+    if (!tripId) return;
+
+    let raf: number;
+    const track = () => {
+      const map = mapRef.current?.getMap();
+      if (!map) { raf = requestAnimationFrame(track); return; }
+      const features = map.querySourceFeatures('bus-positions', {
+        filter: ['==', ['get', 'trip_id'], tripId],
+      });
+      if (features.length > 0 && features[0].geometry.type === 'Point') {
+        const [lng, lat] = features[0].geometry.coordinates;
+        setPopupInfo((prev) => prev && prev.domain === 'busPosition'
+          ? { ...prev, longitude: lng, latitude: lat, feature: features[0] as GeoJSON.Feature }
+          : prev
+        );
+      }
+      raf = requestAnimationFrame(track);
+    };
+    raf = requestAnimationFrame(track);
+    return () => cancelAnimationFrame(raf);
+  }, [popupInfo?.domain, popupInfo?.feature.properties?.trip_id]);
+
   const mapStyle = getMapStyle(baseLayer, PMTILES_URL);
 
   return (

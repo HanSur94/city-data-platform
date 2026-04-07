@@ -29,7 +29,10 @@ const buildingsLayer: FillExtrusionLayerSpecification = {
 };
 
 export default function BuildingsLayer({ visible }: BuildingsLayerProps) {
-  if (!visible) return null;
-
-  return <Layer {...buildingsLayer} />;
+  return (
+    <Layer
+      {...buildingsLayer}
+      layout={{ visibility: visible ? 'visible' : 'none' }}
+    />
+  );
 }
