@@ -532,29 +532,37 @@ class BusInterpolationConnector(BaseConnector):
                 if in_bbox:
                     shape_coords_map[shape_id] = coords
 
-        # Build stop_times by trip_id (only for trips with active service + in-bbox shapes)
+        # Build stop_times by trip_id
         trips_df = feed.trips[feed.trips.service_id.isin(active_service_ids)]
 
-        # Build stop name lookup
+        # Build stop coordinate + name lookup
         stop_names: dict[str, str] = {}
+        stop_coords: dict[str, tuple[float, float]] = {}
         if hasattr(feed, "stops") and feed.stops is not None and not feed.stops.empty:
             for row in feed.stops.itertuples(index=False):
                 stop_names[row.stop_id] = getattr(row, "stop_name", row.stop_id)
+                try:
+                    stop_coords[row.stop_id] = (float(row.stop_lon), float(row.stop_lat))
+                except (ValueError, TypeError):
+                    pass
+
+        has_shapes = bool(shape_coords_map)
+        logger.info("Shape coords available: %s (%d shapes)", has_shapes, len(shape_coords_map))
 
         for trip_row in trips_df.itertuples(index=False):
-            raw_shape = getattr(trip_row, "shape_id", None)
-            try:
-                shape_id = str(raw_shape) if raw_shape is not None and str(raw_shape) not in ("", "nan", "<NA>") else None
-            except (ValueError, TypeError):
-                shape_id = None
-            if shape_id is None or shape_id not in shape_coords_map:
-                continue
-            shape_id = str(shape_id)
-            if shape_id not in shape_coords_map:
-                continue
-
             trip_id = trip_row.trip_id
             route_id = trip_row.route_id
+
+            # Try to get shape coords
+            shape_coords: list[tuple[float, float]] | None = None
+            if has_shapes:
+                raw_shape = getattr(trip_row, "shape_id", None)
+                try:
+                    shape_id = str(raw_shape) if raw_shape is not None and str(raw_shape) not in ("", "nan", "<NA>") else None
+                except (ValueError, TypeError):
+                    shape_id = None
+                if shape_id and shape_id in shape_coords_map:
+                    shape_coords = shape_coords_map[shape_id]
 
             # Get stop_times for this trip
             trip_st = feed.stop_times[feed.stop_times.trip_id == trip_id].sort_values("stop_sequence")
@@ -562,6 +570,7 @@ class BusInterpolationConnector(BaseConnector):
                 continue
 
             stop_time_list: list[tuple[str, int, int]] = []
+            trip_stop_ids: list[str] = []
             for st_row in trip_st.itertuples(index=False):
                 arr_str = getattr(st_row, "arrival_time", "00:00:00")
                 dep_str = getattr(st_row, "departure_time", "00:00:00")
@@ -569,8 +578,26 @@ class BusInterpolationConnector(BaseConnector):
                 dep_secs = self._time_str_to_seconds(dep_str)
                 stop_name = stop_names.get(st_row.stop_id, st_row.stop_id)
                 stop_time_list.append((stop_name, arr_secs, dep_secs))
+                trip_stop_ids.append(st_row.stop_id)
 
             if not stop_time_list:
+                continue
+
+            # If no shape, build coords from stop locations (straight-line between stops)
+            if shape_coords is None:
+                shape_coords = []
+                for sid in trip_stop_ids:
+                    if sid in stop_coords:
+                        shape_coords.append(stop_coords[sid])
+                if len(shape_coords) < 2:
+                    continue
+
+            # Check if any stop is in the bbox (Aalen filter)
+            in_bbox = any(
+                bbox.lon_min <= lon <= bbox.lon_max and bbox.lat_min <= lat <= bbox.lat_max
+                for lon, lat in shape_coords
+            )
+            if not in_bbox:
                 continue
 
             first_dep = stop_time_list[0][2]
@@ -588,7 +615,7 @@ class BusInterpolationConnector(BaseConnector):
                     line_name=line_name,
                     destination=destination,
                     stop_times=stop_time_list,
-                    shape_coords=shape_coords_map[shape_id],
+                    shape_coords=shape_coords,
                     delay_seconds=0,
                 ))
 
