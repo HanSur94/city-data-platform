@@ -37,17 +37,14 @@ connectors:
     poll_interval_seconds: 86400
     enabled: true
     config:
-      gtfs_url: "https://www.nvbw.de/fileadmin/user_upload/service/open_data/fahrplandaten_mit_liniennetz/bwgesamt.zip"
+      gtfs_url: "https://download.gtfs.de/germany/free/latest.zip"
       attribution: "NVBW - Nahverkehrsgesellschaft Baden-Württemberg mbH, DL-DE-BY-2.0"
 
   - connector_class: GTFSRealtimeConnector
     poll_interval_seconds: 30
     enabled: true
     config:
-      gtfs_rt_url: ""
-      # NOTE: GTFS-RT feed URL for NVBW bwgesamt is unconfirmed.
-      # See RESEARCH.md open question 1. Set this once the URL is found.
-      # Connector skips gracefully when empty.
+      gtfs_rt_url: "https://realtime.gtfs.de/realtime-free.pb"
       attribution: "NVBW - Nahverkehrsgesellschaft Baden-Württemberg mbH, CC BY-SA 4.0"
 
   - connector_class: PegelonlineConnector
@@ -149,7 +146,7 @@ connectors:
     poll_interval_seconds: 30
     enabled: true
     config:
-      gtfs_url: "https://www.nvbw.de/fileadmin/user_upload/service/open_data/fahrplandaten_mit_liniennetz/bwgesamt.zip"
+      gtfs_url: "https://download.gtfs.de/germany/free/latest.zip"
       attribution: "NVBW via GTFS schedule interpolation"
 
   - connector_class: AirQualityGridConnector
