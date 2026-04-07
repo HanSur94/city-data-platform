@@ -104,9 +104,10 @@ None yet.
 | # | Description | Date | Commit | Directory |
 |---|-------------|------|--------|-----------|
 | 260407-mwh | Fix transit layer performance and air quality SQL bug | 2026-04-07 | 5c9cc3d | [260407-mwh-fix-transit-layer-performance-and-air-qu](./quick/260407-mwh-fix-transit-layer-performance-and-air-qu/) |
+| 260407-pft | Bus position layer visual overhaul: per-line colors, train/bus distinction, sidebar line filter | 2026-04-07 | d120c78 | [260407-pft-bus-position-layer-visual-overhaul-per-l](./quick/260407-pft-bus-position-layer-visual-overhaul-per-l/) |
 
 ## Session Continuity
 
-Last session: 2026-04-07T10:47:45.648Z
-Stopped at: Completed 20-03-PLAN.md (Weather Skybox & Bus Interpolation)
+Last session: 2026-04-07T16:27:13Z
+Stopped at: Completed quick task 260407-pft: Bus Position Layer Visual Overhaul
 Resume file: None
