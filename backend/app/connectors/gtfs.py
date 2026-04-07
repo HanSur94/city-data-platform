@@ -40,10 +40,11 @@ class GTFSConnector(BaseConnector):
         url = self.config.config["gtfs_url"]
         cache_path = Path("/tmp/gtfs_cache.zip")
 
-        # Use cached file if less than 24h old
+        # Use cached file if less than 7 days old (GTFS schedules update weekly at most)
         if cache_path.exists():
-            age_hours = (Path(cache_path).stat().st_mtime - __import__('time').time()) / -3600
-            if age_hours < 24:
+            import time as _time
+            age_hours = (_time.time() - cache_path.stat().st_mtime) / 3600
+            if age_hours < 168:  # 7 days
                 return cache_path.read_bytes()
 
         async with httpx.AsyncClient(

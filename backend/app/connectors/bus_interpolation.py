@@ -28,7 +28,7 @@ from app.models.bus_interpolation import ActiveTrip, BusPosition
 logger = logging.getLogger(__name__)
 
 # Cache GTFS zip for 24 hours
-_GTFS_CACHE_MAX_AGE = 86400
+_GTFS_CACHE_MAX_AGE = 604800  # 7 days — GTFS schedules update weekly
 
 
 def _haversine(lon1: float, lat1: float, lon2: float, lat2: float) -> float:

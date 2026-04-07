@@ -34,7 +34,7 @@ connectors:
       attribution: "Deutscher Wetterdienst (DWD) via Bright Sky, CC BY 4.0"
 
   - connector_class: GTFSConnector
-    poll_interval_seconds: 86400
+    poll_interval_seconds: 604800
     enabled: true
     config:
       gtfs_url: "https://download.gtfs.de/germany/free/latest.zip"
