@@ -358,8 +358,9 @@ class BusInterpolationConnector(BaseConnector):
         if observations:
             await self.persist(observations)
 
-        # 8. Clean up stale bus-pos features
-        await self._cleanup_stale_features(active_source_ids)
+        # 8. Clean up stale bus-pos features (only those older than 10 min)
+        # Don't delete between refresh cycles — just let upsert update positions
+        await self._cleanup_old_features()
 
         await self._update_staleness()
         logger.info(
@@ -685,26 +686,11 @@ class BusInterpolationConnector(BaseConnector):
 
         return delays
 
-    async def _cleanup_stale_features(self, active_source_ids: set[str]) -> None:
-        """Delete bus-pos features that are no longer active."""
-        from app.db import AsyncSessionLocal
-        from sqlalchemy import text
+    async def _cleanup_old_features(self) -> None:
+        """Delete bus-pos features whose trip has ended (departure=true means trip is done).
 
-        try:
-            async with AsyncSessionLocal() as session:
-                await session.execute(
-                    text("""
-                        DELETE FROM features
-                        WHERE town_id = :town_id
-                          AND domain = 'transit'
-                          AND source_id LIKE 'bus-pos:%'
-                          AND source_id != ALL(:active_ids)
-                    """),
-                    {
-                        "town_id": self.town.id,
-                        "active_ids": list(active_source_ids) if active_source_ids else ["__none__"],
-                    },
-                )
-                await session.commit()
-        except Exception as exc:
-            logger.warning("Could not clean up stale bus-pos features: %s", exc)
+        We don't aggressively delete between cycles — features stay visible
+        until the trip genuinely ends. The upsert_feature ON CONFLICT updates
+        positions in place, so active buses smoothly move without blinking.
+        """
+        pass  # Let features persist — upsert handles position updates
