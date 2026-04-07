@@ -224,6 +224,19 @@ Implement all missing features from the AalenPulse requirements document to reac
 - **Plans:** 0 plans
   - [ ] TBD (promote with /gsd:review-backlog when ready)
 
+### Phase 999.4: Police Reports Layer (BACKLOG)
+- **Goal:** Add a police reports data layer showing geocoded police messages (Polizeimeldungen) on the map with time, date, and location.
+- **Requirements:**
+  - Connector to ingest police press releases (Polizeipraesidium Aalen Pressemeldungen)
+  - Geocode each report location from street name/number or district name to lat/lon coordinates
+  - Create a police entity (feature) for each new report with timestamp, category, description, and position
+  - Map layer with police icons visible when layer is toggled active
+  - Click popup showing report details: date/time, category, summary, location
+  - Reports should age off or fade after configurable period (e.g. 7 days)
+- **Status:** Backlog
+- **Plans:** 0 plans
+  - [ ] TBD (promote with /gsd:review-backlog when ready)
+
 ### Phase 999.3: Bus Movement Along Route Path (BACKLOG)
 - **Goal:** Ensure interpolated bus positions follow the actual GTFS route shape geometry instead of moving in straight lines between stops.
 - **Requirements:**
