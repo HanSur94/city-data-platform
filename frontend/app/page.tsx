@@ -1,5 +1,5 @@
 'use client'
-import { Suspense, useState } from 'react'
+import { Suspense, useCallback, useRef, useState } from 'react'
 import dynamic from 'next/dynamic'
 import Sidebar from '@/components/sidebar/Sidebar'
 import { DashboardPanel } from '@/components/dashboard/DashboardPanel'
@@ -13,6 +13,8 @@ import { useUrlState } from '@/hooks/useUrlState'
 import { useTimeseries } from '@/hooks/useTimeseries'
 import type { Pollutant } from '@/components/map/AirQualityHeatmapLayer'
 import type { DemographicMetric } from '@/components/map/DemographicsGridLayer'
+import type { PopupInfo } from '@/components/map/MapView'
+import type { SearchResult } from '@/components/sidebar/FeatureSearch'
 
 const MapView = dynamic(() => import('@/components/map/MapView'), {
   ssr: false,
@@ -103,6 +105,51 @@ function HomeInner() {
     update({ layers: next.join(',') || null })
   }
 
+  // Map flyTo function ref, set by MapView's onMapReady callback
+  const flyToRef = useRef<((lng: number, lat: number, zoom?: number) => void) | null>(null)
+  const [pendingPopup, setPendingPopup] = useState<PopupInfo | null>(null)
+
+  const handleMapReady = useCallback((flyTo: (lng: number, lat: number, zoom?: number) => void) => {
+    flyToRef.current = flyTo
+  }, [])
+
+  const handleFeatureSelect = useCallback((result: SearchResult) => {
+    // Fly to location
+    flyToRef.current?.(result.longitude, result.latitude, 17)
+    // After a short delay for the fly animation, set popup
+    setTimeout(() => {
+      setPendingPopup({
+        longitude: result.longitude,
+        latitude: result.latitude,
+        feature: {
+          type: 'Feature',
+          geometry: { type: 'Point', coordinates: [result.longitude, result.latitude] },
+          properties: {
+            feature_id: result.id,
+            name: result.name,
+            stop_name: result.name,
+            semantic_id: result.semantic_id,
+            domain: result.domain,
+          },
+        },
+        domain: result.domain === 'infrastructure' ? 'evCharging'
+          : result.domain === 'transit' ? 'transit'
+          : result.domain === 'air_quality' ? 'airQuality'
+          : result.domain === 'traffic' ? 'traffic'
+          : result.domain === 'energy' ? 'energy'
+          : result.domain === 'community' ? 'community'
+          : result.domain === 'water' ? 'water'
+          : result.domain === 'demographics' ? 'demographics'
+          : result.domain === 'buildings' ? 'building'
+          : 'transit',
+      })
+    }, 800)
+  }, [])
+
+  const handleClearExternalPopup = useCallback(() => {
+    setPendingPopup(null)
+  }, [])
+
   // Pollutant toggle state for air quality heatmap grid
   const [activePollutant, setActivePollutant] = useState<Pollutant>('pm25')
 
@@ -169,6 +216,8 @@ function HomeInner() {
     <main className="flex h-screen overflow-hidden">
       {/* Left sidebar — 280px fixed, collapses to drawer on tablet/mobile */}
       <Sidebar
+        town={town}
+        onFeatureSelect={handleFeatureSelect}
         layerVisibility={layerVisibility}
         onToggleLayer={toggleLayer}
         transitError={transit.error}
@@ -230,6 +279,9 @@ function HomeInner() {
             cadastralVisible={layerVisibility.cadastral}
             hillshadeVisible={layerVisibility.hillshade}
             buildings3dVisible={layerVisibility.buildings3d}
+            onMapReady={handleMapReady}
+            externalPopup={pendingPopup}
+            onExternalPopupClear={handleClearExternalPopup}
           />
         </div>
 

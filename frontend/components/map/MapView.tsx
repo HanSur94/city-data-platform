@@ -1,5 +1,5 @@
 'use client';
-import { useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import Map from 'react-map-gl/maplibre';
 import { Popup } from 'react-map-gl/maplibre';
 import type { MapRef } from 'react-map-gl/maplibre';
@@ -110,9 +110,15 @@ interface MapViewProps {
   cadastralVisible?: boolean;
   hillshadeVisible?: boolean;
   buildings3dVisible?: boolean;
+  onFlyTo?: (lng: number, lat: number, zoom?: number) => void;
+  /** Called when the map is ready, passing the flyTo function */
+  onMapReady?: (flyTo: (lng: number, lat: number, zoom?: number) => void) => void;
+  /** External popup to display (e.g. from search result selection) */
+  externalPopup?: PopupInfo | null;
+  onExternalPopupClear?: () => void;
 }
 
-interface PopupInfo {
+export interface PopupInfo {
   longitude: number;
   latitude: number;
   feature: GeoJSON.Feature;
@@ -158,6 +164,9 @@ export default function MapView({
   cadastralVisible = false,
   hillshadeVisible = false,
   buildings3dVisible = true,
+  onMapReady,
+  externalPopup,
+  onExternalPopupClear,
 }: MapViewProps) {
   // Register PMTiles protocol BEFORE Map renders (Pitfall 3)
   // Register at module scope to avoid double-registration on re-renders
@@ -173,6 +182,27 @@ export default function MapView({
       protocolRef.current = null;
     };
   }, []);
+
+  // Expose flyTo function to parent via onMapReady callback
+  const flyToFn = useCallback((lng: number, lat: number, zoom = 17) => {
+    mapRef.current?.flyTo({ center: [lng, lat], zoom, duration: 1500 });
+  }, []);
+
+  const mapReadyCalledRef = useRef(false);
+  useEffect(() => {
+    if (onMapReady && !mapReadyCalledRef.current) {
+      mapReadyCalledRef.current = true;
+      onMapReady(flyToFn);
+    }
+  }, [onMapReady, flyToFn]);
+
+  // Handle external popup (e.g. from search result)
+  useEffect(() => {
+    if (externalPopup) {
+      setPopupInfo(externalPopup);
+      onExternalPopupClear?.();
+    }
+  }, [externalPopup, onExternalPopupClear]);
 
   // Auto-tilt map when 3D buildings are toggled
   useEffect(() => {

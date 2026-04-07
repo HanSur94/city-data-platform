@@ -13,12 +13,16 @@ import TrafficLegend from './TrafficLegend';
 import EnergyLegend from './EnergyLegend';
 import HeatDemandLegend from './HeatDemandLegend';
 import CyclingLegend from './CyclingLegend';
+import FeatureSearch from './FeatureSearch';
+import type { SearchResult } from './FeatureSearch';
 import { LAYER_METADATA } from '@/lib/layer-metadata';
 import { useLayerMetadata } from '@/hooks/useLayerMetadata';
 
 import type { DemographicMetric } from '@/components/map/DemographicsGridLayer';
 
 interface SidebarProps {
+  town: string;
+  onFeatureSelect: (result: SearchResult) => void;
   layerVisibility: {
     transit: boolean;
     airQuality: boolean;
@@ -66,7 +70,7 @@ interface SidebarProps {
   onDemographicMetricChange?: (metric: DemographicMetric) => void;
 }
 
-export default function Sidebar({ layerVisibility, onToggleLayer, transitError, airQualityError, trafficError, energyError, baseLayer, onBaseLayerChange, cadastralVisible, hillshadeVisible, buildings3dVisible, activePollutant, onPollutantChange, noiseMetric, onNoiseMetricChange, demographicMetric, onDemographicMetricChange }: SidebarProps) {
+export default function Sidebar({ town, onFeatureSelect, layerVisibility, onToggleLayer, transitError, airQualityError, trafficError, energyError, baseLayer, onBaseLayerChange, cadastralVisible, hillshadeVisible, buildings3dVisible, activePollutant, onPollutantChange, noiseMetric, onNoiseMetricChange, demographicMetric, onDemographicMetricChange }: SidebarProps) {
   const [drawerOpen, setDrawerOpen] = useState(false);
   const { layerMeta } = useLayerMetadata();
 
@@ -76,6 +80,13 @@ export default function Sidebar({ layerVisibility, onToggleLayer, transitError, 
       <div className="px-4 pt-8 pb-6">
         <h1 className="text-[16px] font-semibold leading-[1.2]">Stadtdaten Aalen</h1>
       </div>
+      <Separator />
+
+      {/* Feature search */}
+      <div className="pt-4">
+        <FeatureSearch town={town} onSelect={onFeatureSelect} />
+      </div>
+
       <Separator />
 
       {/* Layer toggles */}
