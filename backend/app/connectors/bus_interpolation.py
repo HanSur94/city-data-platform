@@ -320,6 +320,10 @@ class BusInterpolationConnector(BaseConnector):
             source_id = f"bus-pos:{trip.trip_id}"
             active_source_ids.add(source_id)
             wkt = f"POINT({pos.lon} {pos.lat})"
+            # Include route shape coords so frontend can draw driven/remaining path
+            import json as _json
+            shape_coords_json = _json.dumps(trip.shape_coords) if trip.shape_coords else None
+
             properties = {
                 "feature_type": "bus_position",
                 "trip_id": pos.trip_id,
@@ -331,6 +335,7 @@ class BusInterpolationConnector(BaseConnector):
                 "bearing": pos.bearing,
                 "progress": pos.progress,
                 "departed": pos.departed,
+                "shape_coords": shape_coords_json,
             }
 
             feature_id = await self.upsert_feature(
