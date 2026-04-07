@@ -228,3 +228,9 @@ connectors:
     enabled: true
     config:
       attribution: "OpenStreetMap contributors, ODbL"
+
+  - connector_class: OsmBuildingsConnector
+    poll_interval_seconds: 86400
+    enabled: true
+    config:
+      attribution: "OpenStreetMap contributors, ODbL"

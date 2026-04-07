@@ -40,7 +40,7 @@ def upgrade() -> None:
         FROM water_readings
         UNION ALL
         SELECT feature_id, 'energy' AS domain, time,
-               json_build_object('value_kw', value_kw, 'source_type', source_type) AS values
+               json_build_object('value_kw', value_kw, 'source_type', source_type::text) AS values
         FROM energy_readings
         UNION ALL
         SELECT feature_id, 'weather' AS domain, time,
@@ -52,7 +52,7 @@ def upgrade() -> None:
         FROM transit_positions
         UNION ALL
         SELECT feature_id, 'demographics' AS domain, time,
-               values AS values
+               values::json AS values
         FROM demographics_readings
     """)
 

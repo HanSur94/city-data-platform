@@ -176,6 +176,12 @@ CONNECTOR_ATTRIBUTION: dict[str, dict[str, str]] = {
         "license_url": "https://opendatacommons.org/licenses/odbl/",
         "url": "https://www.openstreetmap.org/",
     },
+    "OsmBuildingsConnector": {
+        "source_name": "OpenStreetMap (buildings)",
+        "license": "ODbL 1.0",
+        "license_url": "https://opendatacommons.org/licenses/odbl/",
+        "url": "https://www.openstreetmap.org/",
+    },
 }
 
 # Valid domain values for path parameter validation
@@ -183,6 +189,7 @@ VALID_DOMAINS: frozenset[str] = frozenset(
     {
         "air_quality", "transit", "weather", "water", "energy",
         "traffic", "community", "infrastructure", "demographics",
+        "buildings",
     }
 )
 

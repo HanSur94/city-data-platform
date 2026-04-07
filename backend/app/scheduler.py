@@ -57,6 +57,11 @@ _CONNECTOR_MODULES = {
     # Phase 16: Solar production + EV charging live status
     "SolarProductionConnector": "app.connectors.solar_production",
     "EvChargingConnector": "app.connectors.ev_charging",
+    # Phase 17: Static layers
+    "HeatDemandConnector": "app.connectors.heat_demand",
+    "CyclingInfraConnector": "app.connectors.cycling",
+    # Phase 19: OSM buildings with addresses
+    "OsmBuildingsConnector": "app.connectors.osm_buildings",
 }
 
 
