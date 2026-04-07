@@ -224,6 +224,18 @@ Implement all missing features from the AalenPulse requirements document to reac
 - **Plans:** 0 plans
   - [ ] TBD (promote with /gsd:review-backlog when ready)
 
+### Phase 999.7: Bus Stops as Map Dots with Next Departures (BACKLOG)
+- **Goal:** Show all registered bus stops (Haltestellen) as grey dots on the map. Clicking a stop reveals which bus lines serve it and when the next buses arrive.
+- **Requirements:**
+  - All GTFS stops rendered as small grey dots on the map (only registered Haltestellen, not intermediate positions)
+  - Dots visible when OEPNV/bus layer is active
+  - Click stop dot → popup showing: stop name, list of bus lines serving this stop, next departures per line (from GTFS schedule + RT delays)
+  - Departure times show scheduled time and delay if available
+  - Stops should be distinct from moving bus position dots (grey vs colored)
+- **Status:** Backlog
+- **Plans:** 0 plans
+  - [ ] TBD (promote with /gsd:review-backlog when ready)
+
 ### Phase 999.6: KPI Live Timestamps & Loading Spinners (BACKLOG)
 - **Goal:** Show latest fetch timestamp on each KPI card in the right sidebar, and add a spinning/circling loading indicator when data is being fetched from the datasource.
 - **Requirements:**
