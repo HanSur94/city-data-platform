@@ -28,6 +28,7 @@ export default function BusPopup({ feature }: BusPopupProps) {
   const destination = props.destination as string | undefined;
   const delaySeconds = (props.delay_seconds as number) ?? 0;
   const nextStop = props.next_stop as string | undefined;
+  const prevStop = props.prev_stop as string | undefined;
 
   return (
     <div className="text-sm space-y-1 max-w-[220px]">
@@ -45,6 +46,11 @@ export default function BusPopup({ feature }: BusPopupProps) {
       >
         {formatDelay(delaySeconds)}
       </p>
+      {prevStop && (
+        <p className="text-[13px]">
+          Letzter Halt: {prevStop}
+        </p>
+      )}
       {nextStop && (
         <p className="text-[13px]">
           Naechster Halt: {nextStop}

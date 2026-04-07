@@ -238,10 +238,17 @@ export default function MapView({
       });
       if (features.length > 0 && features[0].geometry.type === 'Point') {
         const [lng, lat] = features[0].geometry.coordinates;
-        setPopupInfo((prev) => prev && prev.domain === 'busPosition'
-          ? { ...prev, longitude: lng, latitude: lat, feature: features[0] as GeoJSON.Feature }
-          : prev
-        );
+        setPopupInfo((prev) => {
+          if (!prev || prev.domain !== 'busPosition') return prev;
+          // Skip update if position unchanged (within ~1m precision) — avoids full map re-render
+          if (
+            Math.abs(prev.longitude - lng) < 0.00001 &&
+            Math.abs(prev.latitude - lat) < 0.00001
+          ) {
+            return prev; // Same reference = no re-render
+          }
+          return { ...prev, longitude: lng, latitude: lat, feature: features[0] as GeoJSON.Feature };
+        });
       }
       raf = requestAnimationFrame(track);
     };
