@@ -3,14 +3,14 @@ gsd_state_version: 1.0
 milestone: v2.0
 milestone_name: — AalenPulse Feature Parity
 status: verifying
-stopped_at: Completed 19-02-PLAN.md (Building Click & Unified Popup)
-last_updated: "2026-04-07T08:19:45.453Z"
+stopped_at: Completed 19-03-PLAN.md (Feature Search & Cross-Domain Popups)
+last_updated: "2026-04-07T08:26:21.026Z"
 last_activity: 2026-04-07
 progress:
   total_phases: 9
-  completed_phases: 8
+  completed_phases: 9
   total_plans: 20
-  completed_plans: 19
+  completed_plans: 20
   percent: 14
 ---
 
@@ -77,6 +77,9 @@ Progress: [██░░░░░░░░] 14%
 - [Phase 19]: Feature data endpoint accepts both UUID and semantic_id via string heuristic
 - [Phase 19]: UnifiedBuildingPopup renders domain sections conditionally based on observations data presence
 - [Phase 19]: useFeatureData uses useState+useEffect cancel pattern matching existing hooks
+- [Phase 19]: CrossDomainSection as reusable collapsible component for cross-domain popup data
+- [Phase 19]: MapView onMapReady callback pattern for exposing flyTo to parent without forwardRef
+- [Phase 19]: 800ms delay for popup after flyTo animation on search result selection
 
 ### Pending Todos
 
@@ -90,6 +93,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-04-07T08:19:45.450Z
-Stopped at: Completed 19-02-PLAN.md (Building Click & Unified Popup)
+Last session: 2026-04-07T08:26:21.022Z
+Stopped at: Completed 19-03-PLAN.md (Feature Search & Cross-Domain Popups)
 Resume file: None
