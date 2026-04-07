@@ -2,7 +2,7 @@
 import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Separator } from '@/components/ui/separator';
-import { Layers } from 'lucide-react';
+import { Layers, ChevronLeft, ChevronRight } from 'lucide-react';
 import LayerToggle from './LayerToggle';
 import PollutantToggle from './PollutantToggle';
 import AQILegend from './AQILegend';
@@ -68,9 +68,11 @@ interface SidebarProps {
   onNoiseMetricChange?: (metric: 'lden' | 'lnight') => void;
   demographicMetric?: DemographicMetric;
   onDemographicMetricChange?: (metric: DemographicMetric) => void;
+  collapsed?: boolean;
+  onToggle?: () => void;
 }
 
-export default function Sidebar({ town, onFeatureSelect, layerVisibility, onToggleLayer, transitError, airQualityError, trafficError, energyError, baseLayer, onBaseLayerChange, cadastralVisible, hillshadeVisible, buildings3dVisible, activePollutant, onPollutantChange, noiseMetric, onNoiseMetricChange, demographicMetric, onDemographicMetricChange }: SidebarProps) {
+export default function Sidebar({ town, onFeatureSelect, layerVisibility, onToggleLayer, transitError, airQualityError, trafficError, energyError, baseLayer, onBaseLayerChange, cadastralVisible, hillshadeVisible, buildings3dVisible, activePollutant, onPollutantChange, noiseMetric, onNoiseMetricChange, demographicMetric, onDemographicMetricChange, collapsed, onToggle }: SidebarProps) {
   const [drawerOpen, setDrawerOpen] = useState(false);
   const { layerMeta } = useLayerMetadata();
 
@@ -510,9 +512,23 @@ export default function Sidebar({ town, onFeatureSelect, layerVisibility, onTogg
   return (
     <>
       {/* Desktop sidebar */}
-      <aside className="hidden lg:flex flex-col border-r border-slate-200 h-screen overflow-y-auto">
-        {content}
-      </aside>
+      <div className="hidden lg:block relative">
+        <aside
+          className={`flex flex-col border-r border-slate-200 h-screen overflow-y-auto transition-all duration-300 ease-in-out ${
+            collapsed ? 'w-0 overflow-hidden -translate-x-full' : 'w-[280px]'
+          }`}
+        >
+          {content}
+        </aside>
+        {/* Toggle button — always visible */}
+        <button
+          onClick={onToggle}
+          className="absolute top-1/2 right-0 translate-x-full -translate-y-1/2 z-30 flex items-center justify-center w-[28px] h-[48px] bg-white border border-l-0 border-slate-200 rounded-r-md shadow-sm hover:bg-slate-50 transition-colors"
+          aria-label={collapsed ? 'Sidebar einblenden' : 'Sidebar ausblenden'}
+        >
+          {collapsed ? <ChevronRight className="h-4 w-4 text-slate-600" /> : <ChevronLeft className="h-4 w-4 text-slate-600" />}
+        </button>
+      </div>
 
       {/* Tablet/mobile: floating toggle button */}
       <div className="lg:hidden fixed bottom-4 left-4 z-50">

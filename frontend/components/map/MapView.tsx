@@ -1,6 +1,6 @@
 'use client';
 import { useCallback, useEffect, useRef, useState } from 'react';
-import Map from 'react-map-gl/maplibre';
+import Map, { NavigationControl } from 'react-map-gl/maplibre';
 import { Popup } from 'react-map-gl/maplibre';
 import type { MapRef } from 'react-map-gl/maplibre';
 import { Protocol } from 'pmtiles';
@@ -367,6 +367,7 @@ export default function MapView({
           hillshadeVisible={hillshadeVisible}
         />
         <BuildingsLayer visible={buildings3dVisible} />
+        <NavigationControl position="top-right" showCompass={true} showZoom={true} visualizePitch={true} />
         <KocherLayer data={waterData ?? null} visible={kocherVisible} />
         {popupInfo && (
           <Popup

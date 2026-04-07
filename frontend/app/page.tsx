@@ -1,5 +1,5 @@
 'use client'
-import { Suspense, useCallback, useRef, useState } from 'react'
+import { Suspense, useCallback, useRef, useState, useMemo } from 'react'
 import dynamic from 'next/dynamic'
 import Sidebar from '@/components/sidebar/Sidebar'
 import { DashboardPanel } from '@/components/dashboard/DashboardPanel'
@@ -150,6 +150,10 @@ function HomeInner() {
     setPendingPopup(null)
   }, [])
 
+  // Sidebar collapse state
+  const [leftCollapsed, setLeftCollapsed] = useState(false)
+  const [rightCollapsed, setRightCollapsed] = useState(false)
+
   // Pollutant toggle state for air quality heatmap grid
   const [activePollutant, setActivePollutant] = useState<Pollutant>('pm25')
 
@@ -235,6 +239,8 @@ function HomeInner() {
         onNoiseMetricChange={setNoiseMetric}
         demographicMetric={demographicMetric}
         onDemographicMetricChange={setDemographicMetric}
+        collapsed={leftCollapsed}
+        onToggle={() => setLeftCollapsed(v => !v)}
       />
 
       {/* Map column — flex-1, fills space between sidebar and dashboard panel */}
@@ -294,6 +300,8 @@ function HomeInner() {
         town={town}
         activeDomain={activeDomain}
         onDomainSelect={handleDomainSelect}
+        collapsed={rightCollapsed}
+        onToggle={() => setRightCollapsed(v => !v)}
       >
         {chartSlot}
       </DashboardPanel>

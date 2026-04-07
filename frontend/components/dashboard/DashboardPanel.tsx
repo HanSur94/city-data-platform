@@ -1,5 +1,5 @@
 'use client'
-import { Wind, Thermometer, Bus, Car, Zap, Users, CircleParking } from 'lucide-react'
+import { Wind, Thermometer, Bus, Car, Zap, Users, CircleParking, ChevronLeft, ChevronRight } from 'lucide-react'
 import { Separator } from '@/components/ui/separator'
 import { KpiTile } from './KpiTile'
 import { EnergyMixBar } from './EnergyMixBar'
@@ -14,6 +14,8 @@ interface DashboardPanelProps {
   onDomainSelect: (domain: string | null) => void
   // Chart slot: rendered below KPI tiles; passed as children to keep this component stable
   children?: React.ReactNode
+  collapsed?: boolean
+  onToggle?: () => void
 }
 
 export function DashboardPanel({
@@ -21,6 +23,8 @@ export function DashboardPanel({
   activeDomain,
   onDomainSelect,
   children,
+  collapsed,
+  onToggle,
 }: DashboardPanelProps) {
   const { data, loading } = useKpi(town)
   const { layerMeta } = useLayerMetadata(town)
@@ -73,7 +77,18 @@ export function DashboardPanel({
     : 'Einw.'
 
   return (
-    <aside className="hidden lg:flex w-[320px] flex-shrink-0 flex-col h-screen overflow-y-auto border-l bg-background">
+    <div className="hidden lg:block relative">
+      {/* Toggle button — always visible */}
+      <button
+        onClick={onToggle}
+        className="absolute top-1/2 left-0 -translate-x-full -translate-y-1/2 z-30 flex items-center justify-center w-[28px] h-[48px] bg-white border border-r-0 border-slate-200 rounded-l-md shadow-sm hover:bg-slate-50 transition-colors"
+        aria-label={collapsed ? 'Dashboard einblenden' : 'Dashboard ausblenden'}
+      >
+        {collapsed ? <ChevronLeft className="h-4 w-4 text-slate-600" /> : <ChevronRight className="h-4 w-4 text-slate-600" />}
+      </button>
+    <aside className={`flex w-[320px] flex-shrink-0 flex-col h-screen overflow-y-auto border-l bg-background transition-all duration-300 ease-in-out ${
+      collapsed ? 'w-0 overflow-hidden translate-x-full' : ''
+    }`}>
       {/* Panel header */}
       <div className="px-4 pt-8 pb-4">
         <h2 className="text-[16px] font-semibold">Übersicht</h2>
@@ -204,5 +219,6 @@ export function DashboardPanel({
         {children}
       </div>
     </aside>
+    </div>
   )
 }
