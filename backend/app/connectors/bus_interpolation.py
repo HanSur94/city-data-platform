@@ -533,8 +533,15 @@ class BusInterpolationConnector(BaseConnector):
                 stop_names[row.stop_id] = getattr(row, "stop_name", row.stop_id)
 
         for trip_row in trips_df.itertuples(index=False):
-            shape_id = getattr(trip_row, "shape_id", None)
-            if not shape_id or shape_id not in shape_coords_map:
+            raw_shape = getattr(trip_row, "shape_id", None)
+            try:
+                shape_id = str(raw_shape) if raw_shape is not None and str(raw_shape) not in ("", "nan", "<NA>") else None
+            except (ValueError, TypeError):
+                shape_id = None
+            if shape_id is None or shape_id not in shape_coords_map:
+                continue
+            shape_id = str(shape_id)
+            if shape_id not in shape_coords_map:
                 continue
 
             trip_id = trip_row.trip_id
