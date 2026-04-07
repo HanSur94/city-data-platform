@@ -54,11 +54,12 @@ export default function LayerToggle({
       <Label htmlFor={id} className="text-[12px] font-normal leading-[1.4] cursor-pointer flex items-center gap-2">
         {freshnessError && <span className="inline-block w-2 h-2 rounded-full bg-red-500 flex-shrink-0" />}
         {isStale && (
-          <AlertTriangle
-            size={12}
-            className="text-orange-500 flex-shrink-0"
-            title="Daten moeglicherweise veraltet"
-          />
+          <span title="Daten moeglicherweise veraltet">
+            <AlertTriangle
+              size={12}
+              className="text-orange-500 flex-shrink-0"
+            />
+          </span>
         )}
         {label}
         {dataType && <DataTypeBadge dataType={dataType} size="sm" />}
