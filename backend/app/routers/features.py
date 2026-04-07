@@ -110,7 +110,7 @@ async def get_feature_at_point(
     lng: float = Query(...),
     lat: float = Query(...),
     town: str = Query(...),
-    radius_m: float = Query(50, ge=1, le=500),
+    radius_m: float = Query(150, ge=1, le=500),
     db: AsyncSession = Depends(get_db),
     current_town: Town = Depends(get_current_town),
 ) -> dict[str, Any] | None:
