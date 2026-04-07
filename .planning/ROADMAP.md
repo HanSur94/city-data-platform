@@ -209,3 +209,17 @@ Implement all missing features from the AalenPulse requirements document to reac
   - [x] 20-02-PLAN.md -- Draggable data explorer modals from KPI tiles
   - [x] 20-03-PLAN.md -- Weather skybox and fix bus interpolation
 - **Status:** Planning Complete
+
+## Backlog
+
+### Phase 999.1: Bus System Entities — Clickable Buses & Bus Lines (BACKLOG)
+- **Goal:** Buses and bus lines as full system entities visible in 2D and 3D. Clickable with detailed info popups showing departure/arrival times, route stations, delays, next stops.
+- **Requirements:**
+  - Buses visible as moving dots on map (2D and 3D view)
+  - Bus route lines visible on map when bus layer active
+  - Buses and bus lines are system entities (feature registry)
+  - Click bus → popup with: line number, destination, current delay, departure time, arrival time, from/to stations, next stations
+  - Click bus line → popup with: full route, all stations, schedule, active buses on this line
+- **Status:** Backlog
+- **Plans:** 0 plans
+  - [ ] TBD (promote with /gsd:review-backlog when ready)
