@@ -28,7 +28,7 @@ See: .planning/PROJECT.md (updated 2026-04-06)
 Phase: 20
 Plan: Not started
 Status: Phase complete — ready for verification
-Last activity: 2026-04-07
+Last activity: 2026-04-07 - Completed quick task 260407-mwh: Fix transit layer performance and air quality SQL bug
 
 Progress: [██░░░░░░░░] 14%
 
@@ -98,6 +98,12 @@ None yet.
 - TomTom API key needed for Phase 11 (traffic flow)
 - LHP gauge ident for Huttlingen needs lookup at implementation
 - sw-aalen.de parking page structure may change — scraper fragility
+
+### Quick Tasks Completed
+
+| # | Description | Date | Commit | Directory |
+|---|-------------|------|--------|-----------|
+| 260407-mwh | Fix transit layer performance and air quality SQL bug | 2026-04-07 | 5c9cc3d | [260407-mwh-fix-transit-layer-performance-and-air-qu](./quick/260407-mwh-fix-transit-layer-performance-and-air-qu/) |
 
 ## Session Continuity
 
