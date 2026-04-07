@@ -152,6 +152,7 @@ def interpolate_position(
             line_name=trip.line_name,
             destination=trip.destination,
             next_stop=trip.stop_times[0][0],
+            prev_stop="",
             lat=lat,
             lon=lon,
             bearing=0.0,
@@ -181,6 +182,7 @@ def interpolate_position(
                 line_name=trip.line_name,
                 destination=trip.destination,
                 next_stop=stop_name,
+                prev_stop=trip.stop_times[i - 1][0] if i > 0 else "",
                 lat=lat,
                 lon=lon,
                 bearing=brng,
@@ -192,7 +194,7 @@ def interpolate_position(
 
     # Find the segment: between which two stops is the bus now?
     for i in range(len(trip.stop_times) - 1):
-        _name_a, _arr_a, dep_a = trip.stop_times[i]
+        name_a, _arr_a, dep_a = trip.stop_times[i]
         name_b, arr_b, _dep_b = trip.stop_times[i + 1]
         eff_dep_a = dep_a + delay
         eff_arr_b = arr_b + delay
@@ -218,6 +220,7 @@ def interpolate_position(
                 line_name=trip.line_name,
                 destination=trip.destination,
                 next_stop=name_b,
+                prev_stop=name_a,
                 lat=lat,
                 lon=lon,
                 bearing=brng,
@@ -235,6 +238,7 @@ def interpolate_position(
         line_name=trip.line_name,
         destination=trip.destination,
         next_stop=trip.stop_times[-1][0],
+        prev_stop=trip.stop_times[-2][0] if len(trip.stop_times) >= 2 else "",
         lat=lat,
         lon=lon,
         bearing=brng,
@@ -335,6 +339,7 @@ class BusInterpolationConnector(BaseConnector):
                 "line_name": pos.line_name,
                 "destination": pos.destination,
                 "next_stop": pos.next_stop,
+                "prev_stop": pos.prev_stop,
                 "delay_seconds": pos.delay_seconds,
                 "bearing": pos.bearing,
                 "progress": pos.progress,

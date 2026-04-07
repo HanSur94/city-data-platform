@@ -17,6 +17,7 @@ class BusPosition(BaseModel):
         line_name: Short route name (e.g. "71").
         destination: Trip headsign or last stop name.
         next_stop: Name of the next upcoming stop.
+        prev_stop: Name of the last departed stop (empty if bus hasn't departed yet).
         lat: Interpolated latitude (WGS 84).
         lon: Interpolated longitude (WGS 84).
         bearing: Heading in degrees (0-360, north=0).
@@ -31,6 +32,7 @@ class BusPosition(BaseModel):
     line_name: str = ""
     destination: str = ""
     next_stop: str = ""
+    prev_stop: str = ""
     lat: float
     lon: float
     bearing: float = 0.0
