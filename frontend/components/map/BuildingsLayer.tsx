@@ -1,5 +1,5 @@
 'use client';
-import { Source, Layer } from 'react-map-gl/maplibre';
+import { Layer } from 'react-map-gl/maplibre';
 import type { FillExtrusionLayerSpecification } from 'maplibre-gl';
 
 interface BuildingsLayerProps {
@@ -9,7 +9,7 @@ interface BuildingsLayerProps {
 const buildingsLayer: FillExtrusionLayerSpecification = {
   id: 'buildings-3d',
   type: 'fill-extrusion',
-  source: 'openmaptiles',
+  source: 'protomaps',
   'source-layer': 'building',
   paint: {
     'fill-extrusion-color': '#d4c4a8',
@@ -31,13 +31,5 @@ const buildingsLayer: FillExtrusionLayerSpecification = {
 export default function BuildingsLayer({ visible }: BuildingsLayerProps) {
   if (!visible) return null;
 
-  return (
-    <Source
-      id="openmaptiles"
-      type="vector"
-      url="https://tiles.openfreemap.org/planet"
-    >
-      <Layer {...buildingsLayer} />
-    </Source>
-  );
+  return <Layer {...buildingsLayer} />;
 }

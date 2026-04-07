@@ -35,9 +35,8 @@ export const TRANSIT_COLORS: Record<string, string> = {
   tram:  '#2e7d32',
 };
 
-export function buildMapStyle(_pmtilesUrl: string): StyleSpecification {
-  // Use OSM raster tiles as default base layer.
-  // For vector tiles, download PMTiles and switch to the protomaps variant below.
+export function buildMapStyle(pmtilesUrl: string): StyleSpecification {
+  // Use OSM raster tiles as default base layer + local PMTiles for vector data (buildings, labels).
   return {
     version: 8,
     glyphs: 'https://protomaps.github.io/basemaps-assets/fonts/{fontstack}/{range}.pbf',
@@ -50,6 +49,11 @@ export function buildMapStyle(_pmtilesUrl: string): StyleSpecification {
         ],
         tileSize: 256,
         attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
+      },
+      protomaps: {
+        type: 'vector',
+        url: pmtilesUrl,
+        attribution: '&copy; <a href="https://openfreemap.org">OpenFreeMap</a> &copy; <a href="https://openmaptiles.org">OpenMapTiles</a> Data from <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>',
       },
     },
     layers: [{ id: 'osm-tiles', type: 'raster', source: 'osm' }],
