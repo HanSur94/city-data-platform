@@ -497,13 +497,22 @@ class BusInterpolationConnector(BaseConnector):
         if feed.stop_times is None or feed.stop_times.empty:
             return []
 
+        def _safe_str(val: object) -> str:
+            """Convert pandas value to str, handling NA/NaN/None."""
+            if val is None:
+                return ""
+            s = str(val)
+            if s in ("nan", "<NA>", "None", "NaT"):
+                return ""
+            return s
+
         # Build route lookup
         route_info: dict[str, tuple[str, str]] = {}  # route_id -> (short_name, long_name)
         if hasattr(feed, "routes") and feed.routes is not None and not feed.routes.empty:
             for row in feed.routes.itertuples(index=False):
                 route_info[row.route_id] = (
-                    getattr(row, "route_short_name", "") or "",
-                    getattr(row, "route_long_name", "") or "",
+                    _safe_str(getattr(row, "route_short_name", "")),
+                    _safe_str(getattr(row, "route_long_name", "")),
                 )
 
         # Build shapes lookup
@@ -570,7 +579,7 @@ class BusInterpolationConnector(BaseConnector):
             # Active if first departure <= now <= last arrival (with generous buffer for delays)
             if first_dep - 600 <= now_secs <= last_arr + 600:
                 line_name, _ = route_info.get(route_id, ("", ""))
-                headsign = getattr(trip_row, "trip_headsign", "") or ""
+                headsign = _safe_str(getattr(trip_row, "trip_headsign", ""))
                 destination = headsign if headsign else stop_time_list[-1][0]
 
                 active_trips.append(ActiveTrip(
