@@ -35,9 +35,8 @@ export function useFeatureData(featureId: string | null): UseFeatureDataResult {
 
     fetch(`/api/features/${encodeURIComponent(featureId)}/data`)
       .then(async (res) => {
-        if (!res.ok) {
-          throw new Error(`Fehler beim Laden der Gebaeudetdaten (${res.status})`);
-        }
+        if (res.status === 404) return null;
+        if (!res.ok) throw new Error(`Fehler beim Laden (${res.status})`);
         return res.json() as Promise<FeatureData>;
       })
       .then((result) => {
@@ -89,8 +88,10 @@ export function useFeatureDataAtPoint(
 
     fetch(`/api/features/at?lng=${lng}&lat=${lat}&town=${encodeURIComponent(town)}`)
       .then(async (res) => {
+        if (res.status === 404) return null;
         if (!res.ok) throw new Error(`Fehler (${res.status})`);
-        return res.json() as Promise<FeatureData | null>;
+        const body = await res.json();
+        return body as FeatureData | null;
       })
       .then((result) => {
         if (!cancelled) {
