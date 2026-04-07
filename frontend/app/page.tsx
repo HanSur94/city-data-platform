@@ -7,6 +7,7 @@ import { TimeSlider } from '@/components/dashboard/TimeSlider'
 import { DateRangePicker } from '@/components/dashboard/DateRangePicker'
 import { TimeSeriesChart } from '@/components/dashboard/TimeSeriesChart'
 import { DataExplorerModal } from '@/components/dashboard/DataExplorerModal'
+import { useKpi } from '@/hooks/useKpi'
 import { useLayerData } from '@/hooks/useLayerData'
 import { useGridLayerData } from '@/hooks/useGridLayerData'
 import { useUrlState } from '@/hooks/useUrlState'
@@ -168,6 +169,9 @@ function HomeInner() {
   // Demographic metric toggle state for demographics grid layer
   const [demographicMetric, setDemographicMetric] = useState<DemographicMetric>('population')
 
+  // KPI data — used for weather condition on map skybox
+  const { data: kpiData } = useKpi(town)
+
   // Data hooks — pass historicalTimestamp for time slider historical support
   const transit = useLayerData('transit', town, historicalTimestamp)
   const airQuality = useLayerData('air_quality', town, historicalTimestamp)
@@ -264,6 +268,7 @@ function HomeInner() {
             waterLastFetched={water.lastFetched}
             historicalTimestamp={historicalTimestamp}
             town={town}
+            weatherCondition={kpiData?.weather?.icon ?? null}
             trafficVisible={layerVisibility.traffic}
             autobahnVisible={layerVisibility.autobahn}
             energyVisible={layerVisibility.energy}
