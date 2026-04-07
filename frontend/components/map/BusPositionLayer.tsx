@@ -1,6 +1,6 @@
 'use client';
 import { useState, useEffect, useCallback, useRef } from 'react';
-import { Source, Layer } from 'react-map-gl/maplibre';
+import { Source, Layer, useMap } from 'react-map-gl/maplibre';
 import type {
   CircleLayerSpecification,
   SymbolLayerSpecification,
@@ -206,6 +206,9 @@ export default function BusPositionLayer({
   hiddenLines,
   onLinesDiscovered,
 }: BusPositionLayerProps) {
+  // React state only used for the initial/stable render of <Source> data.
+  // During animation, we bypass React state entirely and call map.getSource().setData()
+  // imperatively to avoid triggering React re-renders at 60fps.
   const [positions, setPositions] = useState<FeatureCollection>(emptyFC);
   const [routesDriven, setRoutesDriven] = useState<FeatureCollection>(emptyFC);
   const [routesRemaining, setRoutesRemaining] = useState<FeatureCollection>(emptyFC);
@@ -221,6 +224,10 @@ export default function BusPositionLayer({
   // Track discovered lines to avoid calling onLinesDiscovered on every render
   const prevLinesKeyRef = useRef('');
 
+  // Get the MapLibre map instance for imperative source updates during animation.
+  // This avoids React state updates (and thus re-renders) on every animation frame.
+  const { current: mapInstance } = useMap();
+
   const animate = useCallback(() => {
     const elapsed = performance.now() - animStartRef.current;
     const t = Math.min(1, elapsed / ANIMATION_DURATION);
@@ -231,12 +238,28 @@ export default function BusPositionLayer({
       nextPositionsRef.current,
       t,
     );
-    setPositions(interpolated);
+
+    // Imperatively update the MapLibre source — bypasses React state and avoids
+    // triggering a React re-render cascade on every animation frame.
+    const map = mapInstance?.getMap();
+    if (map) {
+      const src = map.getSource('bus-positions');
+      // GeoJSONSource exposes setData(); the type is a maplibre-gl internal
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      (src as any)?.setData(interpolated);
+    } else {
+      // Map not yet available (first few frames) — fall back to React state
+      setPositions(interpolated);
+    }
 
     if (t < 1) {
       animFrameRef.current = requestAnimationFrame(animate);
+    } else {
+      // Animation finished — sync React state once so the Source JSX reflects
+      // the final position for future renders (e.g. visibility toggles).
+      setPositions(nextPositionsRef.current);
     }
-  }, []);
+  }, [mapInstance]);
 
   const loadData = useCallback(async () => {
     try {
@@ -260,11 +283,11 @@ export default function BusPositionLayer({
         if (animFrameRef.current) cancelAnimationFrame(animFrameRef.current);
 
         if (prevPositionsRef.current !== pos) {
-          // Animate transition
+          // Animate transition imperatively (no React state updates during rAF loop)
           animStartRef.current = performance.now();
           animFrameRef.current = requestAnimationFrame(animate);
         } else {
-          // First load: set immediately
+          // First load: set immediately via React state (map source may not exist yet)
           setPositions(pos);
         }
 

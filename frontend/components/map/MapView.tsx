@@ -6,7 +6,7 @@ import type { MapRef } from 'react-map-gl/maplibre';
 import { Protocol } from 'pmtiles';
 import maplibregl from 'maplibre-gl';
 import { format } from 'date-fns';
-import { getMapStyle } from '@/lib/map-styles';
+import { buildMapStyle, buildOrthophotoStyle, buildSatelliteStyle } from '@/lib/map-styles';
 import type { BaseLayer } from '@/lib/map-styles';
 import TransitLayer from './TransitLayer';
 import AQILayer from './AQILayer';
@@ -61,6 +61,17 @@ import type GeoJSON from 'geojson';
 //   public/tiles/aalen.pmtiles --bbox=9.8,48.7,10.3,49.0
 // Place in frontend/public/tiles/aalen.pmtiles
 const PMTILES_URL = 'pmtiles:///tiles/aalen.pmtiles';
+
+// Pre-build map styles at module scope — singleton objects with stable references.
+// react-map-gl's _updateStyle() compares mapStyle by reference (===).
+// If a new object is passed on every render, it calls map.setStyle() which tears down
+// and rebuilds ALL layers, causing visible flicker. Module-scope singletons guarantee
+// the same reference across all renders and component remounts.
+const MAP_STYLES: Record<BaseLayer, ReturnType<typeof buildMapStyle>> = {
+  osm: buildMapStyle(PMTILES_URL),
+  orthophoto: buildOrthophotoStyle(),
+  satellite: buildSatelliteStyle(),
+};
 
 interface MapViewProps {
   layerVisibility: {
@@ -256,7 +267,8 @@ export default function MapView({
     return () => cancelAnimationFrame(raf);
   }, [popupInfo?.domain, popupInfo?.feature.properties?.trip_id]);
 
-  const mapStyle = getMapStyle(baseLayer, PMTILES_URL);
+  // Look up the pre-built singleton style — guaranteed stable reference.
+  const mapStyle = MAP_STYLES[baseLayer];
 
   return (
     <div className="relative w-full h-full">
