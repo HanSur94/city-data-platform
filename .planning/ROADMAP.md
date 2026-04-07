@@ -187,3 +187,21 @@ Implement all missing features from the AalenPulse requirements document to reac
   - [x] 19-02-PLAN.md — Clickable buildings with UnifiedBuildingPopup in 2D/3D
   - [x] 19-03-PLAN.md — Infrastructure popup enhancements and feature search
 - **Status:** Planning Complete
+
+### Phase 20: Interactive UI Overhaul
+- **Goal:** Major UI improvements: draggable data explorer modals, collapsible sidebars, map legend overlay, map rotation, weather skybox, fix bus position interpolation
+- **Requirements:**
+  - REQ-UI-01: Right sidebar KPI tiles open draggable/resizable modal windows with data exploration (time-series charts, latest values, data table)
+  - REQ-UI-02: Left and right sidebars are collapsible with toggle buttons
+  - REQ-UI-03: Map legend button overlay that expands/collapses the legend panel
+  - REQ-UI-04: Map rotation and pitch controls (3D orbit)
+  - REQ-UI-05: Weather skybox — sky gradient reflects current weather conditions (blue sky, overcast gray, dark rain)
+  - REQ-UI-06: Fix bus position interpolation — buses visible on map moving along routes in real-time from GTFS schedule + RT delays
+- **Success Criteria:**
+  - [ ] KPI tile click opens draggable modal with domain data and charts
+  - [ ] Both sidebars collapse/expand with smooth animation
+  - [ ] Legend button on map toggles legend overlay
+  - [ ] Map supports rotation via right-drag or compass control
+  - [ ] Sky gradient changes based on weather data
+  - [ ] Bus dots visible and moving along routes
+- **Status:** Not Started
