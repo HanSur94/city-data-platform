@@ -105,9 +105,10 @@ None yet.
 |---|-------------|------|--------|-----------|
 | 260407-mwh | Fix transit layer performance and air quality SQL bug | 2026-04-07 | 5c9cc3d | [260407-mwh-fix-transit-layer-performance-and-air-qu](./quick/260407-mwh-fix-transit-layer-performance-and-air-qu/) |
 | 260407-pft | Bus position layer visual overhaul: per-line colors, train/bus distinction, sidebar line filter | 2026-04-07 | d120c78 | [260407-pft-bus-position-layer-visual-overhaul-per-l](./quick/260407-pft-bus-position-layer-visual-overhaul-per-l/) |
+| 260407-sgj | Bus popup shows prev/next stations; fix map re-render when following bus | 2026-04-07 | d4d2c9a | [260407-sgj-bus-click-show-prev-next-stations-fix-ma](./quick/260407-sgj-bus-click-show-prev-next-stations-fix-ma/) |
 
 ## Session Continuity
 
-Last session: 2026-04-07T16:27:13Z
-Stopped at: Completed quick task 260407-pft: Bus Position Layer Visual Overhaul
+Last session: 2026-04-07T18:33:40Z
+Stopped at: Completed quick task 260407-sgj: Bus Popup Prev/Next Stations + Fix Map Re-render on Follow
 Resume file: None
