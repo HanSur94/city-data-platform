@@ -224,6 +224,18 @@ Implement all missing features from the AalenPulse requirements document to reac
 - **Plans:** 0 plans
   - [ ] TBD (promote with /gsd:review-backlog when ready)
 
+### Phase 999.5: Route Driven vs Remaining Line Style (BACKLOG)
+- **Goal:** Differentiate already-driven and still-to-drive portions of bus/train routes with distinct line styles on the map.
+- **Requirements:**
+  - Already-driven portion of route: solid line (—)
+  - Remaining portion still to be driven: dashed line (- - -)
+  - Split point follows the current interpolated vehicle position along the route shape
+  - Applies to both bus and train route lines
+  - Updates in real-time as vehicles move along routes
+- **Status:** Backlog
+- **Plans:** 0 plans
+  - [ ] TBD (promote with /gsd:review-backlog when ready)
+
 ### Phase 999.4: Police Reports Layer (BACKLOG)
 - **Goal:** Add a police reports data layer showing geocoded police messages (Polizeimeldungen) on the map with time, date, and location.
 - **Requirements:**
