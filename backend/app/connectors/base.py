@@ -33,6 +33,54 @@ from typing import Any
 from app.config import ConnectorConfig, Town
 
 
+def compute_semantic_id(
+    domain: str,
+    source_id: str,
+    source: str | None = None,
+    feature_type: str | None = None,
+) -> str:
+    """Compute a human-readable semantic ID for a feature.
+
+    Maps domain + source_id to a prefixed identifier, e.g.:
+        ("buildings", "DEBWAL330000aBcD") -> "bldg_DEBWAL330000aBcD"
+        ("transit", "de:08136:7810")      -> "stop_de:08136:7810"
+
+    Args:
+        domain: The feature's domain (e.g. "buildings", "air_quality").
+        source_id: The raw source identifier from the connector.
+        source: Optional source hint (e.g. "ev-charging") for disambiguation.
+        feature_type: Optional feature type (e.g. "air_grid") for sub-domain mapping.
+
+    Returns:
+        A prefixed semantic ID string.
+    """
+    if domain == "buildings":
+        return f"bldg_{source_id}"
+
+    if domain == "traffic-flow" or "road" in domain:
+        return f"road_{source_id}"
+
+    if domain == "transit":
+        return f"stop_{source_id}"
+
+    if domain == "air_quality":
+        if feature_type == "air_grid":
+            return f"grid_air_quality_{source_id.replace('grid_', '')}"
+        return f"sensor_air_quality_{source_id}"
+
+    if domain == "parking":
+        return f"parking_{source_id}"
+
+    if domain == "infrastructure":
+        if source and ("ev" in source or "charging" in source):
+            return f"evcharger_{source_id}"
+
+    if domain == "water":
+        return f"gauge_{source_id}"
+
+    return f"{domain}_{source_id}"
+
+
 @dataclass
 class Observation:
     """A normalized data observation ready to be persisted.
@@ -252,26 +300,34 @@ class BaseConnector(ABC):
         domain: str,
         geometry_wkt: str,
         properties: dict,
+        semantic_id: str | None = None,
     ) -> str:
         """Upsert a spatial feature into the features table. Returns the UUID.
 
         Uses ON CONFLICT on (town_id, domain, source_id) unique constraint
         added in migration 002. geometry_wkt must be WKT with SRID 4326,
         e.g. 'POINT(10.09 48.84)'.
+
+        If semantic_id is not provided, it is computed automatically via
+        compute_semantic_id(domain, source_id).
         """
         import json
         from app.db import AsyncSessionLocal
         from sqlalchemy import text
 
+        if semantic_id is None:
+            semantic_id = compute_semantic_id(domain, source_id)
+
         async with AsyncSessionLocal() as session:
             result = await session.execute(
                 text(
-                    "INSERT INTO features (town_id, domain, source_id, geometry, properties) "
+                    "INSERT INTO features (town_id, domain, source_id, geometry, properties, semantic_id) "
                     "VALUES (:town_id, :domain, :source_id, "
-                    "ST_GeomFromText(:geom, 4326), CAST(:properties AS jsonb)) "
+                    "ST_GeomFromText(:geom, 4326), CAST(:properties AS jsonb), :semantic_id) "
                     "ON CONFLICT (town_id, domain, source_id) "
                     "DO UPDATE SET geometry = EXCLUDED.geometry, "
-                    "properties = EXCLUDED.properties "
+                    "properties = EXCLUDED.properties, "
+                    "semantic_id = EXCLUDED.semantic_id "
                     "RETURNING id"
                 ),
                 {
@@ -280,6 +336,7 @@ class BaseConnector(ABC):
                     "source_id": source_id,
                     "geom": geometry_wkt,
                     "properties": json.dumps(properties),
+                    "semantic_id": semantic_id,
                 },
             )
             await session.commit()
