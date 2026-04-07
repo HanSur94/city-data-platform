@@ -204,4 +204,8 @@ Implement all missing features from the AalenPulse requirements document to reac
   - [ ] Map supports rotation via right-drag or compass control
   - [ ] Sky gradient changes based on weather data
   - [ ] Bus dots visible and moving along routes
-- **Status:** Not Started
+- **Plans:** 3 plans
+  - [ ] 20-01-PLAN.md -- Collapsible sidebars, map rotation, map legend overlay
+  - [ ] 20-02-PLAN.md -- Draggable data explorer modals from KPI tiles
+  - [ ] 20-03-PLAN.md -- Weather skybox and fix bus interpolation
+- **Status:** Planning Complete
