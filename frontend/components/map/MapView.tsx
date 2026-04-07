@@ -50,6 +50,7 @@ import HeatDemandPopup from './HeatDemandPopup';
 import UnifiedBuildingPopup from './UnifiedBuildingPopup';
 import CyclingLayer from './CyclingLayer';
 import CyclingPopup from './CyclingPopup';
+import LegendOverlay from './LegendOverlay';
 import type { DemographicMetric } from './DemographicsGridLayer';
 import type { LayerResponse } from '@/types/geojson';
 import type GeoJSON from 'geojson';
@@ -441,6 +442,10 @@ export default function MapView({
           {format(historicalTimestamp, 'dd.MM.yyyy HH:mm')} Uhr
         </div>
       )}
+      <LegendOverlay
+        layerVisibility={layerVisibility}
+        trafficFlowVisible={trafficFlowVisible}
+      />
     </div>
   );
 }
