@@ -164,3 +164,22 @@ Implement all missing features from the AalenPulse requirements document to reac
   - [x] 18-01-PLAN.md -- Backend metadata endpoint, frontend metadata registry, DataTypeBadge and DataSourceSection components
   - [x] 18-02-PLAN.md -- Sidebar badges + info icons, KPI widget footers, popup DataSourceSection wiring
 - **Status:** Planning Complete
+
+### Phase 19: Feature Registry & Clickable Buildings
+- **Goal:** Implement unified feature registry with semantic IDs, cross-domain data attachment, and make every building/infrastructure object clickable in 2D and 3D views with a unified data card
+- **Requirements:**
+  - REQ-REGISTRY-01: Semantic feature_id scheme (bldg_{gml_id}, road_osm_{way_id}, stop_{gtfs_id}, etc.) replacing UUIDs
+  - REQ-REGISTRY-02: Unified observations table (or cross-domain join view) so all data layers attach to features by feature_id
+  - REQ-REGISTRY-03: Spatial matching at ingestion — MaStR solar, heat demand, Fernwaerme matched to nearest building
+  - REQ-REGISTRY-04: Per-building data stack API: GET /api/features/{feature_id}/observations returns all attached data
+  - REQ-REGISTRY-05: Every building clickable in 2D (footprint) and 3D (extruded block) — click opens unified data card
+  - REQ-REGISTRY-06: Unified BuildingPopup showing all attached layers: heat demand, solar potential, solar installed, solar production, Fernwaerme, demographics, energy class
+  - REQ-REGISTRY-07: Infrastructure objects (EV chargers, parking, bus stops, sensors) also clickable with unified popup
+  - REQ-REGISTRY-08: Feature search — type address or feature name to fly-to and open popup
+- **Success Criteria:**
+  - [ ] Features table uses semantic IDs instead of random UUIDs
+  - [ ] Cross-domain query returns all data for a single building
+  - [ ] Buildings clickable in both 2D and 3D views
+  - [ ] Unified BuildingPopup shows all attached data layers
+  - [ ] Infrastructure objects clickable with data card
+- **Status:** Not Started
