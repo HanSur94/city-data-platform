@@ -2,16 +2,16 @@
 gsd_state_version: 1.0
 milestone: v2.0
 milestone_name: — AalenPulse Feature Parity
-status: verifying
-stopped_at: Completed 18-02-PLAN.md (UI Data Transparency Wiring)
-last_updated: "2026-04-06T23:04:01.924Z"
-last_activity: 2026-04-06
+status: in-progress
+stopped_at: Completed 19-01-PLAN.md (Feature Registry Foundation)
+last_updated: "2026-04-07T08:18:00Z"
+last_activity: 2026-04-07
 progress:
   total_phases: 8
   completed_phases: 8
   total_plans: 17
-  completed_plans: 17
-  percent: 12
+  completed_plans: 18
+  percent: 14
 ---
 
 # Project State
@@ -25,12 +25,12 @@ See: .planning/PROJECT.md (updated 2026-04-06)
 
 ## Current Position
 
-Phase: 18
-Plan: Not started
-Status: Phase complete — ready for verification
-Last activity: 2026-04-06
+Phase: 19
+Plan: 1 of 1
+Status: Plan 01 complete
+Last activity: 2026-04-07
 
-Progress: [█░░░░░░░░░] 12%
+Progress: [██░░░░░░░░] 14%
 
 ## Performance Metrics
 
@@ -72,6 +72,9 @@ Progress: [█░░░░░░░░░] 12%
 - [Phase 17-static-layers]: CyclingLayer uses inline fetch with source=cycling query param for API sub-filtering
 - [Phase 18]: Static LAYER_METADATA_REGISTRY with DB merge for last_updated only
 - [Phase 18]: useLayerMetadata hook polls /api/metadata/layers every 60s with stale detection at 2x interval
+- [Phase 19]: Semantic ID computed automatically in upsert_feature (backward compatible)
+- [Phase 19]: feature_observations VIEW unions all 7 hypertables for cross-domain queries
+- [Phase 19]: Feature data endpoint accepts both UUID and semantic_id via string heuristic
 
 ### Pending Todos
 
@@ -85,6 +88,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-04-06T23:03:28.578Z
-Stopped at: Completed 18-02-PLAN.md (UI Data Transparency Wiring)
+Last session: 2026-04-07T08:18:00Z
+Stopped at: Completed 19-01-PLAN.md (Feature Registry Foundation)
 Resume file: None
