@@ -10,17 +10,7 @@ import HeatDemandLegend from '@/components/sidebar/HeatDemandLegend';
 import CyclingLegend from '@/components/sidebar/CyclingLegend';
 
 interface LegendOverlayProps {
-  layerVisibility: {
-    transit: boolean;
-    airQuality: boolean;
-    water: boolean;
-    traffic: boolean;
-    autobahn: boolean;
-    energy: boolean;
-    trafficFlow?: boolean;
-    heatDemand?: boolean;
-    cycling?: boolean;
-  };
+  layerVisibility: Record<string, boolean | undefined>;
   trafficFlowVisible?: boolean;
 }
 
