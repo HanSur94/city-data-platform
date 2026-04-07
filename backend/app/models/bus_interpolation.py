@@ -23,6 +23,7 @@ class BusPosition(BaseModel):
         delay_seconds: Delay offset from GTFS-RT (0 if unknown).
         progress: Trip progress fraction (0.0 = at origin, 1.0 = at destination).
         departed: Whether the bus has departed from its first stop.
+        route_type: GTFS route_type (0=tram, 1=subway, 2=rail, 3=bus, default 3).
     """
 
     trip_id: str
@@ -36,6 +37,7 @@ class BusPosition(BaseModel):
     delay_seconds: int = 0
     progress: float = Field(default=0.0, ge=0.0, le=1.0)
     departed: bool = True
+    route_type: int = 3
 
 
 class ActiveTrip(BaseModel):
@@ -50,6 +52,7 @@ class ActiveTrip(BaseModel):
                     where times are seconds since midnight.
         shape_coords: Ordered list of (lon, lat) tuples along the route shape.
         delay_seconds: Current delay in seconds (from GTFS-RT, default 0).
+        route_type: GTFS route_type (0=tram, 1=subway, 2=rail, 3=bus, default 3).
     """
 
     trip_id: str
@@ -59,3 +62,4 @@ class ActiveTrip(BaseModel):
     stop_times: list[tuple[str, int, int]] = Field(default_factory=list)
     shape_coords: list[tuple[float, float]] = Field(default_factory=list)
     delay_seconds: int = 0
+    route_type: int = 3

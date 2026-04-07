@@ -158,6 +158,7 @@ def interpolate_position(
             delay_seconds=delay,
             progress=0.0,
             departed=False,
+            route_type=trip.route_type,
         )
 
     # Find current segment between stops
@@ -186,6 +187,7 @@ def interpolate_position(
                 delay_seconds=delay,
                 progress=progress,
                 departed=True,
+                route_type=trip.route_type,
             )
 
     # Find the segment: between which two stops is the bus now?
@@ -222,6 +224,7 @@ def interpolate_position(
                 delay_seconds=delay,
                 progress=progress,
                 departed=True,
+                route_type=trip.route_type,
             )
 
     # Fallback: past last computed segment, show at last stop
@@ -238,6 +241,7 @@ def interpolate_position(
         delay_seconds=delay,
         progress=1.0,
         departed=True,
+        route_type=trip.route_type,
     )
 
 
@@ -335,6 +339,7 @@ class BusInterpolationConnector(BaseConnector):
                 "bearing": pos.bearing,
                 "progress": pos.progress,
                 "departed": pos.departed,
+                "route_type": pos.route_type,
                 "shape_coords": shape_coords_json,
             }
 
@@ -513,12 +518,13 @@ class BusInterpolationConnector(BaseConnector):
             return s
 
         # Build route lookup
-        route_info: dict[str, tuple[str, str]] = {}  # route_id -> (short_name, long_name)
+        route_info: dict[str, tuple[str, str, int]] = {}  # route_id -> (short_name, long_name, route_type)
         if hasattr(feed, "routes") and feed.routes is not None and not feed.routes.empty:
             for row in feed.routes.itertuples(index=False):
                 route_info[row.route_id] = (
                     _safe_str(getattr(row, "route_short_name", "")),
                     _safe_str(getattr(row, "route_long_name", "")),
+                    int(getattr(row, "route_type", 3)),
                 )
 
         # Build shapes lookup
@@ -632,7 +638,7 @@ class BusInterpolationConnector(BaseConnector):
 
             # Active if first departure <= now <= last arrival (with generous buffer for delays)
             if first_dep - 600 <= now_secs <= last_arr + 600:
-                line_name, _ = route_info.get(route_id, ("", ""))
+                line_name, _, route_type = route_info.get(route_id, ("", "", 3))
                 headsign = _safe_str(getattr(trip_row, "trip_headsign", ""))
                 destination = headsign if headsign else stop_time_list[-1][0]
 
@@ -644,6 +650,7 @@ class BusInterpolationConnector(BaseConnector):
                     stop_times=stop_time_list,
                     shape_coords=shape_coords,
                     delay_seconds=0,
+                    route_type=route_type,
                 ))
 
         return active_trips
