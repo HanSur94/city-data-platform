@@ -15,9 +15,10 @@ interface BusPositionLayerProps {
 }
 
 /**
- * Extract bus positions and build route lines from stop coordinates.
+ * Extract bus positions and build route lines from shape coordinates.
  * Each bus feature has coordinates in geometry (current position) and
- * shape_coords or stop positions in properties for the full route path.
+ * shape_coords in properties for the full route path (road-following
+ * geometry from GTFS shapes.txt).
  */
 function processBusData(fc: FeatureCollection): {
   positions: FeatureCollection;
@@ -81,6 +82,46 @@ function processBusData(fc: FeatureCollection): {
     routesDriven: { type: 'FeatureCollection', features: drivenLines },
     routesRemaining: { type: 'FeatureCollection', features: remainingLines },
   };
+}
+
+/**
+ * Smoothly interpolate between old and new bus positions over a duration.
+ * Returns a new FeatureCollection at each animation frame with lerped coordinates.
+ */
+function lerpPositions(
+  prev: FeatureCollection,
+  next: FeatureCollection,
+  t: number, // 0..1
+): FeatureCollection {
+  // Build lookup of previous positions by trip_id
+  const prevMap = new Map<string, [number, number]>();
+  for (const f of prev.features) {
+    const tid = f.properties?.trip_id;
+    const geom = f.geometry as Point | undefined;
+    if (tid && geom?.coordinates) {
+      prevMap.set(tid, geom.coordinates as [number, number]);
+    }
+  }
+
+  const features: Feature<Point>[] = next.features.map((f) => {
+    const tid = f.properties?.trip_id;
+    const newCoords = (f.geometry as Point).coordinates as [number, number];
+    const oldCoords = tid ? prevMap.get(tid) : undefined;
+
+    if (oldCoords && t < 1) {
+      // Lerp between old and new position
+      const lng = oldCoords[0] + (newCoords[0] - oldCoords[0]) * t;
+      const lat = oldCoords[1] + (newCoords[1] - oldCoords[1]) * t;
+      return {
+        ...f,
+        geometry: { type: 'Point' as const, coordinates: [lng, lat] },
+      };
+    }
+
+    return f as Feature<Point>;
+  });
+
+  return { type: 'FeatureCollection', features };
 }
 
 const circleLayer: CircleLayerSpecification = {
@@ -153,11 +194,52 @@ const remainingLineLayer: LineLayerSpecification = {
 
 const emptyFC: FeatureCollection = { type: 'FeatureCollection', features: [] };
 
+// Animation duration in ms for bus dot transitions
+const ANIMATION_DURATION = 2000;
+
+/**
+ * Build a fingerprint string from bus positions so we can skip state updates
+ * when the data hasn't actually changed.
+ */
+function fingerprint(fc: FeatureCollection): string {
+  return fc.features
+    .map((f) => {
+      const p = f.properties;
+      const g = f.geometry as Point;
+      return `${p?.trip_id}:${g.coordinates[0].toFixed(5)},${g.coordinates[1].toFixed(5)}:${p?.delay_seconds ?? 0}`;
+    })
+    .join('|');
+}
+
 export default function BusPositionLayer({ town, visible }: BusPositionLayerProps) {
   const [positions, setPositions] = useState<FeatureCollection>(emptyFC);
   const [routesDriven, setRoutesDriven] = useState<FeatureCollection>(emptyFC);
   const [routesRemaining, setRoutesRemaining] = useState<FeatureCollection>(emptyFC);
-  const prevDataRef = useRef<FeatureCollection>(emptyFC);
+  const prevFingerprintRef = useRef('');
+
+  // Animation state
+  const prevPositionsRef = useRef<FeatureCollection>(emptyFC);
+  const nextPositionsRef = useRef<FeatureCollection>(emptyFC);
+  const animFrameRef = useRef<number>(0);
+  const animStartRef = useRef<number>(0);
+
+  const animate = useCallback(() => {
+    const elapsed = performance.now() - animStartRef.current;
+    const t = Math.min(1, elapsed / ANIMATION_DURATION);
+    // Ease-out cubic for smooth deceleration
+    const eased = 1 - Math.pow(1 - t, 3);
+
+    const interpolated = lerpPositions(
+      prevPositionsRef.current,
+      nextPositionsRef.current,
+      eased,
+    );
+    setPositions(interpolated);
+
+    if (t < 1) {
+      animFrameRef.current = requestAnimationFrame(animate);
+    }
+  }, []);
 
   const loadData = useCallback(async () => {
     try {
@@ -165,41 +247,60 @@ export default function BusPositionLayer({ town, visible }: BusPositionLayerProp
       const fc = json as unknown as FeatureCollection;
       const { positions: pos, routesDriven: dr, routesRemaining: rem } = processBusData(fc);
 
-      // Only update if we actually got data — prevents flash to empty
       if (pos.features.length > 0) {
-        setPositions(pos);
+        const fp = fingerprint(pos);
+        if (fp === prevFingerprintRef.current) return;
+        prevFingerprintRef.current = fp;
+
+        // Start smooth animation from current to new positions
+        prevPositionsRef.current = nextPositionsRef.current.features.length > 0
+          ? nextPositionsRef.current
+          : pos; // First load: no animation
+        nextPositionsRef.current = pos;
+
+        // Cancel any running animation
+        if (animFrameRef.current) cancelAnimationFrame(animFrameRef.current);
+
+        if (prevPositionsRef.current !== pos) {
+          // Animate transition
+          animStartRef.current = performance.now();
+          animFrameRef.current = requestAnimationFrame(animate);
+        } else {
+          // First load: set immediately
+          setPositions(pos);
+        }
+
         setRoutesDriven(dr);
         setRoutesRemaining(rem);
-        prevDataRef.current = pos;
-      } else if (prevDataRef.current.features.length > 0) {
-        // Keep previous data visible if new fetch returned empty
-        // (transient state between backend refreshes)
       }
     } catch {
       // Keep last data on error
     }
-  }, [town]);
+  }, [town, animate]);
 
   useEffect(() => {
     if (!visible) return;
     loadData();
     const id = setInterval(loadData, 30_000);
-    return () => clearInterval(id);
+    return () => {
+      clearInterval(id);
+      if (animFrameRef.current) cancelAnimationFrame(animFrameRef.current);
+    };
   }, [visible, loadData]);
 
-  if (!visible) return null;
+  const vis = visible ? 'visible' : 'none';
 
   return (
     <>
       <Source id="bus-routes-driven" type="geojson" data={routesDriven}>
-        <Layer {...drivenLineLayer} />
+        <Layer {...drivenLineLayer} layout={{ ...drivenLineLayer.layout, visibility: vis }} />
       </Source>
       <Source id="bus-routes-remaining" type="geojson" data={routesRemaining}>
-        <Layer {...remainingLineLayer} />
+        <Layer {...remainingLineLayer} layout={{ ...remainingLineLayer.layout, visibility: vis }} />
       </Source>
       <Source id="bus-positions" type="geojson" data={positions}>
-        <Layer {...circleLayer} />
-        <Layer {...labelLayer} />
+        <Layer {...circleLayer} layout={{ ...circleLayer.layout, visibility: vis }} />
+        <Layer {...labelLayer} layout={{ ...labelLayer.layout, visibility: vis }} />
       </Source>
     </>
   );

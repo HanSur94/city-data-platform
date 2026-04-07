@@ -37,8 +37,9 @@ connectors:
     poll_interval_seconds: 604800
     enabled: true
     config:
-      gtfs_url: "https://download.gtfs.de/germany/free/latest.zip"
-      attribution: "NVBW - Nahverkehrsgesellschaft Baden-Württemberg mbH, DL-DE-BY-2.0"
+      gtfs_url: "https://www.nvbw.de/fileadmin/user_upload/service/open_data/fahrplandaten_mit_liniennetz/oam.zip"
+      gtfs_url_fallback: "https://download.gtfs.de/germany/free/latest.zip"
+      attribution: "OstalbMobil (NVBW), DL-DE-BY-2.0 / Shapes © OpenStreetMap contributors"
 
   - connector_class: GTFSRealtimeConnector
     poll_interval_seconds: 30
@@ -146,8 +147,9 @@ connectors:
     poll_interval_seconds: 30
     enabled: true
     config:
-      gtfs_url: "https://download.gtfs.de/germany/free/latest.zip"
-      attribution: "NVBW via GTFS schedule interpolation"
+      gtfs_url: "https://www.nvbw.de/fileadmin/user_upload/service/open_data/fahrplandaten_mit_liniennetz/oam.zip"
+      gtfs_url_fallback: "https://download.gtfs.de/germany/free/latest.zip"
+      attribution: "OstalbMobil (NVBW) via GTFS schedule interpolation, Shapes © OpenStreetMap contributors"
 
   - connector_class: AirQualityGridConnector
     poll_interval_seconds: 300
