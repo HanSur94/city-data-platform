@@ -28,17 +28,21 @@ class OsmBuildingsConnector(BaseConnector):
         # Overpass bbox format: south,west,north,east
         overpass_bbox = f"{bbox.lat_min},{bbox.lon_min},{bbox.lat_max},{bbox.lon_max}"
 
-        # Query buildings with addr:street OR addr:housenumber
+        # Query buildings with addr:housenumber
+        # Use a tighter bbox around city center to avoid Overpass timeouts
+        # For larger areas, split into sub-bboxes
+        center_lat = (bbox.lat_min + bbox.lat_max) / 2
+        center_lon = (bbox.lon_min + bbox.lon_max) / 2
+        # ~2km radius around center
+        tight_bbox = f"{center_lat - 0.02},{center_lon - 0.03},{center_lat + 0.02},{center_lon + 0.03}"
+
         query = f"""
-        [out:json][timeout:120];
-        (
-          way["building"]["addr:street"]({overpass_bbox});
-          relation["building"]["addr:street"]({overpass_bbox});
-        );
+        [out:json][timeout:90];
+        way["building"]["addr:housenumber"]({tight_bbox});
         out center tags;
         """
 
-        async with httpx.AsyncClient(timeout=180) as client:
+        async with httpx.AsyncClient(timeout=300) as client:
             resp = await client.post(OVERPASS_URL, data={"data": query})
             resp.raise_for_status()
             return resp.json()
@@ -87,9 +91,16 @@ class OsmBuildingsConnector(BaseConnector):
             housenumber = tags.get("addr:housenumber", "")
             postcode = tags.get("addr:postcode", "")
             city = tags.get("addr:city", "")
-            address = f"{street} {housenumber}".strip()
-            if postcode or city:
-                address += f", {postcode} {city}".strip(", ")
+            address_parts = []
+            if street and housenumber:
+                address_parts.append(f"{street} {housenumber}")
+            elif street:
+                address_parts.append(street)
+            if postcode and city:
+                address_parts.append(f"{postcode} {city}")
+            elif city:
+                address_parts.append(city)
+            address = ", ".join(address_parts) if address_parts else ""
 
             # Build properties
             properties: dict[str, Any] = {
