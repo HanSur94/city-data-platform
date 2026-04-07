@@ -1,12 +1,13 @@
 'use client';
 import { useMemo } from 'react';
-import { useFeatureData } from '@/hooks/useFeatureData';
+import { useFeatureData, useFeatureDataAtPoint } from '@/hooks/useFeatureData';
 import type { Feature } from 'geojson';
 
 interface UnifiedBuildingPopupProps {
   feature: Feature;
   longitude: number;
   latitude: number;
+  town?: string;
 }
 
 function SectionHeader({ title }: { title: string }) {
@@ -26,68 +27,150 @@ function DataRow({ label, value }: { label: string; value: string | number }) {
   );
 }
 
+/** Map OpenMapTiles building class to German label */
+function buildingClassLabel(cls: string | undefined): string | null {
+  if (!cls) return null;
+  const map: Record<string, string> = {
+    residential: 'Wohngebaeude',
+    commercial: 'Gewerbegebaeude',
+    industrial: 'Industriegebaeude',
+    retail: 'Einzelhandel',
+    office: 'Buerogebaeude',
+    church: 'Kirche',
+    school: 'Schule',
+    hospital: 'Krankenhaus',
+    university: 'Universitaet',
+    public: 'Oeffentliches Gebaeude',
+    garage: 'Garage',
+    shed: 'Schuppen',
+    barn: 'Scheune',
+    house: 'Wohnhaus',
+    apartments: 'Mehrfamilienhaus',
+    detached: 'Einfamilienhaus',
+    terrace: 'Reihenhaus',
+    semidetached_house: 'Doppelhaushaelfte',
+  };
+  return map[cls] ?? cls;
+}
+
+/** Map roof shape tags to German */
+function roofShapeLabel(shape: string | undefined): string | null {
+  if (!shape) return null;
+  const map: Record<string, string> = {
+    flat: 'Flachdach',
+    gabled: 'Satteldach',
+    hipped: 'Walmdach',
+    pyramidal: 'Pyramidendach',
+    skillion: 'Pultdach',
+    half_hipped: 'Kruppwalmdach',
+    round: 'Runddach',
+    mansard: 'Mansarddach',
+    dome: 'Kuppel',
+  };
+  return map[shape] ?? shape;
+}
+
 export default function UnifiedBuildingPopup({
   feature,
+  longitude,
+  latitude,
+  town = 'aalen',
 }: UnifiedBuildingPopupProps) {
-  const props = feature.properties ?? {};
+  const tileProps = feature.properties ?? {};
 
+  // Try to get feature_id from the tile (unlikely for vector tile buildings)
   const featureId = useMemo(() => {
-    const id = props.feature_id ?? props.id;
+    const id = tileProps.feature_id ?? tileProps.id;
     return id ? String(id) : null;
-  }, [props.feature_id, props.id]);
+  }, [tileProps.feature_id, tileProps.id]);
 
-  const { data, loading, error } = useFeatureData(featureId);
+  // Primary: lookup by feature_id if available
+  const byId = useFeatureData(featureId);
+  // Fallback: reverse-lookup by coordinates
+  const byPoint = useFeatureDataAtPoint(
+    featureId ? null : longitude,
+    featureId ? null : latitude,
+    town,
+  );
 
-  // Address / name from vector tile properties or API data
-  const address =
-    (data?.properties?.address as string) ??
-    (props.name as string) ??
-    null;
+  const data = byId.data ?? byPoint.data;
+  const loading = byId.loading || byPoint.loading;
+  const error = byId.error ?? byPoint.error;
 
-  const hasObservations =
-    data?.observations && Object.keys(data.observations).length > 0;
+  // === Building Info from tile properties + DB properties ===
+  const dbProps = data?.properties ?? {};
 
-  // Extract observation data by domain
+  // Address: try DB first, then tile props
+  const street = (dbProps.street as string) ?? (dbProps['addr:street'] as string) ?? (tileProps['addr:street'] as string) ?? null;
+  const housenumber = (dbProps.housenumber as string) ?? (dbProps['addr:housenumber'] as string) ?? (tileProps['addr:housenumber'] as string) ?? null;
+  const address = (dbProps.address as string)
+    ?? (street && housenumber ? `${street} ${housenumber}` : street)
+    ?? (tileProps.name as string)
+    ?? null;
+
+  // Building type
+  const buildingType = buildingClassLabel(
+    (dbProps.building_type as string) ?? (dbProps.class as string) ?? (tileProps.class as string) ?? (tileProps.type as string),
+  );
+
+  // Height
+  const heightM = (tileProps.render_height as number) ?? (dbProps.height as number) ?? null;
+
+  // Roof shape
+  const roofShape = roofShapeLabel(
+    (dbProps.roof_shape as string) ?? (dbProps['roof:shape'] as string),
+  );
+
+  // Year built
+  const yearBuilt = (dbProps.year_built as string) ?? (dbProps.start_date as string) ?? (dbProps.baujahr as string) ?? null;
+
+  // Levels / floors
+  const levels = (dbProps.levels as number) ?? (tileProps['building:levels'] as number) ?? null;
+
+  // Has any building info to show?
+  const hasBuildingInfo = address || buildingType || heightM || roofShape || yearBuilt || levels;
+
+  // === Observation data ===
+  const hasObservations = data?.observations && Object.keys(data.observations).length > 0;
   const energyObs = data?.observations?.energy;
   const demographicsObs = data?.observations?.demographics;
 
-  // Extract from properties or observations
-  const heatDemand =
-    (energyObs?.values?.heat_demand_kwh as number) ??
-    (data?.properties?.heat_demand_kwh as number) ??
-    null;
-
-  const solarInstalledKw =
-    (energyObs?.values?.solar_installed_kw as number) ??
-    (data?.properties?.solar_installed_kw as number) ??
-    null;
-
-  const solarProduction =
-    (energyObs?.values?.solar_production as number) ??
-    (data?.properties?.solar_production as number) ??
-    null;
-
-  const fernwaermeConnected =
-    (data?.properties?.fernwaerme_connected as boolean) ??
-    null;
-
-  const energyClass =
-    (data?.properties?.energy_class as string) ??
-    (energyObs?.values?.energy_class as string) ??
-    null;
+  const heatDemand = (energyObs?.values?.heat_demand_kwh as number) ?? (dbProps.heat_demand_kwh as number) ?? null;
+  const solarInstalledKw = (energyObs?.values?.solar_installed_kw as number) ?? (dbProps.solar_installed_kw as number) ?? null;
+  const solarProduction = (energyObs?.values?.solar_production as number) ?? (dbProps.solar_production as number) ?? null;
+  const fernwaermeConnected = (dbProps.fernwaerme_connected as boolean) ?? null;
+  const energyClass = (dbProps.energy_class as string) ?? (energyObs?.values?.energy_class as string) ?? null;
 
   const hasWaerme = heatDemand != null;
   const hasSolar = solarInstalledKw != null || solarProduction != null;
   const hasFernwaerme = fernwaermeConnected != null;
   const hasDemografie = demographicsObs != null;
   const hasEnergie = energyClass != null;
+  const hasAnyData = hasBuildingInfo || hasWaerme || hasSolar || hasFernwaerme || hasDemografie || hasEnergie || hasObservations;
 
   return (
     <div className="text-sm space-y-1 max-w-[320px]">
       {/* Header */}
-      <p className="text-[16px] font-semibold leading-tight">Gebaeude</p>
+      <p className="text-[16px] font-semibold leading-tight">
+        {buildingType ?? 'Gebaeude'}
+      </p>
       {address && (
         <p className="text-[13px] text-muted-foreground">{address}</p>
+      )}
+
+      {/* Gebaeude-Info section */}
+      {hasBuildingInfo && (
+        <>
+          <SectionHeader title="Gebaeude-Info" />
+          {heightM != null && (
+            <DataRow label="Hoehe" value={`${Math.round(heightM)} m`} />
+          )}
+          {levels != null && (
+            <DataRow label="Stockwerke" value={levels} />
+          )}
+          {roofShape && <DataRow label="Dachform" value={roofShape} />}
+          {yearBuilt && <DataRow label="Baujahr" value={yearBuilt} />}
+        </>
       )}
 
       {/* Loading state */}
@@ -103,17 +186,10 @@ export default function UnifiedBuildingPopup({
         <p className="text-[13px] text-destructive">{error}</p>
       )}
 
-      {/* No feature_id -- show tile-only info */}
-      {!featureId && !loading && (
+      {/* No data available */}
+      {!loading && !error && !hasAnyData && (
         <p className="text-[13px] text-muted-foreground italic mt-1">
-          Keine Daten verfuegbar
-        </p>
-      )}
-
-      {/* Data loaded but no observations */}
-      {!loading && !error && data && !hasObservations && !hasWaerme && !hasSolar && !hasFernwaerme && !hasEnergie && (
-        <p className="text-[13px] text-muted-foreground italic mt-1">
-          Keine Daten verfuegbar
+          Keine weiteren Daten verfuegbar
         </p>
       )}
 
@@ -123,10 +199,7 @@ export default function UnifiedBuildingPopup({
           {hasWaerme && (
             <>
               <SectionHeader title="Waerme" />
-              <DataRow
-                label="Waermebedarf"
-                value={`${Math.round(heatDemand!)} kWh`}
-              />
+              <DataRow label="Waermebedarf" value={`${Math.round(heatDemand!)} kWh/m\u00B2/a`} />
             </>
           )}
 
@@ -137,10 +210,7 @@ export default function UnifiedBuildingPopup({
                 <DataRow label="Installiert" value={`${solarInstalledKw} kW`} />
               )}
               {solarProduction != null && (
-                <DataRow
-                  label="Produktion"
-                  value={`${solarProduction.toFixed(1)} kWh`}
-                />
+                <DataRow label="Aktuelle Produktion" value={`${solarProduction.toFixed(1)} kW`} />
               )}
             </>
           )}
@@ -175,6 +245,14 @@ export default function UnifiedBuildingPopup({
           )}
         </>
       )}
+
+      {/* Coordinates footer */}
+      <p className="text-[11px] text-muted-foreground/60 mt-1 pt-1 border-t border-border/50">
+        {latitude.toFixed(5)}, {longitude.toFixed(5)}
+        {data?.semantic_id && (
+          <span className="ml-2">{data.semantic_id}</span>
+        )}
+      </p>
     </div>
   );
 }

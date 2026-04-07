@@ -105,6 +105,85 @@ async def search_features(
     return results
 
 
+@router.get("/features/at")
+async def get_feature_at_point(
+    lng: float = Query(...),
+    lat: float = Query(...),
+    town: str = Query(...),
+    radius_m: float = Query(50, ge=1, le=500),
+    db: AsyncSession = Depends(get_db),
+    current_town: Town = Depends(get_current_town),
+) -> dict[str, Any] | None:
+    """Find the nearest feature to a point (lng, lat) within radius_m meters.
+
+    Used for reverse-lookup when clicking a building on the map (vector tile
+    features don't carry our semantic_id). Returns the same shape as
+    /features/{feature_id}/data, or null if no feature found.
+    """
+    if town != current_town.id:
+        raise HTTPException(status_code=404, detail=f"Unknown town: {town!r}")
+
+    result = await db.execute(
+        text(
+            "SELECT id::text, domain, semantic_id, source_id, properties, "
+            "ST_AsGeoJSON(geometry)::text AS geometry "
+            "FROM features "
+            "WHERE town_id = :town_id "
+            "AND ST_DWithin(geometry::geography, "
+            "  ST_SetSRID(ST_MakePoint(:lng, :lat), 4326)::geography, :radius) "
+            "ORDER BY geometry::geography <-> "
+            "  ST_SetSRID(ST_MakePoint(:lng, :lat), 4326)::geography "
+            "LIMIT 1"
+        ),
+        {"town_id": current_town.id, "lng": lng, "lat": lat, "radius": radius_m},
+    )
+    row = result.mappings().first()
+
+    if row is None:
+        return None
+
+    feature_uuid = row["id"]
+
+    # Get latest observation per domain
+    obs_result = await db.execute(
+        text(
+            "SELECT DISTINCT ON (domain) domain, timestamp, values "
+            "FROM feature_observations "
+            "WHERE feature_id = CAST(:fid AS uuid) "
+            "ORDER BY domain, timestamp DESC"
+        ),
+        {"fid": feature_uuid},
+    )
+    obs_rows = obs_result.mappings().all()
+
+    observations: dict[str, Any] = {}
+    for obs in obs_rows:
+        values = obs["values"]
+        if isinstance(values, str):
+            values = json.loads(values)
+        observations[obs["domain"]] = {
+            "timestamp": obs["timestamp"].isoformat() if obs["timestamp"] else None,
+            "values": values,
+        }
+
+    geometry = row["geometry"]
+    if isinstance(geometry, str):
+        geometry = json.loads(geometry)
+
+    properties = row["properties"]
+    if isinstance(properties, str):
+        properties = json.loads(properties)
+
+    return {
+        "feature_id": feature_uuid,
+        "semantic_id": row["semantic_id"],
+        "domain": row["domain"],
+        "properties": properties or {},
+        "geometry": geometry,
+        "observations": observations,
+    }
+
+
 @router.get("/features/{feature_id}/data")
 async def get_feature_data(
     feature_id: str,

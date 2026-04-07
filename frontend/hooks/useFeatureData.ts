@@ -60,3 +60,53 @@ export function useFeatureData(featureId: string | null): UseFeatureDataResult {
 
   return { data, loading, error };
 }
+
+/**
+ * Fetch feature data by coordinates (reverse lookup).
+ * Used when clicking vector tile buildings that don't carry our feature_id.
+ */
+export function useFeatureDataAtPoint(
+  lng: number | null,
+  lat: number | null,
+  town: string,
+): UseFeatureDataResult {
+  const [data, setData] = useState<FeatureData | null>(null);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (lng == null || lat == null) {
+      setData(null);
+      setLoading(false);
+      setError(null);
+      return;
+    }
+
+    let cancelled = false;
+    setLoading(true);
+    setError(null);
+    setData(null);
+
+    fetch(`/api/features/at?lng=${lng}&lat=${lat}&town=${encodeURIComponent(town)}`)
+      .then(async (res) => {
+        if (!res.ok) throw new Error(`Fehler (${res.status})`);
+        return res.json() as Promise<FeatureData | null>;
+      })
+      .then((result) => {
+        if (!cancelled) {
+          setData(result);
+          setLoading(false);
+        }
+      })
+      .catch((err) => {
+        if (!cancelled) {
+          setError(err instanceof Error ? err.message : 'Unbekannter Fehler');
+          setLoading(false);
+        }
+      });
+
+    return () => { cancelled = true; };
+  }, [lng, lat, town]);
+
+  return { data, loading, error };
+}
