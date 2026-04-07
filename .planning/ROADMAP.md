@@ -223,3 +223,14 @@ Implement all missing features from the AalenPulse requirements document to reac
 - **Status:** Backlog
 - **Plans:** 0 plans
   - [ ] TBD (promote with /gsd:review-backlog when ready)
+
+### Phase 999.2: Construction Site Icon Redesign (BACKLOG)
+- **Goal:** Replace the orange dot construction site symbol with a triangle or circle containing a construction site icon (similar to Google Maps style).
+- **Requirements:**
+  - Replace plain orange dot marker for construction sites (Autobahn-Stoerungen layer) with a recognizable construction icon
+  - Icon should be a triangle or circle with a construction worker/shovel symbol inside
+  - Follow Google Maps visual language for construction/roadwork markers
+  - Must work in both 2D and 3D map views
+- **Status:** Backlog
+- **Plans:** 0 plans
+  - [ ] TBD (promote with /gsd:review-backlog when ready)
