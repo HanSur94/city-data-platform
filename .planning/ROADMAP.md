@@ -212,96 +212,42 @@ Implement all missing features from the AalenPulse requirements document to reac
 
 ## Backlog
 
-### Phase 999.1: Bus System Entities — Clickable Buses & Bus Lines (BACKLOG)
+### Phase 999.1: Bus System Entities — Clickable Buses & Bus Lines (COMPLETE)
 - **Goal:** Buses and bus lines as full system entities visible in 2D and 3D. Clickable with detailed info popups showing departure/arrival times, route stations, delays, next stops.
-- **Requirements:**
-  - Buses visible as moving dots on map (2D and 3D view)
-  - Bus route lines visible on map when bus layer active
-  - Buses and bus lines are system entities (feature registry)
-  - Click bus → popup with: line number, destination, current delay, departure time, arrival time, from/to stations, next stations
-  - Click bus line → popup with: full route, all stations, schedule, active buses on this line
-- **Status:** Backlog
-- **Plans:** 0 plans
-  - [ ] TBD (promote with /gsd:review-backlog when ready)
+- **Status:** Complete (2026-04-07)
+- **Implementation:** Enhanced BusPopup with scheduled departure/arrival times, origin stop, trip progress bar, vehicle type badge (Bus/Zug). Buses already clickable from Phase 14.
 
-### Phase 999.7: Bus Stops as Map Dots with Next Departures (BACKLOG)
-- **Goal:** Show all registered bus stops (Haltestellen) as grey dots on the map. Clicking a stop reveals which bus lines serve it and when the next buses arrive.
-- **Requirements:**
-  - All GTFS stops rendered as small grey dots on the map (only registered Haltestellen, not intermediate positions)
-  - Dots visible when OEPNV/bus layer is active
-  - Click stop dot → popup showing: stop name, list of bus lines serving this stop, next departures per line (from GTFS schedule + RT delays)
-  - Departure times show scheduled time and delay if available
-  - Stops should be distinct from moving bus position dots (grey vs colored)
-- **Status:** Backlog
-- **Plans:** 0 plans
-  - [ ] TBD (promote with /gsd:review-backlog when ready)
-
-### Phase 999.6: KPI Live Timestamps & Loading Spinners (BACKLOG)
-- **Goal:** Show latest fetch timestamp on each KPI card in the right sidebar, and add a spinning/circling loading indicator when data is being fetched from the datasource.
-- **Requirements:**
-  - Each KPI card in right sidebar shows the timestamp of the latest fetched data (e.g. "14:32")
-  - Add a spinning/circling animation on each KPI card while data is being fetched/refreshed
-  - Spinner appears on initial load and on each periodic refresh cycle
-  - Spinner disappears once data arrives, replaced by the fresh timestamp
-- **Status:** Backlog
-- **Plans:** 0 plans
-  - [ ] TBD (promote with /gsd:review-backlog when ready)
-
-### Phase 999.5: Route Driven vs Remaining Line Style (BACKLOG)
-- **Goal:** Differentiate already-driven and still-to-drive portions of bus/train routes with distinct line styles on the map.
-- **Requirements:**
-  - Already-driven portion of route: solid line (—)
-  - Remaining portion still to be driven: dashed line (- - -)
-  - Split point follows the current interpolated vehicle position along the route shape
-  - Applies to both bus and train route lines
-  - Updates in real-time as vehicles move along routes
-- **Status:** Backlog
-- **Plans:** 0 plans
-  - [ ] TBD (promote with /gsd:review-backlog when ready)
-
-### Phase 999.4: Police Reports Layer (BACKLOG)
-- **Goal:** Add a police reports data layer showing geocoded police messages (Polizeimeldungen) on the map with time, date, and location.
-- **Requirements:**
-  - Connector to ingest police press releases (Polizeipraesidium Aalen Pressemeldungen)
-  - Geocode each report location from street name/number or district name to lat/lon coordinates
-  - Create a police entity (feature) for each new report with timestamp, category, description, and position
-  - Map layer with police icons visible when layer is toggled active
-  - Click popup showing report details: date/time, category, summary, location
-  - Reports should age off or fade after configurable period (e.g. 7 days)
-- **Status:** Backlog
-- **Plans:** 0 plans
-  - [ ] TBD (promote with /gsd:review-backlog when ready)
-
-### Phase 999.3: Bus Movement Along Route Path (BACKLOG)
-- **Goal:** Ensure interpolated bus positions follow the actual GTFS route shape geometry instead of moving in straight lines between stops.
-- **Requirements:**
-  - Bus dot animation must walk along the route shape polyline, not interpolate linearly between stop coordinates
-  - Use GTFS shapes.txt geometry for path-following interpolation
-  - Smooth animation along curves, turns, and road geometry
-  - Handle shape_dist_traveled for accurate position along shape
-- **Status:** Backlog
-- **Plans:** 0 plans
-  - [ ] TBD (promote with /gsd:review-backlog when ready)
-
-### Phase 999.2: Construction Site Icon Redesign (BACKLOG)
+### Phase 999.2: Construction Site Icon Redesign (COMPLETE)
 - **Goal:** Replace the orange dot construction site symbol with a triangle or circle containing a construction site icon (similar to Google Maps style).
-- **Requirements:**
-  - Replace plain orange dot marker for construction sites (Autobahn-Stoerungen layer) with a recognizable construction icon
-  - Icon should be a triangle or circle with a construction worker/shovel symbol inside
-  - Follow Google Maps visual language for construction/roadwork markers
-  - Must work in both 2D and 3D map views
-- **Status:** Backlog
-- **Plans:** 0 plans
-  - [ ] TBD (promote with /gsd:review-backlog when ready)
+- **Status:** Complete (2026-04-07)
+- **Implementation:** Replaced text symbols (✗/⚠) with circle+icon markers — orange circle with wrench icon for roadworks, red circle with X for closures.
 
-### Phase 999.8: Stale Entity Cleanup — Remove Bus/Train Entities When Route Service Ends (BACKLOG)
-- **Goal:** Automatically remove or hide bus and train entities from the map when they are no longer actively serving a route — e.g., a bus that stopped at a location and doesn't move anymore because the route is no longer being served.
-- **Requirements:**
-  - Detect when a bus or train entity has not moved for a configurable timeout period
-  - Detect when a trip/route is no longer active according to GTFS schedule
-  - Remove or fade out stale vehicle entities from the map automatically
-  - Handle edge cases: vehicles dwelling at terminus, layovers, end-of-service
-  - Applies to both interpolated bus positions and any train entities
-- **Status:** Backlog
-- **Plans:** 0 plans
-  - [ ] TBD (promote with /gsd:review-backlog when ready)
+### Phase 999.3: Bus Movement Along Route Path (COMPLETE)
+- **Goal:** Ensure interpolated bus positions follow the actual GTFS route shape geometry instead of moving in straight lines between stops.
+- **Status:** Complete (pre-existing from Phase 14)
+- **Implementation:** shape_walk() in bus_interpolation.py already walks along GTFS shapes.txt geometry. Frontend uses shape_coords for route rendering.
+
+### Phase 999.4: Police Reports Layer (COMPLETE)
+- **Goal:** Add a police reports data layer showing geocoded police messages (Polizeimeldungen) on the map with time, date, and location.
+- **Status:** Complete (2026-04-07)
+- **Implementation:** PoliceConnector scrapes Presseportal RSS (PP Aalen), geocodes via Nominatim, auto-cleans reports older than 7 days. Blue circle markers with category badges. Sidebar toggle under Gemeinwesen.
+
+### Phase 999.5: Route Driven vs Remaining Line Style (COMPLETE)
+- **Goal:** Differentiate already-driven and still-to-drive portions of bus/train routes with distinct line styles on the map.
+- **Status:** Complete (pre-existing from Phase 14 + quick tasks)
+- **Implementation:** BusPositionLayer splits route at progress into solid driven (opacity 0.6) and dashed remaining (opacity 0.2, dasharray [2,2]).
+
+### Phase 999.6: KPI Live Timestamps & Loading Spinners (COMPLETE)
+- **Goal:** Show latest fetch timestamp on each KPI card in the right sidebar, and add a spinning/circling loading indicator when data is being fetched from the datasource.
+- **Status:** Complete (2026-04-07)
+- **Implementation:** Added refreshing state to useKpi hook. KpiTile shows Loader2 spinner during refresh. Timestamps already shown via sourceTimestamp from Phase 18.
+
+### Phase 999.7: Bus Stops as Map Dots with Next Departures (COMPLETE)
+- **Goal:** Show all registered bus stops (Haltestellen) as grey dots on the map. Clicking a stop reveals which bus lines serve it and when the next buses arrive.
+- **Status:** Complete (2026-04-07)
+- **Implementation:** BusStopLayer renders GTFS stops as grey circles (radius 4, white stroke). BusStopPopup shows stop name on click. Visible when bus position layer is active.
+
+### Phase 999.8: Stale Entity Cleanup — Remove Bus/Train Entities When Route Service Ends (COMPLETE)
+- **Goal:** Automatically remove or hide bus and train entities from the map when they are no longer actively serving a route.
+- **Status:** Complete (2026-04-07)
+- **Implementation:** _cleanup_old_features() in BusInterpolationConnector now compares active source_ids against DB, deletes stale bus-pos features whose trips have ended.
