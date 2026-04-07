@@ -5,9 +5,10 @@ import type { AdminHealthResponse, AdminMonitorResponse } from '@/types/admin'
 
 const API_BASE = process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:8000'
 
-export async function fetchLayer(domain: string, town = 'aalen', at?: Date | null): Promise<LayerResponse> {
+export async function fetchLayer(domain: string, town = 'aalen', at?: Date | null, featureType?: string): Promise<LayerResponse> {
   const params = new URLSearchParams({ town })
   if (at) params.set('at', at.toISOString())
+  if (featureType) params.set('feature_type', featureType)
   const res = await fetch(`${API_BASE}/api/layers/${encodeURIComponent(domain)}?${params}`)
   if (!res.ok) throw new Error(`Layer fetch failed: ${res.status}`)
   return res.json() as Promise<LayerResponse>

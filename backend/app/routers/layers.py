@@ -52,8 +52,13 @@ async def get_layer(
         at_aware = at.replace(tzinfo=timezone.utc) if at.tzinfo is None else at
 
     if domain == "transit":
+        ft_filter = ""
+        transit_params: dict[str, Any] = {"town_id": current_town.id}
+        if feature_type:
+            ft_filter = "AND f.properties->>'feature_type' = :feature_type"
+            transit_params["feature_type"] = feature_type
         result = await db.execute(
-            text("""
+            text(f"""
                 SELECT
                     f.id::text                     AS id,
                     ST_AsGeoJSON(f.geometry)::text AS geometry,
@@ -65,9 +70,10 @@ async def get_layer(
                 LEFT JOIN sources s ON s.town_id = f.town_id AND s.domain = f.domain
                 WHERE f.town_id = :town_id
                   AND f.domain   = 'transit'
+                  {ft_filter}
                 GROUP BY f.id, f.geometry, f.properties, f.source_id, s.connector_class
             """),
-            {"town_id": current_town.id},
+            transit_params,
         )
         rows = result.mappings().all()
         # Get last_updated from transit rows (created_at grouped as last_updated)
@@ -101,7 +107,7 @@ async def get_layer(
                     SELECT pm25, pm10, no2, o3, aqi, time
                     FROM air_quality_readings
                     WHERE feature_id = f.id
-                      AND (:at IS NULL OR time <= :at)
+                      AND (CAST(:at AS timestamptz) IS NULL OR time <= CAST(:at AS timestamptz))
                     ORDER BY time DESC
                     LIMIT 1
                 ) r ON true
@@ -138,7 +144,7 @@ async def get_layer(
                            speed_avg_kmh, congestion_level
                     FROM traffic_readings
                     WHERE feature_id = f.id
-                      AND (:at IS NULL OR time <= :at)
+                      AND (CAST(:at AS timestamptz) IS NULL OR time <= CAST(:at AS timestamptz))
                     ORDER BY time DESC
                     LIMIT 1
                 ) r ON true
@@ -192,7 +198,7 @@ async def get_layer(
                     SELECT values, time
                     FROM demographics_readings
                     WHERE feature_id = f.id
-                      AND (:at IS NULL OR time <= :at)
+                      AND (CAST(:at AS timestamptz) IS NULL OR time <= CAST(:at AS timestamptz))
                     ORDER BY time DESC
                     LIMIT 1
                 ) r ON true

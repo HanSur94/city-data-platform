@@ -161,7 +161,7 @@ export default function BusPositionLayer({ town, visible }: BusPositionLayerProp
 
   const loadData = useCallback(async () => {
     try {
-      const json = await fetchLayer('transit', town);
+      const json = await fetchLayer('transit', town, null, 'bus_position');
       const fc = json as unknown as FeatureCollection;
       const { positions: pos, routesDriven: dr, routesRemaining: rem } = processBusData(fc);
 
