@@ -293,3 +293,15 @@ Implement all missing features from the AalenPulse requirements document to reac
 - **Status:** Backlog
 - **Plans:** 0 plans
   - [ ] TBD (promote with /gsd:review-backlog when ready)
+
+### Phase 999.8: Stale Entity Cleanup — Remove Bus/Train Entities When Route Service Ends (BACKLOG)
+- **Goal:** Automatically remove or hide bus and train entities from the map when they are no longer actively serving a route — e.g., a bus that stopped at a location and doesn't move anymore because the route is no longer being served.
+- **Requirements:**
+  - Detect when a bus or train entity has not moved for a configurable timeout period
+  - Detect when a trip/route is no longer active according to GTFS schedule
+  - Remove or fade out stale vehicle entities from the map automatically
+  - Handle edge cases: vehicles dwelling at terminus, layovers, end-of-service
+  - Applies to both interpolated bus positions and any train entities
+- **Status:** Backlog
+- **Plans:** 0 plans
+  - [ ] TBD (promote with /gsd:review-backlog when ready)
