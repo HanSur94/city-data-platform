@@ -162,6 +162,7 @@ class GTFSRealtimeConnector(BaseConnector):
                     domain="transit",
                     geometry_wkt=f"POINT({lon} {lat})",
                     properties={
+                        "feature_type": "bus_position",
                         "trip_id": vp.trip.trip_id,
                         "route_id": vp.trip.route_id,
                     },
@@ -175,7 +176,10 @@ class GTFSRealtimeConnector(BaseConnector):
                     source_id=source_id,
                     domain="transit",
                     geometry_wkt="POINT(0 0)",  # no position for trip updates
-                    properties={"trip_id": entity.trip_update.trip.trip_id},
+                    properties={
+                        "feature_type": "trip_update",
+                        "trip_id": entity.trip_update.trip.trip_id,
+                    },
                 )
                 feature_ids[entity.id] = feature_id
 
