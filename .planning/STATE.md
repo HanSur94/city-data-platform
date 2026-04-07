@@ -3,14 +3,14 @@ gsd_state_version: 1.0
 milestone: v2.0
 milestone_name: — AalenPulse Feature Parity
 status: verifying
-stopped_at: Completed 20-02-PLAN.md (Data Explorer Modals)
-last_updated: "2026-04-07T10:43:16.872Z"
+stopped_at: Completed 20-03-PLAN.md (Weather Skybox & Bus Interpolation)
+last_updated: "2026-04-07T10:47:45.652Z"
 last_activity: 2026-04-07
 progress:
   total_phases: 10
-  completed_phases: 9
+  completed_phases: 10
   total_plans: 23
-  completed_plans: 22
+  completed_plans: 23
   percent: 14
 ---
 
@@ -86,6 +86,8 @@ Progress: [██░░░░░░░░] 14%
 - [Phase 20-interactive-ui]: LegendOverlay independent from sidebar legends - both coexist
 - [Phase 20-interactive-ui]: Native pointer events + CSS resize for DataExplorerModal drag/resize (no react-rnd dependency)
 - [Phase 20-interactive-ui]: KPI tile click opens floating DataExplorerModal, replaces inline DomainDetailPanel toggle
+- [Phase 20]: MapLibre setFog() for weather sky gradient instead of sky layer (no terrain required)
+- [Phase 20]: Default NVBW bwgesamt URL when gtfs_url not configured instead of skipping
 
 ### Pending Todos
 
@@ -99,6 +101,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-04-07T10:43:16.867Z
-Stopped at: Completed 20-02-PLAN.md (Data Explorer Modals)
+Last session: 2026-04-07T10:47:45.648Z
+Stopped at: Completed 20-03-PLAN.md (Weather Skybox & Bus Interpolation)
 Resume file: None
