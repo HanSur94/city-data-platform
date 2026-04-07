@@ -35,7 +35,7 @@ const routeLineLayer: LineLayerSpecification = {
 };
 
 export default function BusRouteLayer({ town, visible }: BusRouteLayerProps) {
-  const { data } = useLayerData('transit', town);
+  const { data } = useLayerData('transit', town, undefined, 'shape');
 
   if (!visible || !data) return null;
 
