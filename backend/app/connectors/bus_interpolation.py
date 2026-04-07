@@ -268,8 +268,9 @@ class BusInterpolationConnector(BaseConnector):
         """Full interpolation pipeline."""
         gtfs_url = self.config.config.get("gtfs_url", "")
         if not gtfs_url:
-            logger.warning("BusInterpolationConnector: gtfs_url not configured, skipping.")
-            return
+            # Default to NVBW Baden-Wuerttemberg GTFS for OstalbMobil coverage
+            gtfs_url = "https://www.nvbw.de/fileadmin/nvbw/open-data/fahrplandaten_mit_liniennetz/bwgesamt.zip"
+            logger.info("BusInterpolationConnector: using default NVBW GTFS URL")
 
         # 1. Download/cache GTFS
         zip_bytes = await self._download_cached_gtfs(gtfs_url)
@@ -367,7 +368,12 @@ class BusInterpolationConnector(BaseConnector):
         )
 
     async def _download_cached_gtfs(self, url: str) -> bytes | None:
-        """Download GTFS zip, caching in /tmp for 24 hours."""
+        """Download GTFS zip, caching in /tmp for 24 hours.
+
+        Tries the primary URL first. If it fails, tries the fallback URL from
+        config (``gtfs_url_fallback``). Adds ``follow_redirects`` and a
+        ``User-Agent`` header for resilience against server-side blocks.
+        """
         url_hash = hashlib.md5(url.encode()).hexdigest()[:12]
         cache_path = Path(tempfile.gettempdir()) / f"gtfs_cache_{url_hash}.zip"
 
@@ -377,24 +383,54 @@ class BusInterpolationConnector(BaseConnector):
                 logger.debug("Using cached GTFS zip: %s (age=%ds)", cache_path, int(age))
                 return cache_path.read_bytes()
 
-        try:
-            import httpx
-            async with httpx.AsyncClient(timeout=120.0) as client:
-                r = await client.get(url)
-                r.raise_for_status()
-                data = r.content
-            if not data:
-                logger.error("Empty GTFS response from %s", url)
-                return None
-            cache_path.write_bytes(data)
-            return data
-        except Exception as exc:
-            logger.error("Failed to download GTFS zip: %s", exc)
-            # Fall back to stale cache if available
-            if cache_path.exists():
-                logger.warning("Using stale GTFS cache after download failure.")
-                return cache_path.read_bytes()
-            return None
+        # Build list of URLs to try (primary + optional fallback)
+        urls_to_try = [url]
+        fallback = self.config.config.get("gtfs_url_fallback", "")
+        if fallback and fallback != url:
+            urls_to_try.append(fallback)
+
+        import httpx
+
+        headers = {"User-Agent": "CityDataPlatform/2.0"}
+
+        for attempt_url in urls_to_try:
+            try:
+                async with httpx.AsyncClient(
+                    timeout=120.0,
+                    follow_redirects=True,
+                    headers=headers,
+                ) as client:
+                    r = await client.get(attempt_url)
+                    r.raise_for_status()
+                    data = r.content
+
+                if not data:
+                    logger.error("Empty GTFS response from %s", attempt_url)
+                    continue
+
+                if len(data) < 1000:
+                    logger.warning(
+                        "GTFS response from %s is suspiciously small (%d bytes), "
+                        "possibly an error page — trying next URL.",
+                        attempt_url,
+                        len(data),
+                    )
+                    continue
+
+                logger.info("Successfully downloaded GTFS zip from %s (%d bytes)", attempt_url, len(data))
+                cache_path.write_bytes(data)
+                return data
+            except Exception as exc:
+                logger.warning("Failed to download GTFS zip from %s: %s", attempt_url, exc)
+                continue
+
+        # All URLs failed — fall back to stale cache if available
+        if cache_path.exists():
+            logger.warning("Using stale GTFS cache after all download attempts failed.")
+            return cache_path.read_bytes()
+
+        logger.error("Could not download GTFS zip from any URL and no cache available.")
+        return None
 
     def _parse_gtfs(self, zip_bytes: bytes):
         """Parse GTFS zip bytes with gtfs_kit. Called in a thread."""

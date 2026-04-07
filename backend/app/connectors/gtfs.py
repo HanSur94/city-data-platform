@@ -37,7 +37,11 @@ class GTFSConnector(BaseConnector):
             httpx.HTTPError: On network failure or non-2xx response.
         """
         url = self.config.config["gtfs_url"]
-        async with httpx.AsyncClient(timeout=120.0) as client:
+        async with httpx.AsyncClient(
+            timeout=120.0,
+            follow_redirects=True,
+            headers={"User-Agent": "CityDataPlatform/2.0"},
+        ) as client:
             response = await client.get(url)
             response.raise_for_status()
             raw = response.content
