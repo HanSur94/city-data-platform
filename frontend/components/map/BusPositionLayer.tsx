@@ -176,8 +176,9 @@ function lerpPositions(
 
 const emptyFC: FeatureCollection = { type: 'FeatureCollection', features: [] };
 
-// Animation duration in ms for bus dot transitions
-const ANIMATION_DURATION = 2000;
+// Animate over the full polling interval so bus dots move at realistic speed.
+// The dot travels from old→new position over 30s, matching real-world bus velocity.
+const ANIMATION_DURATION = 30_000;
 
 /**
  * Build a fingerprint string from bus positions so we can skip state updates
@@ -223,13 +224,12 @@ export default function BusPositionLayer({
   const animate = useCallback(() => {
     const elapsed = performance.now() - animStartRef.current;
     const t = Math.min(1, elapsed / ANIMATION_DURATION);
-    // Ease-out cubic for smooth deceleration
-    const eased = 1 - Math.pow(1 - t, 3);
+    // Linear interpolation — bus moves at constant speed matching real velocity
 
     const interpolated = lerpPositions(
       prevPositionsRef.current,
       nextPositionsRef.current,
-      eased,
+      t,
     );
     setPositions(interpolated);
 
