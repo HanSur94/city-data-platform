@@ -532,10 +532,7 @@ class BusInterpolationConnector(BaseConnector):
                 if in_bbox:
                     shape_coords_map[shape_id] = coords
 
-        # Build stop_times by trip_id
-        trips_df = feed.trips[feed.trips.service_id.isin(active_service_ids)]
-
-        # Build stop coordinate + name lookup
+        # Build stop coordinate + name lookup FIRST (needed for pre-filter)
         stop_names: dict[str, str] = {}
         stop_coords: dict[str, tuple[float, float]] = {}
         if hasattr(feed, "stops") and feed.stops is not None and not feed.stops.empty:
@@ -546,8 +543,40 @@ class BusInterpolationConnector(BaseConnector):
                 except (ValueError, TypeError):
                     pass
 
+        # Pre-filter: find trip_ids that have at least one stop in Aalen bbox
+        bbox_stop_ids = set()
+        for sid, coord in stop_coords.items():
+            if bbox.lon_min <= coord[0] <= bbox.lon_max and bbox.lat_min <= coord[1] <= bbox.lat_max:
+                bbox_stop_ids.add(sid)
+        logger.info("Stops in Aalen bbox: %d", len(bbox_stop_ids))
+
+        # Find trip_ids that visit any bbox stop
+        bbox_trip_ids = set()
+        if bbox_stop_ids and feed.stop_times is not None:
+            bbox_trip_ids = set(
+                feed.stop_times[feed.stop_times.stop_id.isin(bbox_stop_ids)].trip_id.unique()
+            )
+        logger.info("Trips visiting Aalen stops: %d", len(bbox_trip_ids))
+
+        # Filter to active services AND bbox trips only
+        trips_df = feed.trips[
+            feed.trips.service_id.isin(active_service_ids)
+            & feed.trips.trip_id.isin(bbox_trip_ids)
+        ]
+        logger.info("Active trips in Aalen: %d", len(trips_df))
+
         has_shapes = bool(shape_coords_map)
         logger.info("Shape coords available: %s (%d shapes)", has_shapes, len(shape_coords_map))
+
+        # Pre-group stop_times by trip_id for O(1) lookup (avoid O(N) scan per trip)
+        aalen_trip_ids = set(trips_df.trip_id)
+        st_filtered = feed.stop_times[feed.stop_times.trip_id.isin(aalen_trip_ids)].sort_values(
+            ["trip_id", "stop_sequence"]
+        )
+        stop_times_by_trip: dict[str, list] = {}
+        for row in st_filtered.itertuples(index=False):
+            stop_times_by_trip.setdefault(row.trip_id, []).append(row)
+        logger.info("Pre-grouped stop_times for %d trips", len(stop_times_by_trip))
 
         for trip_row in trips_df.itertuples(index=False):
             trip_id = trip_row.trip_id
@@ -564,14 +593,14 @@ class BusInterpolationConnector(BaseConnector):
                 if shape_id and shape_id in shape_coords_map:
                     shape_coords = shape_coords_map[shape_id]
 
-            # Get stop_times for this trip
-            trip_st = feed.stop_times[feed.stop_times.trip_id == trip_id].sort_values("stop_sequence")
-            if trip_st.empty:
+            # Get stop_times for this trip (from pre-grouped dict)
+            trip_st_rows = stop_times_by_trip.get(trip_id, [])
+            if not trip_st_rows:
                 continue
 
             stop_time_list: list[tuple[str, int, int]] = []
             trip_stop_ids: list[str] = []
-            for st_row in trip_st.itertuples(index=False):
+            for st_row in trip_st_rows:
                 arr_str = getattr(st_row, "arrival_time", "00:00:00")
                 dep_str = getattr(st_row, "departure_time", "00:00:00")
                 arr_secs = self._time_str_to_seconds(arr_str)
@@ -591,14 +620,6 @@ class BusInterpolationConnector(BaseConnector):
                         shape_coords.append(stop_coords[sid])
                 if len(shape_coords) < 2:
                     continue
-
-            # Check if any stop is in the bbox (Aalen filter)
-            in_bbox = any(
-                bbox.lon_min <= lon <= bbox.lon_max and bbox.lat_min <= lat <= bbox.lat_max
-                for lon, lat in shape_coords
-            )
-            if not in_bbox:
-                continue
 
             first_dep = stop_time_list[0][2]
             last_arr = stop_time_list[-1][1]
