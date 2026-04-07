@@ -47,6 +47,7 @@ import DemographicsGridLayer from './DemographicsGridLayer';
 import DemographicsPopup from './DemographicsPopup';
 import HeatDemandLayer from './HeatDemandLayer';
 import HeatDemandPopup from './HeatDemandPopup';
+import UnifiedBuildingPopup from './UnifiedBuildingPopup';
 import CyclingLayer from './CyclingLayer';
 import CyclingPopup from './CyclingPopup';
 import type { DemographicMetric } from './DemographicsGridLayer';
@@ -115,7 +116,7 @@ interface PopupInfo {
   longitude: number;
   latitude: number;
   feature: GeoJSON.Feature;
-  domain: 'transit' | 'airQuality' | 'water' | 'traffic' | 'trafficFlow' | 'autobahn' | 'energy' | 'community' | 'evCharging' | 'roadworks' | 'kocher' | 'parking' | 'busPosition' | 'solarGlow' | 'demographics' | 'heatDemand' | 'cycling';
+  domain: 'transit' | 'airQuality' | 'water' | 'traffic' | 'trafficFlow' | 'autobahn' | 'energy' | 'community' | 'evCharging' | 'roadworks' | 'kocher' | 'parking' | 'busPosition' | 'solarGlow' | 'demographics' | 'heatDemand' | 'cycling' | 'building';
 }
 
 export default function MapView({
@@ -207,6 +208,7 @@ export default function MapView({
           'infrastructure-ev-points', 'infrastructure-roadworks-points', 'parking-points', 'bus-position-points',
           'solar-glow-points', 'ev-charging-live-points',
           'heat-demand-points', 'cycling-infra-lines',
+          'buildings-3d',
         ]}
         onClick={(e) => {
           const feature = e.features?.[0];
@@ -244,6 +246,8 @@ export default function MapView({
             ? 'roadworks'
             : layerId.startsWith('community-')
             ? 'community'
+            : layerId === 'buildings-3d'
+            ? 'building'
             : 'transit';
           setPopupInfo({
             longitude: e.lngLat.lng,
@@ -382,6 +386,12 @@ export default function MapView({
               <CyclingPopup feature={popupInfo.feature} />
             ) : popupInfo.domain === 'demographics' ? (
               <DemographicsPopup feature={popupInfo.feature} />
+            ) : popupInfo.domain === 'building' ? (
+              <UnifiedBuildingPopup
+                feature={popupInfo.feature}
+                longitude={popupInfo.longitude}
+                latitude={popupInfo.latitude}
+              />
             ) : (
               <FeaturePopup
                 feature={popupInfo.feature}
