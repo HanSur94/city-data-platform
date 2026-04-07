@@ -2,6 +2,7 @@
 """Response schemas for timeseries, KPI, and connector health endpoints."""
 from datetime import datetime
 from typing import Any
+
 from pydantic import BaseModel
 
 
@@ -134,3 +135,51 @@ class AdminHealthResponse(BaseModel):
     checked_at: datetime
     summary: dict[str, int]  # {"green": N, "yellow": N, "red": N, "never_fetched": N}
     connectors: list[AdminHealthItem]
+
+
+# --- Admin Monitor models (comprehensive monitoring endpoint) ---
+
+
+class HypertableStats(BaseModel):
+    table_name: str
+    row_count: int
+    disk_size_bytes: int
+    chunk_count: int
+    compression_ratio: float | None  # None if compression not enabled
+    oldest_timestamp: datetime | None
+    newest_timestamp: datetime | None
+    retention_policy: str | None  # e.g. "30 days" or None
+
+
+class ConnectorHealthInfo(BaseModel):
+    connector_class: str
+    domain: str
+    status: str  # green/yellow/red/never_fetched
+    last_successful_fetch: datetime | None
+    poll_interval_seconds: int | None
+    validation_error_count: int
+
+
+class FeatureDomainCount(BaseModel):
+    domain: str
+    total_features: int
+    with_semantic_id: int
+    with_address: int
+
+
+class SystemInfo(BaseModel):
+    db_ok: bool
+    timescaledb_version: str | None
+    postgis_version: str | None
+    total_db_size: str  # human-readable like "1.2 GB"
+    total_db_size_bytes: int
+    server_uptime_seconds: float
+
+
+class AdminMonitorResponse(BaseModel):
+    town: str
+    checked_at: datetime
+    system_info: SystemInfo
+    hypertable_stats: list[HypertableStats]
+    connector_health: list[ConnectorHealthInfo]
+    feature_registry: list[FeatureDomainCount]
