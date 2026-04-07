@@ -3,14 +3,14 @@ gsd_state_version: 1.0
 milestone: v2.0
 milestone_name: — AalenPulse Feature Parity
 status: verifying
-stopped_at: Completed quick-260407-gih-02-PLAN.md (Admin Dashboard Frontend)
-last_updated: "2026-04-07T10:05:06.770Z"
+stopped_at: Completed 20-01-PLAN.md (Collapsible Sidebars & Map Controls)
+last_updated: "2026-04-07T10:37:46.660Z"
 last_activity: 2026-04-07
 progress:
-  total_phases: 9
+  total_phases: 10
   completed_phases: 9
-  total_plans: 20
-  completed_plans: 20
+  total_plans: 23
+  completed_plans: 21
   percent: 14
 ---
 
@@ -82,6 +82,8 @@ Progress: [██░░░░░░░░] 14%
 - [Phase 19]: 800ms delay for popup after flyTo animation on search result selection
 - [Phase quick-260407-gih]: Separate SQL queries per section with try/except for independent resilience in monitor endpoint
 - [Phase quick-260407-gih]: Inline connector table in admin page instead of modifying existing ConnectorHealthTable for backward compatibility
+- [Phase 20-interactive-ui]: Toggle buttons positioned at panel edges with translate-x-full for always-visible access
+- [Phase 20-interactive-ui]: LegendOverlay independent from sidebar legends - both coexist
 
 ### Pending Todos
 
@@ -95,6 +97,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-04-07T10:05:06.764Z
-Stopped at: Completed quick-260407-gih-02-PLAN.md (Admin Dashboard Frontend)
+Last session: 2026-04-07T10:37:46.657Z
+Stopped at: Completed 20-01-PLAN.md (Collapsible Sidebars & Map Controls)
 Resume file: None
