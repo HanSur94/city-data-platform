@@ -182,4 +182,8 @@ Implement all missing features from the AalenPulse requirements document to reac
   - [ ] Buildings clickable in both 2D and 3D views
   - [ ] Unified BuildingPopup shows all attached data layers
   - [ ] Infrastructure objects clickable with data card
-- **Status:** Not Started
+- **Plans:** 3 plans
+  - [ ] 19-01-PLAN.md — Semantic ID migration, cross-domain observations VIEW, feature data API
+  - [ ] 19-02-PLAN.md — Clickable buildings with UnifiedBuildingPopup in 2D/3D
+  - [ ] 19-03-PLAN.md — Infrastructure popup enhancements and feature search
+- **Status:** Planning Complete
