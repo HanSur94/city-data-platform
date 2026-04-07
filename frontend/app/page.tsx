@@ -169,6 +169,22 @@ function HomeInner() {
   // Demographic metric toggle state for demographics grid layer
   const [demographicMetric, setDemographicMetric] = useState<DemographicMetric>('population')
 
+  // Bus line filter state
+  const [busLines, setBusLines] = useState<string[]>([])
+  const [hiddenBusLines, setHiddenBusLines] = useState<Set<string>>(new Set())
+
+  const handleToggleBusLine = useCallback((line: string) => {
+    setHiddenBusLines(prev => {
+      const next = new Set(prev)
+      if (next.has(line)) {
+        next.delete(line)
+      } else {
+        next.add(line)
+      }
+      return next
+    })
+  }, [])
+
   // KPI data — used for weather condition on map skybox
   const { data: kpiData } = useKpi(town)
 
@@ -248,6 +264,9 @@ function HomeInner() {
         onNoiseMetricChange={setNoiseMetric}
         demographicMetric={demographicMetric}
         onDemographicMetricChange={setDemographicMetric}
+        busLines={busLines}
+        hiddenBusLines={hiddenBusLines}
+        onToggleBusLine={handleToggleBusLine}
         collapsed={leftCollapsed}
         onToggle={() => setLeftCollapsed(v => !v)}
       />
@@ -295,6 +314,8 @@ function HomeInner() {
             cadastralVisible={layerVisibility.cadastral}
             hillshadeVisible={layerVisibility.hillshade}
             buildings3dVisible={layerVisibility.buildings3d}
+            hiddenBusLines={hiddenBusLines}
+            onBusLinesDiscovered={setBusLines}
             onMapReady={handleMapReady}
             externalPopup={pendingPopup}
             onExternalPopupClear={handleClearExternalPopup}

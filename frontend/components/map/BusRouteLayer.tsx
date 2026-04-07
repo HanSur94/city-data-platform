@@ -1,4 +1,5 @@
 'use client';
+import { useMemo } from 'react';
 import { Source, Layer } from 'react-map-gl/maplibre';
 import type { LineLayerSpecification } from 'react-map-gl/maplibre';
 import { useLayerData } from '@/hooks/useLayerData';
@@ -8,6 +9,8 @@ interface BusRouteLayerProps {
   town: string;
   visible: boolean;
 }
+
+const emptyFC: FeatureCollection = { type: 'FeatureCollection', features: [] };
 
 function filterShapes(data: FeatureCollection): FeatureCollection {
   return {
@@ -37,13 +40,18 @@ const routeLineLayer: LineLayerSpecification = {
 export default function BusRouteLayer({ town, visible }: BusRouteLayerProps) {
   const { data } = useLayerData('transit', town, undefined, 'shape');
 
-  if (!visible || !data) return null;
+  // Memoize filtered shapes so Source doesn't get a new data object on every
+  // parent re-render — avoids unnecessary MapLibre setData() calls and flicker.
+  const shapesData = useMemo(
+    () => (data ? filterShapes(data as unknown as FeatureCollection) : emptyFC),
+    [data],
+  );
 
-  const shapesData = filterShapes(data as unknown as FeatureCollection);
+  const vis = visible ? 'visible' : 'none';
 
   return (
     <Source id="bus-routes" type="geojson" data={shapesData}>
-      <Layer {...routeLineLayer} />
+      <Layer {...routeLineLayer} layout={{ ...routeLineLayer.layout, visibility: vis }} />
     </Source>
   );
 }

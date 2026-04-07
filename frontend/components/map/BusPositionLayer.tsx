@@ -6,12 +6,45 @@ import type {
   SymbolLayerSpecification,
   LineLayerSpecification,
 } from 'react-map-gl/maplibre';
+import type { FilterSpecification } from 'maplibre-gl';
 import { fetchLayer } from '@/lib/api';
 import type { FeatureCollection, Feature, LineString, Point } from 'geojson';
+
+// ── Color palette for per-line deterministic colors ──────────────────────────
+
+export const LINE_COLORS = [
+  '#e6194b', '#3cb44b', '#4363d8', '#f58231', '#911eb4',
+  '#42d4f4', '#f032e6', '#bfef45', '#fabed4', '#469990',
+  '#dcbeff', '#9A6324', '#800000', '#aaffc3', '#808000',
+];
+
+/** Deterministic color for a line name based on a hash of its characters. */
+export function lineColor(name: string): string {
+  let h = 0;
+  for (let i = 0; i < name.length; i++) h = ((h << 5) - h + name.charCodeAt(i)) | 0;
+  return LINE_COLORS[Math.abs(h) % LINE_COLORS.length];
+}
+
+// ── Build MapLibre match expression for line colors ───────────────────────────
+
+type MatchExpression = ['match', ['get', string], ...unknown[]];
+
+function buildColorMatchExpr(lineNames: string[], fallback: string): MatchExpression {
+  const parts: unknown[] = ['match', ['get', 'line_name']];
+  for (const name of lineNames) {
+    parts.push(name, lineColor(name));
+  }
+  parts.push(fallback);
+  return parts as MatchExpression;
+}
+
+// ── Props ─────────────────────────────────────────────────────────────────────
 
 interface BusPositionLayerProps {
   town: string;
   visible: boolean;
+  hiddenLines?: Set<string>;
+  onLinesDiscovered?: (lines: string[]) => void;
 }
 
 /**
@@ -24,21 +57,29 @@ function processBusData(fc: FeatureCollection): {
   positions: FeatureCollection;
   routesDriven: FeatureCollection;
   routesRemaining: FeatureCollection;
+  lineNames: string[];
 } {
   const positions: Feature<Point>[] = [];
   const drivenLines: Feature<LineString>[] = [];
   const remainingLines: Feature<LineString>[] = [];
+  const lineNameSet = new Set<string>();
 
   for (const f of fc.features) {
     if (f.properties?.feature_type !== 'bus_position') continue;
     if (f.geometry?.type !== 'Point') continue;
 
-    // Bus dot
+    const lineName: string = f.properties?.line_name ?? '';
+    if (lineName) lineNameSet.add(lineName);
+
+    // Bus dot — include route_type and pre-computed _color for data-driven styling
     positions.push({
       type: 'Feature',
       id: f.properties?.trip_id as string,
       geometry: f.geometry as Point,
-      properties: { ...f.properties },
+      properties: {
+        ...f.properties,
+        _color: lineColor(lineName),
+      },
     });
 
     // Route path from shape_coords (stored as JSON string in properties)
@@ -65,14 +106,22 @@ function processBusData(fc: FeatureCollection): {
       drivenLines.push({
         type: 'Feature',
         geometry: { type: 'LineString', coordinates: driven },
-        properties: { trip_id: tripId, line_name: f.properties?.line_name ?? '' },
+        properties: {
+          trip_id: tripId,
+          line_name: lineName,
+          _color: lineColor(lineName),
+        },
       });
     }
     if (remaining.length >= 2) {
       remainingLines.push({
         type: 'Feature',
         geometry: { type: 'LineString', coordinates: remaining },
-        properties: { trip_id: tripId, line_name: f.properties?.line_name ?? '' },
+        properties: {
+          trip_id: tripId,
+          line_name: lineName,
+          _color: lineColor(lineName),
+        },
       });
     }
   }
@@ -81,6 +130,7 @@ function processBusData(fc: FeatureCollection): {
     positions: { type: 'FeatureCollection', features: positions },
     routesDriven: { type: 'FeatureCollection', features: drivenLines },
     routesRemaining: { type: 'FeatureCollection', features: remainingLines },
+    lineNames: [...lineNameSet].sort((a, b) => a.localeCompare(b, undefined, { numeric: true })),
   };
 }
 
@@ -124,74 +174,6 @@ function lerpPositions(
   return { type: 'FeatureCollection', features };
 }
 
-const circleLayer: CircleLayerSpecification = {
-  id: 'bus-position-points',
-  type: 'circle',
-  source: 'bus-positions',
-  layout: { visibility: 'visible' },
-  paint: {
-    'circle-color': [
-      'step',
-      ['coalesce', ['get', 'delay_seconds'], 0],
-      '#22c55e',
-      120, '#eab308',
-      300, '#f97316',
-      600, '#ef4444',
-    ],
-    'circle-radius': 8,
-    'circle-stroke-width': 2,
-    'circle-stroke-color': '#ffffff',
-  },
-};
-
-const labelLayer: SymbolLayerSpecification = {
-  id: 'bus-line-labels',
-  type: 'symbol',
-  source: 'bus-positions',
-  layout: {
-    'text-field': ['get', 'line_name'],
-    'text-font': ['Noto Sans Regular'],
-    'text-size': 10,
-    'text-offset': [0, 1.8],
-    'text-allow-overlap': false,
-    visibility: 'visible',
-  },
-  paint: {
-    'text-color': '#374151',
-    'text-halo-color': '#ffffff',
-    'text-halo-width': 1,
-  },
-};
-
-const drivenLineLayer: LineLayerSpecification = {
-  id: 'bus-route-driven',
-  type: 'line',
-  source: 'bus-routes-driven',
-  layout: { visibility: 'visible', 'line-cap': 'round', 'line-join': 'round' },
-  paint: {
-    'line-color': '#6366f1',
-    'line-opacity': 0.6,
-    'line-width': 3,
-  },
-};
-
-const remainingLineLayer: LineLayerSpecification = {
-  id: 'bus-route-remaining',
-  type: 'line',
-  source: 'bus-routes-remaining',
-  layout: {
-    visibility: 'visible',
-    'line-cap': 'round',
-    'line-join': 'round',
-  },
-  paint: {
-    'line-color': '#6366f1',
-    'line-opacity': 0.2,
-    'line-width': 2,
-    'line-dasharray': [2, 2],
-  },
-};
-
 const emptyFC: FeatureCollection = { type: 'FeatureCollection', features: [] };
 
 // Animation duration in ms for bus dot transitions
@@ -211,10 +193,22 @@ function fingerprint(fc: FeatureCollection): string {
     .join('|');
 }
 
-export default function BusPositionLayer({ town, visible }: BusPositionLayerProps) {
+/** Build a MapLibre filter to exclude hidden lines. */
+function buildHiddenLinesFilter(hiddenLines: Set<string>): FilterSpecification | undefined {
+  if (!hiddenLines || hiddenLines.size === 0) return undefined;
+  return ['!', ['in', ['get', 'line_name'], ['literal', [...hiddenLines]]]] as FilterSpecification;
+}
+
+export default function BusPositionLayer({
+  town,
+  visible,
+  hiddenLines,
+  onLinesDiscovered,
+}: BusPositionLayerProps) {
   const [positions, setPositions] = useState<FeatureCollection>(emptyFC);
   const [routesDriven, setRoutesDriven] = useState<FeatureCollection>(emptyFC);
   const [routesRemaining, setRoutesRemaining] = useState<FeatureCollection>(emptyFC);
+  const [lineNames, setLineNames] = useState<string[]>([]);
   const prevFingerprintRef = useRef('');
 
   // Animation state
@@ -222,6 +216,9 @@ export default function BusPositionLayer({ town, visible }: BusPositionLayerProp
   const nextPositionsRef = useRef<FeatureCollection>(emptyFC);
   const animFrameRef = useRef<number>(0);
   const animStartRef = useRef<number>(0);
+
+  // Track discovered lines to avoid calling onLinesDiscovered on every render
+  const prevLinesKeyRef = useRef('');
 
   const animate = useCallback(() => {
     const elapsed = performance.now() - animStartRef.current;
@@ -245,7 +242,8 @@ export default function BusPositionLayer({ town, visible }: BusPositionLayerProp
     try {
       const json = await fetchLayer('transit', town, null, 'bus_position');
       const fc = json as unknown as FeatureCollection;
-      const { positions: pos, routesDriven: dr, routesRemaining: rem } = processBusData(fc);
+      const { positions: pos, routesDriven: dr, routesRemaining: rem, lineNames: names } =
+        processBusData(fc);
 
       if (pos.features.length > 0) {
         const fp = fingerprint(pos);
@@ -273,10 +271,18 @@ export default function BusPositionLayer({ town, visible }: BusPositionLayerProp
         setRoutesDriven(dr);
         setRoutesRemaining(rem);
       }
+
+      // Report discovered line names (only when they change)
+      const namesKey = names.join(',');
+      if (namesKey !== prevLinesKeyRef.current) {
+        prevLinesKeyRef.current = namesKey;
+        setLineNames(names);
+        onLinesDiscovered?.(names);
+      }
     } catch {
       // Keep last data on error
     }
-  }, [town, animate]);
+  }, [town, animate, onLinesDiscovered]);
 
   useEffect(() => {
     if (!visible) return;
@@ -290,17 +296,106 @@ export default function BusPositionLayer({ town, visible }: BusPositionLayerProp
 
   const vis = visible ? 'visible' : 'none';
 
+  // Build filter for hidden lines
+  const hiddenFilter = hiddenLines && hiddenLines.size > 0
+    ? buildHiddenLinesFilter(hiddenLines)
+    : undefined;
+
+  // Build data-driven color match expression from discovered line names
+  const colorMatchExpr = lineNames.length > 0
+    ? buildColorMatchExpr(lineNames, '#6b7280')
+    : ('#6b7280' as unknown as MatchExpression);
+
+  // Suppress unused variable warning — colorMatchExpr available for future use
+  void colorMatchExpr;
+
+  // Circle layer with per-line colors and delay-based stroke
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const circleLayer = {
+    id: 'bus-position-points',
+    type: 'circle',
+    source: 'bus-positions',
+    layout: { visibility: vis },
+    paint: {
+      'circle-color': ['get', '_color'],
+      // Trains (route_type 0,1,2) get radius 10; buses (3) get 8
+      'circle-radius': ['match', ['get', 'route_type'], 0, 10, 1, 10, 2, 10, 8],
+      'circle-stroke-width': ['match', ['get', 'route_type'], 0, 3, 1, 3, 2, 3, 2],
+      // Delay indicated via stroke color: green/yellow/orange/red
+      'circle-stroke-color': [
+        'step',
+        ['coalesce', ['get', 'delay_seconds'], 0],
+        '#22c55e',
+        120, '#eab308',
+        300, '#f97316',
+        600, '#ef4444',
+      ],
+    },
+    ...(hiddenFilter ? { filter: hiddenFilter } : {}),
+  } as CircleLayerSpecification;
+
+  const labelLayer = {
+    id: 'bus-line-labels',
+    type: 'symbol',
+    source: 'bus-positions',
+    layout: {
+      'text-field': ['get', 'line_name'],
+      'text-font': ['Noto Sans Regular'],
+      'text-size': 10,
+      'text-offset': [0, 1.8],
+      'text-allow-overlap': false,
+      visibility: vis,
+    },
+    paint: {
+      'text-color': '#374151',
+      'text-halo-color': '#ffffff',
+      'text-halo-width': 1,
+    },
+    ...(hiddenFilter ? { filter: hiddenFilter } : {}),
+  } as SymbolLayerSpecification;
+
+  const drivenLineLayer = {
+    id: 'bus-route-driven',
+    type: 'line',
+    source: 'bus-routes-driven',
+    layout: { visibility: vis, 'line-cap': 'round', 'line-join': 'round' },
+    paint: {
+      'line-color': ['get', '_color'],
+      'line-opacity': 0.6,
+      'line-width': 3,
+    },
+    ...(hiddenFilter ? { filter: hiddenFilter } : {}),
+  } as LineLayerSpecification;
+
+  const remainingLineLayer = {
+    id: 'bus-route-remaining',
+    type: 'line',
+    source: 'bus-routes-remaining',
+    layout: {
+      visibility: vis,
+      'line-cap': 'round',
+      'line-join': 'round',
+    },
+    paint: {
+      'line-color': ['get', '_color'],
+      'line-opacity': 0.2,
+      'line-width': 2,
+      'line-dasharray': [2, 2],
+    },
+    ...(hiddenFilter ? { filter: hiddenFilter } : {}),
+  } as LineLayerSpecification;
+
   return (
     <>
       <Source id="bus-routes-driven" type="geojson" data={routesDriven}>
-        <Layer {...drivenLineLayer} layout={{ ...drivenLineLayer.layout, visibility: vis }} />
+        <Layer {...drivenLineLayer} />
       </Source>
       <Source id="bus-routes-remaining" type="geojson" data={routesRemaining}>
-        <Layer {...remainingLineLayer} layout={{ ...remainingLineLayer.layout, visibility: vis }} />
+        <Layer {...remainingLineLayer} />
       </Source>
       <Source id="bus-positions" type="geojson" data={positions}>
-        <Layer {...circleLayer} layout={{ ...circleLayer.layout, visibility: vis }} />
-        <Layer {...labelLayer} layout={{ ...labelLayer.layout, visibility: vis }} />
+        <Layer {...circleLayer} />
+        <Layer {...labelLayer} />
       </Source>
     </>
   );

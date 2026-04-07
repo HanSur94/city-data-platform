@@ -15,6 +15,7 @@ import HeatDemandLegend from './HeatDemandLegend';
 import CyclingLegend from './CyclingLegend';
 import FeatureSearch from './FeatureSearch';
 import type { SearchResult } from './FeatureSearch';
+import BusLineFilter from './BusLineFilter';
 import { LAYER_METADATA } from '@/lib/layer-metadata';
 import { useLayerMetadata } from '@/hooks/useLayerMetadata';
 
@@ -68,11 +69,14 @@ interface SidebarProps {
   onNoiseMetricChange?: (metric: 'lden' | 'lnight') => void;
   demographicMetric?: DemographicMetric;
   onDemographicMetricChange?: (metric: DemographicMetric) => void;
+  busLines?: string[];
+  hiddenBusLines?: Set<string>;
+  onToggleBusLine?: (line: string) => void;
   collapsed?: boolean;
   onToggle?: () => void;
 }
 
-export default function Sidebar({ town, onFeatureSelect, layerVisibility, onToggleLayer, transitError, airQualityError, trafficError, energyError, baseLayer, onBaseLayerChange, cadastralVisible, hillshadeVisible, buildings3dVisible, activePollutant, onPollutantChange, noiseMetric, onNoiseMetricChange, demographicMetric, onDemographicMetricChange, collapsed, onToggle }: SidebarProps) {
+export default function Sidebar({ town, onFeatureSelect, layerVisibility, onToggleLayer, transitError, airQualityError, trafficError, energyError, baseLayer, onBaseLayerChange, cadastralVisible, hillshadeVisible, buildings3dVisible, activePollutant, onPollutantChange, noiseMetric, onNoiseMetricChange, demographicMetric, onDemographicMetricChange, busLines, hiddenBusLines, onToggleBusLine, collapsed, onToggle }: SidebarProps) {
   const [drawerOpen, setDrawerOpen] = useState(false);
   const { layerMeta } = useLayerMetadata();
 
@@ -119,6 +123,13 @@ export default function Sidebar({ town, onFeatureSelect, layerVisibility, onTogg
           metadata={LAYER_METADATA['busPosition']}
           lastUpdated={layerMeta['busPosition']?.lastUpdated}
         />
+        {layerVisibility.busPosition && busLines && busLines.length > 0 && onToggleBusLine && hiddenBusLines && (
+          <BusLineFilter
+            lines={busLines}
+            hiddenLines={hiddenBusLines}
+            onToggle={onToggleBusLine}
+          />
+        )}
         <LayerToggle
           id="aqi-toggle"
           label="Luftqualitaet"

@@ -74,6 +74,8 @@ interface MapViewProps {
     autobahn?: boolean;
     energy?: boolean;
   };
+  hiddenBusLines?: Set<string>;
+  onBusLinesDiscovered?: (lines: string[]) => void;
   transitData: LayerResponse | null;
   airQualityData: LayerResponse | null;
   airQualityGridData?: LayerResponse | null;
@@ -168,6 +170,8 @@ export default function MapView({
   cadastralVisible = false,
   hillshadeVisible = false,
   buildings3dVisible = true,
+  hiddenBusLines,
+  onBusLinesDiscovered,
   onMapReady,
   externalPopup,
   onExternalPopupClear,
@@ -351,12 +355,13 @@ export default function MapView({
         {parkingVisible && (
           <ParkingLayer town={town} visible={true} />
         )}
-        {busPositionVisible && (
-          <>
-            <BusRouteLayer town={town} visible={true} />
-            <BusPositionLayer town={town} visible={true} />
-          </>
-        )}
+        <BusRouteLayer town={town} visible={busPositionVisible} />
+        <BusPositionLayer
+          town={town}
+          visible={busPositionVisible}
+          hiddenLines={hiddenBusLines}
+          onLinesDiscovered={onBusLinesDiscovered}
+        />
         <NoiseWmsLayer visible={roadNoiseVisible} noiseMetric={noiseMetric} />
         <FernwaermeLayer visible={fernwaermeVisible} />
         {heatDemandVisible && (
