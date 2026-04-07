@@ -1,5 +1,6 @@
 'use client';
 import { DataSourceSection } from '@/components/map/DataSourceSection';
+import { CrossDomainSection } from '@/components/map/CrossDomainSection';
 import { LAYER_METADATA } from '@/lib/layer-metadata';
 import type { Feature } from 'geojson';
 
@@ -22,6 +23,7 @@ function formatDelay(seconds: number): string {
 
 export default function BusPopup({ feature }: BusPopupProps) {
   const props = feature.properties ?? {};
+  const featureId = (props.feature_id as string) ?? (feature.id as string) ?? null;
   const lineName = props.line_name as string | undefined;
   const destination = props.destination as string | undefined;
   const delaySeconds = (props.delay_seconds as number) ?? 0;
@@ -54,6 +56,7 @@ export default function BusPopup({ feature }: BusPopupProps) {
         dataType={LAYER_METADATA['busPosition'].dataType}
         timestamp={null}
       />
+      <CrossDomainSection featureId={featureId} ownDomain="transit" />
     </div>
   );
 }

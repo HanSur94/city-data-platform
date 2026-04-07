@@ -2,6 +2,7 @@
 import { Badge } from '@/components/ui/badge';
 import FreshnessIndicator from './FreshnessIndicator';
 import { DataSourceSection } from '@/components/map/DataSourceSection';
+import { CrossDomainSection } from '@/components/map/CrossDomainSection';
 import { LAYER_METADATA } from '@/lib/layer-metadata';
 import { AQI_TIER_COLORS } from '@/lib/map-styles';
 import type { Feature } from 'geojson';
@@ -13,6 +14,7 @@ interface FeaturePopupProps {
 
 export default function FeaturePopup({ feature, lastFetched }: FeaturePopupProps) {
   const props = feature.properties ?? {};
+  const featureId = (props.feature_id as string) ?? (feature.id as string) ?? null;
   const isAQI = 'aqi' in props || 'pm25' in props;
 
   if (isAQI) {
@@ -44,6 +46,7 @@ export default function FeaturePopup({ feature, lastFetched }: FeaturePopupProps
           dataType={LAYER_METADATA['airQuality'].dataType}
           timestamp={(props.measured_at as string) ?? (props.fetched_at as string) ?? null}
         />
+        <CrossDomainSection featureId={featureId} ownDomain="air_quality" />
       </div>
     );
   }
@@ -69,6 +72,7 @@ export default function FeaturePopup({ feature, lastFetched }: FeaturePopupProps
         dataType={LAYER_METADATA['transit'].dataType}
         timestamp={(props.fetched_at as string) ?? null}
       />
+      <CrossDomainSection featureId={featureId} ownDomain="transit" />
     </div>
   );
 }

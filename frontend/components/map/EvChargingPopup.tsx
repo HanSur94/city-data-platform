@@ -1,5 +1,6 @@
 'use client';
 import { DataSourceSection } from '@/components/map/DataSourceSection';
+import { CrossDomainSection } from '@/components/map/CrossDomainSection';
 import { LAYER_METADATA } from '@/lib/layer-metadata';
 import type { Feature } from 'geojson';
 
@@ -25,6 +26,7 @@ function PowerClassLabel({ powerKw, powerClass }: { powerKw?: number; powerClass
 export default function EvChargingPopup({ feature }: EvChargingPopupProps) {
   const props = feature.properties ?? {};
   const source = props.source as string | undefined;
+  const featureId = (props.feature_id as string) ?? (feature.id as string) ?? null;
 
   // OCPDB live data path
   if (source === 'ocpdb') {
@@ -75,6 +77,7 @@ export default function EvChargingPopup({ feature }: EvChargingPopupProps) {
           dataType={LAYER_METADATA['evCharging'].dataType}
           timestamp={(props.fetched_at as string) ?? null}
         />
+        <CrossDomainSection featureId={featureId} ownDomain="infrastructure" />
       </div>
     );
   }
@@ -131,6 +134,7 @@ export default function EvChargingPopup({ feature }: EvChargingPopupProps) {
         dataType={LAYER_METADATA['evCharging'].dataType}
         timestamp={(props.fetched_at as string) ?? null}
       />
+      <CrossDomainSection featureId={featureId} ownDomain="infrastructure" />
     </div>
   );
 }

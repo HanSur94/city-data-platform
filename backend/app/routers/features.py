@@ -1,4 +1,7 @@
-"""GET /api/features/{feature_id}/data — per-feature data aggregation endpoint.
+"""Feature registry API endpoints.
+
+- GET /api/features/search — search features by name, address, or ID
+- GET /api/features/{feature_id}/data — per-feature data aggregation
 
 Returns feature info (properties, geometry, semantic_id) plus the latest
 observation from each domain that has data for this feature, queried from
@@ -9,11 +12,13 @@ Accepts both UUID and semantic_id as the feature_id path parameter.
 import json
 from typing import Any
 
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import text
 
 from app.db import get_db
+from app.dependencies import get_current_town
+from app.config import Town
 
 router = APIRouter(tags=["features"])
 
@@ -21,6 +26,83 @@ router = APIRouter(tags=["features"])
 def _is_uuid(value: str) -> bool:
     """Check if a string looks like a UUID (36 chars with dashes)."""
     return len(value) == 36 and value.count("-") == 4
+
+
+@router.get("/features/search")
+async def search_features(
+    q: str = Query(..., min_length=2),
+    town: str = Query(...),
+    limit: int = Query(10, ge=1, le=50),
+    db: AsyncSession = Depends(get_db),
+    current_town: Town = Depends(get_current_town),
+) -> list[dict[str, Any]]:
+    """Search features by name, address, semantic_id, or source_id.
+
+    Returns an array of matching features with id, semantic_id, domain,
+    name, and geometry coordinates.
+    """
+    if town != current_town.id:
+        raise HTTPException(status_code=404, detail=f"Unknown town: {town!r}")
+
+    pattern = f"%{q}%"
+    result = await db.execute(
+        text(
+            "SELECT id::text, semantic_id, domain, source_id, "
+            "ST_AsGeoJSON(geometry)::text AS geometry, "
+            "properties "
+            "FROM features "
+            "WHERE town_id = :town_id "
+            "AND ( "
+            "  properties->>'name' ILIKE :q "
+            "  OR properties->>'address' ILIKE :q "
+            "  OR properties->>'stop_name' ILIKE :q "
+            "  OR semantic_id ILIKE :q "
+            "  OR source_id ILIKE :q "
+            ") "
+            "LIMIT :limit"
+        ),
+        {"town_id": current_town.id, "q": pattern, "limit": limit},
+    )
+    rows = result.mappings().all()
+
+    results: list[dict[str, Any]] = []
+    for row in rows:
+        geom = row["geometry"]
+        if isinstance(geom, str):
+            geom = json.loads(geom)
+
+        props = row["properties"]
+        if isinstance(props, str):
+            props = json.loads(props)
+        props = props or {}
+
+        # Extract name: try 'name', then 'stop_name', then source_id
+        name = props.get("name") or props.get("stop_name") or row["source_id"] or "Unbekannt"
+
+        # Extract centroid from geometry (Point -> direct, others -> first coordinate)
+        lon, lat = 0.0, 0.0
+        if geom:
+            coords = geom.get("coordinates")
+            if geom.get("type") == "Point" and coords:
+                lon, lat = coords[0], coords[1]
+            elif coords:
+                # For LineString/Polygon, take the first coordinate
+                flat = coords
+                while isinstance(flat, list) and flat and isinstance(flat[0], list):
+                    flat = flat[0]
+                if flat and len(flat) >= 2:
+                    lon, lat = flat[0], flat[1]
+
+        results.append({
+            "id": row["id"],
+            "semantic_id": row["semantic_id"],
+            "domain": row["domain"],
+            "name": name,
+            "longitude": lon,
+            "latitude": lat,
+        })
+
+    return results
 
 
 @router.get("/features/{feature_id}/data")

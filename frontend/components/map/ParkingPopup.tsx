@@ -1,5 +1,6 @@
 'use client';
 import { DataSourceSection } from '@/components/map/DataSourceSection';
+import { CrossDomainSection } from '@/components/map/CrossDomainSection';
 import { LAYER_METADATA } from '@/lib/layer-metadata';
 import type { Feature } from 'geojson';
 
@@ -15,6 +16,7 @@ function occupancyColor(pct: number): string {
 
 export default function ParkingPopup({ feature }: ParkingPopupProps) {
   const props = feature.properties ?? {};
+  const featureId = (props.feature_id as string) ?? (feature.id as string) ?? null;
   const name = props.name as string | undefined;
   const freeSpots = props.free_spots as number | undefined;
   const totalSpots = props.total_spots as number | undefined;
@@ -41,6 +43,7 @@ export default function ParkingPopup({ feature }: ParkingPopupProps) {
         dataType={LAYER_METADATA['parking'].dataType}
         timestamp={(props.fetched_at as string) ?? null}
       />
+      <CrossDomainSection featureId={featureId} ownDomain="infrastructure" />
     </div>
   );
 }
