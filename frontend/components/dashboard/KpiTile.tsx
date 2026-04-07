@@ -11,7 +11,7 @@ interface KpiTileProps {
   value: string | null   // Display-size primary metric, null if no data
   unit: string           // "AQI" | "°C" | "Linien"
   trend: number | null   // % change vs yesterday; null = no trend (transit)
-  active: boolean        // is this tile's domain the activeDomain?
+  active?: boolean       // deprecated — kept for backward compat, no longer styled
   onSelect: (domain: string) => void
   children?: React.ReactNode  // optional slot for compact sub-charts (e.g. EnergyMixBar)
   sourceAbbrev?: string
@@ -19,14 +19,12 @@ interface KpiTileProps {
   dataType?: DataType
 }
 
-export function KpiTile({ domain, label, icon, value, unit, trend, active, onSelect, children, sourceAbbrev, sourceTimestamp, dataType }: KpiTileProps) {
+export function KpiTile({ domain, label, icon, value, unit, trend, onSelect, children, sourceAbbrev, sourceTimestamp, dataType }: KpiTileProps) {
   return (
     <Card
       role="button"
       tabIndex={0}
-      className={`min-h-[80px] cursor-pointer select-none transition-colors hover:bg-secondary p-4 ${
-        active ? 'ring-2 ring-primary' : ''
-      }`}
+      className="min-h-[80px] cursor-pointer select-none transition-colors hover:bg-secondary p-4"
       onClick={() => onSelect(domain)}
       onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') onSelect(domain) }}
     >

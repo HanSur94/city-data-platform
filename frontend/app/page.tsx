@@ -5,8 +5,8 @@ import Sidebar from '@/components/sidebar/Sidebar'
 import { DashboardPanel } from '@/components/dashboard/DashboardPanel'
 import { TimeSlider } from '@/components/dashboard/TimeSlider'
 import { DateRangePicker } from '@/components/dashboard/DateRangePicker'
-import { DomainDetailPanel } from '@/components/dashboard/DomainDetailPanel'
 import { TimeSeriesChart } from '@/components/dashboard/TimeSeriesChart'
+import { DataExplorerModal } from '@/components/dashboard/DataExplorerModal'
 import { useLayerData } from '@/hooks/useLayerData'
 import { useGridLayerData } from '@/hooks/useGridLayerData'
 import { useUrlState } from '@/hooks/useUrlState'
@@ -154,6 +154,11 @@ function HomeInner() {
   const [leftCollapsed, setLeftCollapsed] = useState(false)
   const [rightCollapsed, setRightCollapsed] = useState(false)
 
+  // Data explorer modals state
+  const [openModals, setOpenModals] = useState<Array<{ domain: string; id: string; position: { x: number; y: number } }>>([])
+
+  const handleCloseModal = (id: string) => setOpenModals(prev => prev.filter(m => m.id !== id))
+
   // Pollutant toggle state for air quality heatmap grid
   const [activePollutant, setActivePollutant] = useState<Pollutant>('pm25')
 
@@ -174,10 +179,17 @@ function HomeInner() {
   // Default chart data (shown when no activeDomain detail panel open)
   const aqiTs = useTimeseries('air_quality', dateRange.from, dateRange.to, town)
 
-  const activeDomain = state.domain  // 'aqi' | 'weather' | 'transit' | 'traffic' | 'energy' | null
-
   const handleDomainSelect = (domain: string | null) => {
-    update({ domain: domain ?? null })
+    if (!domain) return
+    // Check if already open
+    if (openModals.some(m => m.domain === domain)) return
+    // Stagger position so multiple modals don't stack exactly
+    const offset = openModals.length * 30
+    setOpenModals(prev => [...prev, {
+      domain,
+      id: `${domain}-${Date.now()}`,
+      position: { x: 200 + offset, y: 100 + offset },
+    }])
   }
 
   const handleDateRangeChange = (range: { from: Date; to: Date }) => {
@@ -195,15 +207,8 @@ function HomeInner() {
     update({ base: base === 'osm' ? null : base })
   }
 
-  // Dashboard panel chart slot: DomainDetailPanel if activeDomain, else default AQI chart
-  const chartSlot = activeDomain ? (
-    <DomainDetailPanel
-      domain={activeDomain}
-      dateRange={dateRange}
-      town={town}
-      onBack={() => handleDomainSelect(null)}
-    />
-  ) : (
+  // Dashboard panel chart slot: always show default AQI chart with date range picker
+  const chartSlot = (
     <div className="flex flex-col gap-4">
       <DateRangePicker value={dateRange} onChange={handleDateRangeChange} />
       <TimeSeriesChart
@@ -298,13 +303,23 @@ function HomeInner() {
       {/* Right dashboard panel — 320px, hidden on tablet/mobile (hidden lg:flex inside component) */}
       <DashboardPanel
         town={town}
-        activeDomain={activeDomain}
-        onDomainSelect={handleDomainSelect}
+        onExplore={handleDomainSelect}
         collapsed={rightCollapsed}
         onToggle={() => setRightCollapsed(v => !v)}
       >
         {chartSlot}
       </DashboardPanel>
+
+      {/* Data explorer modals */}
+      {openModals.map(modal => (
+        <DataExplorerModal
+          key={modal.id}
+          domain={modal.domain}
+          town={town}
+          onClose={() => handleCloseModal(modal.id)}
+          initialPosition={modal.position}
+        />
+      ))}
     </main>
   )
 }

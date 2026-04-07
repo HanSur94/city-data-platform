@@ -10,8 +10,7 @@ import { useLayerMetadata } from '@/hooks/useLayerMetadata'
 
 interface DashboardPanelProps {
   town?: string
-  activeDomain: string | null
-  onDomainSelect: (domain: string | null) => void
+  onExplore?: (domain: string) => void
   // Chart slot: rendered below KPI tiles; passed as children to keep this component stable
   children?: React.ReactNode
   collapsed?: boolean
@@ -20,8 +19,7 @@ interface DashboardPanelProps {
 
 export function DashboardPanel({
   town = 'aalen',
-  activeDomain,
-  onDomainSelect,
+  onExplore,
   children,
   collapsed,
   onToggle,
@@ -38,8 +36,7 @@ export function DashboardPanel({
   }
 
   const handleSelect = (domain: string) => {
-    // Toggle: clicking active domain closes the detail panel
-    onDomainSelect(activeDomain === domain ? null : domain)
+    onExplore?.(domain)
   }
 
   const aqiValue = data?.air_quality?.current_aqi != null
@@ -112,7 +109,7 @@ export function DashboardPanel({
               value={aqiValue}
               unit="AQI"
               trend={null}
-              active={activeDomain === 'aqi'}
+
               onSelect={handleSelect}
               sourceAbbrev={LAYER_METADATA['airQuality']?.sourceAbbrev}
               sourceTimestamp={formatTime(layerMeta['airQuality']?.lastUpdated)}
@@ -125,7 +122,7 @@ export function DashboardPanel({
               value={tempValue}
               unit="deg. C"
               trend={null}
-              active={activeDomain === 'weather'}
+
               onSelect={handleSelect}
               sourceAbbrev={LAYER_METADATA['water']?.sourceAbbrev}
               sourceTimestamp={formatTime(layerMeta['water']?.lastUpdated)}
@@ -138,7 +135,7 @@ export function DashboardPanel({
               value={routeValue}
               unit="Linien"
               trend={null}
-              active={activeDomain === 'transit'}
+
               onSelect={handleSelect}
               sourceAbbrev={LAYER_METADATA['transit']?.sourceAbbrev}
               sourceTimestamp={formatTime(layerMeta['transit']?.lastUpdated)}
@@ -151,7 +148,7 @@ export function DashboardPanel({
               value={trafficValue}
               unit={trafficUnit}
               trend={null}
-              active={activeDomain === 'traffic'}
+
               onSelect={handleSelect}
               sourceAbbrev={LAYER_METADATA['traffic']?.sourceAbbrev}
               sourceTimestamp={formatTime(layerMeta['traffic']?.lastUpdated)}
@@ -164,7 +161,7 @@ export function DashboardPanel({
               value={energyValue}
               unit="Erneuerbare am Netz"
               trend={null}
-              active={activeDomain === 'energy'}
+
               onSelect={handleSelect}
               sourceAbbrev={LAYER_METADATA['energy']?.sourceAbbrev}
               sourceTimestamp={formatTime(layerMeta['energy']?.lastUpdated)}
@@ -182,7 +179,7 @@ export function DashboardPanel({
                 value={demographicsValue}
                 unit={demographicsUnit}
                 trend={null}
-                active={activeDomain === 'demographics'}
+
                 onSelect={handleSelect}
                 sourceAbbrev={LAYER_METADATA['demographics']?.sourceAbbrev}
                 sourceTimestamp={formatTime(layerMeta['demographics']?.lastUpdated)}
@@ -200,7 +197,7 @@ export function DashboardPanel({
                 value={data.parking.total_free != null ? String(data.parking.total_free) : null}
                 unit={data.parking.total_capacity != null ? `von ${data.parking.total_capacity} frei` : 'Parkplaetze'}
                 trend={null}
-                active={activeDomain === 'parking'}
+
                 onSelect={handleSelect}
                 sourceAbbrev={LAYER_METADATA['parking']?.sourceAbbrev}
                 sourceTimestamp={formatTime(layerMeta['parking']?.lastUpdated)}
