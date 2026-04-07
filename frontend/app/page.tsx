@@ -46,6 +46,7 @@ function HomeInner() {
     healthcare: state.layers.includes('healthcare'),
     parks: state.layers.includes('parks'),
     waste: state.layers.includes('waste'),
+    police: state.layers.includes('police'),
     evCharging: state.layers.includes('ev_charging'),
     roadworks: state.layers.includes('roadworks'),
     solarPotential: state.layers.includes('solar_potential'),
@@ -79,6 +80,7 @@ function HomeInner() {
     healthcare: 'healthcare',
     parks: 'parks',
     waste: 'waste',
+    police: 'police',
     evCharging: 'ev_charging',
     roadworks: 'roadworks',
     solarPotential: 'solar_potential',
@@ -308,6 +310,7 @@ function HomeInner() {
             demographicsVisible={layerVisibility.demographics}
             heatDemandVisible={layerVisibility.heatDemand}
             cyclingVisible={layerVisibility.cycling}
+            policeVisible={layerVisibility.police}
             noiseMetric={noiseMetric}
             demographicMetric={demographicMetric}
             baseLayer={state.baseLayer}

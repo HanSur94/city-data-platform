@@ -2,6 +2,7 @@
 import { Card, CardContent } from '@/components/ui/card'
 import { TrendArrow } from './TrendArrow'
 import { DataTypeBadge } from '@/components/ui/DataTypeBadge'
+import { Loader2 } from 'lucide-react'
 import type { DataType } from '@/lib/layer-metadata'
 
 interface KpiTileProps {
@@ -17,9 +18,10 @@ interface KpiTileProps {
   sourceAbbrev?: string
   sourceTimestamp?: string
   dataType?: DataType
+  refreshing?: boolean
 }
 
-export function KpiTile({ domain, label, icon, value, unit, trend, onSelect, children, sourceAbbrev, sourceTimestamp, dataType }: KpiTileProps) {
+export function KpiTile({ domain, label, icon, value, unit, trend, onSelect, children, sourceAbbrev, sourceTimestamp, dataType, refreshing }: KpiTileProps) {
   return (
     <Card
       role="button"
@@ -32,6 +34,9 @@ export function KpiTile({ domain, label, icon, value, unit, trend, onSelect, chi
         <div className="flex items-center gap-2">
           <span className="text-muted-foreground">{icon}</span>
           <span className="text-[16px] font-semibold">{label}</span>
+          {refreshing && (
+            <Loader2 className="h-3.5 w-3.5 text-muted-foreground animate-spin ml-auto" />
+          )}
         </div>
         {value !== null ? (
           <>

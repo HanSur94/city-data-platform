@@ -332,6 +332,17 @@ class BusInterpolationConnector(BaseConnector):
             import json as _json
             shape_coords_json = _json.dumps(trip.shape_coords) if trip.shape_coords else None
 
+            # Format schedule times for frontend display
+            def _fmt_time(secs: int) -> str:
+                h, m = divmod(secs, 3600)
+                m = m // 60
+                return f"{h % 24:02d}:{m:02d}"
+
+            first_dep = trip.stop_times[0][2] if trip.stop_times else 0
+            last_arr = trip.stop_times[-1][1] if trip.stop_times else 0
+            origin_stop = trip.stop_times[0][0] if trip.stop_times else ""
+            total_stops = len(trip.stop_times)
+
             properties = {
                 "feature_type": "bus_position",
                 "trip_id": pos.trip_id,
@@ -346,6 +357,10 @@ class BusInterpolationConnector(BaseConnector):
                 "departed": pos.departed,
                 "route_type": pos.route_type,
                 "shape_coords": shape_coords_json,
+                "scheduled_departure": _fmt_time(first_dep),
+                "scheduled_arrival": _fmt_time(last_arr),
+                "origin_stop": origin_stop,
+                "total_stops": total_stops,
             }
 
             feature_id = await self.upsert_feature(
@@ -373,9 +388,8 @@ class BusInterpolationConnector(BaseConnector):
         if observations:
             await self.persist(observations)
 
-        # 8. Clean up stale bus-pos features (only those older than 10 min)
-        # Don't delete between refresh cycles — just let upsert update positions
-        await self._cleanup_old_features()
+        # 8. Clean up stale bus-pos features that are no longer active
+        await self._cleanup_old_features(active_source_ids)
 
         await self._update_staleness()
         logger.info(
@@ -703,11 +717,70 @@ class BusInterpolationConnector(BaseConnector):
 
         return delays
 
-    async def _cleanup_old_features(self) -> None:
-        """Delete bus-pos features whose trip has ended (departure=true means trip is done).
+    async def _cleanup_old_features(self, active_source_ids: set[str]) -> None:
+        """Remove bus-pos features whose trips are no longer active.
 
-        We don't aggressively delete between cycles — features stay visible
-        until the trip genuinely ends. The upsert_feature ON CONFLICT updates
-        positions in place, so active buses smoothly move without blinking.
+        Compares features in the DB with the current set of active source_ids.
+        Any bus-pos feature NOT in the active set has its trip completed or
+        route service ended — remove it so stale dots disappear from the map.
         """
-        pass  # Let features persist — upsert handles position updates
+        from app.db import AsyncSessionLocal
+        from sqlalchemy import text
+
+        if not active_source_ids:
+            # No active buses — remove all bus-pos features for this town
+            try:
+                async with AsyncSessionLocal() as session:
+                    result = await session.execute(
+                        text(
+                            "DELETE FROM features "
+                            "WHERE town_id = :town_id "
+                            "AND domain = 'transit' "
+                            "AND source_id LIKE 'bus-pos:%'"
+                        ),
+                        {"town_id": self.town.id},
+                    )
+                    await session.commit()
+                    deleted = result.rowcount
+                    if deleted:
+                        logger.info("Cleaned up all %d stale bus-pos features (no active trips).", deleted)
+            except Exception as exc:
+                logger.warning("Failed to clean up stale bus features: %s", exc)
+            return
+
+        try:
+            async with AsyncSessionLocal() as session:
+                # Get all current bus-pos source_ids for this town
+                result = await session.execute(
+                    text(
+                        "SELECT source_id FROM features "
+                        "WHERE town_id = :town_id "
+                        "AND domain = 'transit' "
+                        "AND source_id LIKE 'bus-pos:%'"
+                    ),
+                    {"town_id": self.town.id},
+                )
+                db_source_ids = {row[0] for row in result.fetchall()}
+
+                # Find stale ones: in DB but not in current active set
+                stale_ids = db_source_ids - active_source_ids
+                if stale_ids:
+                    await session.execute(
+                        text(
+                            "DELETE FROM features "
+                            "WHERE town_id = :town_id "
+                            "AND domain = 'transit' "
+                            "AND source_id = ANY(:stale_ids)"
+                        ),
+                        {
+                            "town_id": self.town.id,
+                            "stale_ids": list(stale_ids),
+                        },
+                    )
+                    await session.commit()
+                    logger.info(
+                        "Cleaned up %d stale bus-pos features (%d active remain).",
+                        len(stale_ids), len(active_source_ids),
+                    )
+        except Exception as exc:
+            logger.warning("Failed to clean up stale bus features: %s", exc)

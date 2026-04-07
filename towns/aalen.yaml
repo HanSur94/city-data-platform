@@ -233,3 +233,13 @@ connectors:
     enabled: true
     config:
       attribution: "OpenStreetMap contributors, ODbL"
+
+  # --- Backlog 999.4: Police reports ---
+
+  - connector_class: PoliceConnector
+    poll_interval_seconds: 1800
+    enabled: true
+    config:
+      rss_url: "https://www.presseportal.de/rss/dienststelle_110969.rss2"
+      max_age_days: 7
+      attribution: "Polizeipraesidium Aalen via Presseportal.de"

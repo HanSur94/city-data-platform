@@ -24,13 +24,13 @@ export function DashboardPanel({
   collapsed,
   onToggle,
 }: DashboardPanelProps) {
-  const { data, loading } = useKpi(town)
+  const { data, loading, refreshing, lastFetched: kpiLastFetched } = useKpi(town)
   const { layerMeta } = useLayerMetadata(town)
 
-  function formatTime(ts: string | null | undefined): string {
+  function formatTime(ts: string | Date | null | undefined): string {
     if (!ts) return '--:--';
     try {
-      const d = new Date(ts);
+      const d = ts instanceof Date ? ts : new Date(ts);
       return d.toLocaleTimeString('de-DE', { hour: '2-digit', minute: '2-digit' });
     } catch { return '--:--'; }
   }
@@ -111,6 +111,7 @@ export function DashboardPanel({
               trend={null}
 
               onSelect={handleSelect}
+              refreshing={refreshing}
               sourceAbbrev={LAYER_METADATA['airQuality']?.sourceAbbrev}
               sourceTimestamp={formatTime(layerMeta['airQuality']?.lastUpdated)}
               dataType={LAYER_METADATA['airQuality']?.dataType}
@@ -124,6 +125,7 @@ export function DashboardPanel({
               trend={null}
 
               onSelect={handleSelect}
+              refreshing={refreshing}
               sourceAbbrev={LAYER_METADATA['water']?.sourceAbbrev}
               sourceTimestamp={formatTime(layerMeta['water']?.lastUpdated)}
               dataType={LAYER_METADATA['water']?.dataType}
@@ -137,6 +139,7 @@ export function DashboardPanel({
               trend={null}
 
               onSelect={handleSelect}
+              refreshing={refreshing}
               sourceAbbrev={LAYER_METADATA['transit']?.sourceAbbrev}
               sourceTimestamp={formatTime(layerMeta['transit']?.lastUpdated)}
               dataType={LAYER_METADATA['transit']?.dataType}
@@ -150,6 +153,7 @@ export function DashboardPanel({
               trend={null}
 
               onSelect={handleSelect}
+              refreshing={refreshing}
               sourceAbbrev={LAYER_METADATA['traffic']?.sourceAbbrev}
               sourceTimestamp={formatTime(layerMeta['traffic']?.lastUpdated)}
               dataType={LAYER_METADATA['traffic']?.dataType}
@@ -163,6 +167,7 @@ export function DashboardPanel({
               trend={null}
 
               onSelect={handleSelect}
+              refreshing={refreshing}
               sourceAbbrev={LAYER_METADATA['energy']?.sourceAbbrev}
               sourceTimestamp={formatTime(layerMeta['energy']?.lastUpdated)}
               dataType={LAYER_METADATA['energy']?.dataType}
@@ -181,6 +186,7 @@ export function DashboardPanel({
                 trend={null}
 
                 onSelect={handleSelect}
+              refreshing={refreshing}
                 sourceAbbrev={LAYER_METADATA['demographics']?.sourceAbbrev}
                 sourceTimestamp={formatTime(layerMeta['demographics']?.lastUpdated)}
                 dataType={LAYER_METADATA['demographics']?.dataType}
@@ -199,6 +205,7 @@ export function DashboardPanel({
                 trend={null}
 
                 onSelect={handleSelect}
+              refreshing={refreshing}
                 sourceAbbrev={LAYER_METADATA['parking']?.sourceAbbrev}
                 sourceTimestamp={formatTime(layerMeta['parking']?.lastUpdated)}
                 dataType={LAYER_METADATA['parking']?.dataType}

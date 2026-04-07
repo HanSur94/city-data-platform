@@ -29,12 +29,25 @@ export default function BusPopup({ feature }: BusPopupProps) {
   const delaySeconds = (props.delay_seconds as number) ?? 0;
   const nextStop = props.next_stop as string | undefined;
   const prevStop = props.prev_stop as string | undefined;
+  const routeType = (props.route_type as number) ?? 3;
+  const scheduledDep = props.scheduled_departure as string | undefined;
+  const scheduledArr = props.scheduled_arrival as string | undefined;
+  const originStop = props.origin_stop as string | undefined;
+  const totalStops = props.total_stops as number | undefined;
+  const progress = (props.progress as number) ?? 0;
+
+  const vehicleType = routeType <= 2 ? 'Zug' : 'Bus';
 
   return (
-    <div className="text-sm space-y-1 max-w-[220px]">
-      <p className="text-[16px] font-semibold leading-tight">
-        Linie {lineName ?? '?'}
-      </p>
+    <div className="text-sm space-y-1 max-w-[240px]">
+      <div className="flex items-center gap-2">
+        <span className="text-[16px] font-semibold leading-tight">
+          Linie {lineName ?? '?'}
+        </span>
+        <span className="text-[11px] px-1.5 py-0.5 rounded bg-slate-100 text-slate-500">
+          {vehicleType}
+        </span>
+      </div>
       {destination && (
         <p className="text-[13px] text-muted-foreground">
           Richtung {destination}
@@ -46,6 +59,17 @@ export default function BusPopup({ feature }: BusPopupProps) {
       >
         {formatDelay(delaySeconds)}
       </p>
+      {(scheduledDep || scheduledArr) && (
+        <div className="text-[12px] text-muted-foreground flex gap-3">
+          {scheduledDep && <span>Abfahrt: {scheduledDep}</span>}
+          {scheduledArr && <span>Ankunft: {scheduledArr}</span>}
+        </div>
+      )}
+      {originStop && (
+        <p className="text-[12px] text-muted-foreground">
+          Von: {originStop}
+        </p>
+      )}
       {prevStop && (
         <p className="text-[13px]">
           Letzter Halt: {prevStop}
@@ -55,6 +79,20 @@ export default function BusPopup({ feature }: BusPopupProps) {
         <p className="text-[13px]">
           Naechster Halt: {nextStop}
         </p>
+      )}
+      {totalStops != null && totalStops > 0 && (
+        <div className="pt-1">
+          <div className="flex items-center gap-2 text-[11px] text-muted-foreground">
+            <span>{Math.round(progress * 100)}%</span>
+            <div className="flex-1 h-1.5 bg-slate-100 rounded-full overflow-hidden">
+              <div
+                className="h-full bg-blue-500 rounded-full transition-all"
+                style={{ width: `${Math.round(progress * 100)}%` }}
+              />
+            </div>
+            <span>{totalStops} Halte</span>
+          </div>
+        </div>
       )}
       <DataSourceSection
         sourceName={LAYER_METADATA['busPosition'].sourceName}

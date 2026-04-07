@@ -62,6 +62,8 @@ _CONNECTOR_MODULES = {
     "CyclingInfraConnector": "app.connectors.cycling",
     # Phase 19: OSM buildings with addresses
     "OsmBuildingsConnector": "app.connectors.osm_buildings",
+    # Backlog 999.4: Police reports
+    "PoliceConnector": "app.connectors.police",
 }
 
 

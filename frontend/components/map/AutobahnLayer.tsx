@@ -1,6 +1,10 @@
 'use client';
-import { Source, Layer } from 'react-map-gl/maplibre';
-import type { SymbolLayerSpecification } from 'react-map-gl/maplibre';
+import { useEffect } from 'react';
+import { Source, Layer, useMap } from 'react-map-gl/maplibre';
+import type {
+  CircleLayerSpecification,
+  SymbolLayerSpecification,
+} from 'react-map-gl/maplibre';
 import { useLayerData } from '@/hooks/useLayerData';
 import type { LayerResponse } from '@/types/geojson';
 import type { Feature } from 'geojson';
@@ -12,7 +16,26 @@ interface AutobahnLayerProps {
 
 const visibility = (v: boolean): 'visible' | 'none' => (v ? 'visible' : 'none');
 
-const autobahnSymbolLayer: SymbolLayerSpecification = {
+// Background circle — orange for roadworks, red for closures
+const circleLayer: CircleLayerSpecification = {
+  id: 'autobahn-markers-bg',
+  type: 'circle',
+  source: 'autobahn',
+  paint: {
+    'circle-radius': 14,
+    'circle-color': [
+      'match',
+      ['get', 'type'],
+      'closure', '#ef4444',
+      '#f97316',
+    ],
+    'circle-stroke-width': 2.5,
+    'circle-stroke-color': '#ffffff',
+  },
+};
+
+// Icon symbol on top of circle — construction/closure icons
+const symbolLayer: SymbolLayerSpecification = {
   id: 'autobahn-markers',
   type: 'symbol',
   source: 'autobahn',
@@ -20,22 +43,20 @@ const autobahnSymbolLayer: SymbolLayerSpecification = {
     'text-field': [
       'match',
       ['get', 'type'],
-      'closure', '✗',
-      '⚠',
+      'closure', '✕',
+      '🔧',
     ],
-    'text-size': 20,
+    'text-size': [
+      'match',
+      ['get', 'type'],
+      'closure', 14,
+      12,
+    ],
     'text-allow-overlap': true,
     visibility: 'visible',
   },
   paint: {
-    'text-color': [
-      'match',
-      ['get', 'type'],
-      'closure', '#ef4444',
-      '#f97316',
-    ],
-    'text-halo-color': '#ffffff',
-    'text-halo-width': 2,
+    'text-color': '#ffffff',
   },
 };
 
@@ -58,8 +79,12 @@ export default function AutobahnLayer({ town, visible }: AutobahnLayerProps) {
   return (
     <Source id="autobahn" type="geojson" data={filtered}>
       <Layer
-        {...autobahnSymbolLayer}
-        layout={{ ...autobahnSymbolLayer.layout, visibility: vis }}
+        {...circleLayer}
+        layout={{ visibility: vis }}
+      />
+      <Layer
+        {...symbolLayer}
+        layout={{ ...symbolLayer.layout, visibility: vis }}
       />
     </Source>
   );

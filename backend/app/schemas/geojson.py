@@ -189,7 +189,7 @@ VALID_DOMAINS: frozenset[str] = frozenset(
     {
         "air_quality", "transit", "weather", "water", "energy",
         "traffic", "community", "infrastructure", "demographics",
-        "buildings",
+        "buildings", "police",
     }
 )
 

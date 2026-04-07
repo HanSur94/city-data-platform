@@ -41,6 +41,10 @@ import ParkingPopup from './ParkingPopup';
 import BusPositionLayer from './BusPositionLayer';
 import BusRouteLayer from './BusRouteLayer';
 import BusPopup from './BusPopup';
+import BusStopLayer from './BusStopLayer';
+import BusStopPopup from './BusStopPopup';
+import PoliceLayer from './PoliceLayer';
+import PolicePopup from './PolicePopup';
 import NoiseWmsLayer from './NoiseWmsLayer';
 import FernwaermeLayer from './FernwaermeLayer';
 import DemographicsGridLayer from './DemographicsGridLayer';
@@ -119,6 +123,7 @@ interface MapViewProps {
   demographicsVisible?: boolean;
   heatDemandVisible?: boolean;
   cyclingVisible?: boolean;
+  policeVisible?: boolean;
   noiseMetric?: 'lden' | 'lnight';
   demographicMetric?: DemographicMetric;
   weatherCondition?: string | null;
@@ -138,7 +143,7 @@ export interface PopupInfo {
   longitude: number;
   latitude: number;
   feature: GeoJSON.Feature;
-  domain: 'transit' | 'airQuality' | 'water' | 'traffic' | 'trafficFlow' | 'autobahn' | 'energy' | 'community' | 'evCharging' | 'roadworks' | 'kocher' | 'parking' | 'busPosition' | 'solarGlow' | 'demographics' | 'heatDemand' | 'cycling' | 'building';
+  domain: 'transit' | 'airQuality' | 'water' | 'traffic' | 'trafficFlow' | 'autobahn' | 'energy' | 'community' | 'evCharging' | 'roadworks' | 'kocher' | 'parking' | 'busPosition' | 'busStop' | 'police' | 'solarGlow' | 'demographics' | 'heatDemand' | 'cycling' | 'building';
 }
 
 export default function MapView({
@@ -174,6 +179,7 @@ export default function MapView({
   demographicsVisible = false,
   heatDemandVisible = false,
   cyclingVisible = false,
+  policeVisible = false,
   noiseMetric = 'lden',
   demographicMetric = 'population',
   weatherCondition = null,
@@ -288,9 +294,9 @@ export default function MapView({
         interactiveLayerIds={[
           'transit-stops', 'aqi-points', 'water-gauges', 'traffic-circles', 'traffic-flow-lines', 'autobahn-markers', 'energy-points', 'kocher-gauge', 'kocher-river-line',
           'community-schools-points', 'community-healthcare-points', 'community-parks-points', 'community-waste-points',
-          'infrastructure-ev-points', 'infrastructure-roadworks-points', 'parking-points', 'bus-position-points',
+          'infrastructure-ev-points', 'infrastructure-roadworks-points', 'parking-points', 'bus-position-points', 'bus-stop-points',
           'solar-glow-points', 'ev-charging-live-points',
-          'heat-demand-points', 'cycling-infra-lines',
+          'heat-demand-points', 'cycling-infra-lines', 'police-reports-bg',
           'buildings-3d',
         ]}
         onClick={(e) => {
@@ -321,6 +327,10 @@ export default function MapView({
             ? 'energy'
             : layerId === 'bus-position-points'
             ? 'busPosition'
+            : layerId === 'bus-stop-points'
+            ? 'busStop'
+            : layerId === 'police-reports-bg'
+            ? 'police'
             : layerId === 'parking-points'
             ? 'parking'
             : layerId === 'infrastructure-ev-points'
@@ -400,6 +410,10 @@ export default function MapView({
         {parkingVisible && (
           <ParkingLayer town={town} visible={true} />
         )}
+        {policeVisible && (
+          <PoliceLayer town={town} visible={true} />
+        )}
+        <BusStopLayer town={town} visible={busPositionVisible} />
         <BusRouteLayer town={town} visible={busPositionVisible} />
         <BusPositionLayer
           town={town}
@@ -460,6 +474,10 @@ export default function MapView({
               <CommunityPopup feature={popupInfo.feature} />
             ) : popupInfo.domain === 'evCharging' ? (
               <EvChargingPopup feature={popupInfo.feature} />
+            ) : popupInfo.domain === 'busStop' ? (
+              <BusStopPopup feature={popupInfo.feature} />
+            ) : popupInfo.domain === 'police' ? (
+              <PolicePopup feature={popupInfo.feature} />
             ) : popupInfo.domain === 'busPosition' ? (
               <BusPopup feature={popupInfo.feature} />
             ) : popupInfo.domain === 'parking' ? (

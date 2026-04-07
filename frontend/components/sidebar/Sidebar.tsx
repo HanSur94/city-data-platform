@@ -39,6 +39,7 @@ interface SidebarProps {
     healthcare?: boolean;
     parks?: boolean;
     waste?: boolean;
+    police?: boolean;
     evCharging?: boolean;
     roadworks?: boolean;
     solarPotential?: boolean;
@@ -53,7 +54,7 @@ interface SidebarProps {
     heatDemand?: boolean;
     cycling?: boolean;
   };
-  onToggleLayer: (layer: 'transit' | 'airQuality' | 'water' | 'floodHazard' | 'railNoise' | 'lubwEnv' | 'traffic' | 'autobahn' | 'mobiData' | 'energy' | 'schools' | 'healthcare' | 'parks' | 'waste' | 'evCharging' | 'roadworks' | 'solarPotential' | 'trafficFlow' | 'cadastral' | 'hillshade' | 'buildings3d' | 'kocher' | 'parking' | 'busPosition' | 'solarGlow' | 'roadNoise' | 'fernwaerme' | 'demographics' | 'heatDemand' | 'cycling') => void;
+  onToggleLayer: (layer: 'transit' | 'airQuality' | 'water' | 'floodHazard' | 'railNoise' | 'lubwEnv' | 'traffic' | 'autobahn' | 'mobiData' | 'energy' | 'schools' | 'healthcare' | 'parks' | 'waste' | 'police' | 'evCharging' | 'roadworks' | 'solarPotential' | 'trafficFlow' | 'cadastral' | 'hillshade' | 'buildings3d' | 'kocher' | 'parking' | 'busPosition' | 'solarGlow' | 'roadNoise' | 'fernwaerme' | 'demographics' | 'heatDemand' | 'cycling') => void;
   transitError?: boolean;
   airQualityError?: boolean;
   trafficError?: boolean;
@@ -374,6 +375,14 @@ export default function Sidebar({ town, onFeatureSelect, layerVisibility, onTogg
           isStale={layerMeta['waste']?.isStale}
           metadata={LAYER_METADATA['waste']}
           lastUpdated={layerMeta['waste']?.lastUpdated}
+        />
+        <LayerToggle
+          id="police-toggle"
+          label="Polizeimeldungen"
+          checked={layerVisibility.police ?? false}
+          onCheckedChange={() => onToggleLayer('police')}
+          layerKey="police"
+          dataType="SCRAPED"
         />
         <LayerToggle
           id="demographics-toggle"
