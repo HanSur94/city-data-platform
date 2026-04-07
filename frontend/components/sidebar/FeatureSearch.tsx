@@ -2,6 +2,8 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { Search } from 'lucide-react';
 
+const API_BASE = process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:8000';
+
 export interface SearchResult {
   id: string;
   semantic_id: string | null;
@@ -48,7 +50,7 @@ export default function FeatureSearch({ town, onSelect }: FeatureSearchProps) {
       setLoading(true);
       try {
         const res = await fetch(
-          `/api/features/search?q=${encodeURIComponent(q)}&town=${encodeURIComponent(town)}`,
+          `${API_BASE}/api/features/search?q=${encodeURIComponent(q)}&town=${encodeURIComponent(town)}`,
         );
         if (!res.ok) {
           setResults([]);

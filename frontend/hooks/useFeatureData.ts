@@ -1,6 +1,8 @@
 'use client';
 import { useEffect, useState } from 'react';
 
+const API_BASE = process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:8000';
+
 export interface FeatureData {
   feature_id: string;
   semantic_id: string | null;
@@ -33,7 +35,7 @@ export function useFeatureData(featureId: string | null): UseFeatureDataResult {
     setError(null);
     setData(null);
 
-    fetch(`/api/features/${encodeURIComponent(featureId)}/data`)
+    fetch(`${API_BASE}/api/features/${encodeURIComponent(featureId)}/data`)
       .then(async (res) => {
         if (res.status === 404) return null;
         if (!res.ok) throw new Error(`Fehler beim Laden (${res.status})`);
@@ -86,7 +88,7 @@ export function useFeatureDataAtPoint(
     setError(null);
     setData(null);
 
-    fetch(`/api/features/at?lng=${lng}&lat=${lat}&town=${encodeURIComponent(town)}`)
+    fetch(`${API_BASE}/api/features/at?lng=${lng}&lat=${lat}&town=${encodeURIComponent(town)}`)
       .then(async (res) => {
         if (res.status === 404) return null;
         if (!res.ok) throw new Error(`Fehler (${res.status})`);
