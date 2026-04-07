@@ -322,7 +322,7 @@ async def get_kpi(
                     SUM((properties->>'free_spots')::int) AS total_free,
                     SUM((properties->>'total_spots')::int) AS total_capacity,
                     COUNT(*) AS garage_count,
-                    MAX(updated_at) AS last_updated
+                    MAX(created_at) AS last_updated
                 FROM features
                 WHERE town_id = :town_id
                   AND domain = 'infrastructure'
