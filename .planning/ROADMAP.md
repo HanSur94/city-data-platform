@@ -224,6 +224,17 @@ Implement all missing features from the AalenPulse requirements document to reac
 - **Plans:** 0 plans
   - [ ] TBD (promote with /gsd:review-backlog when ready)
 
+### Phase 999.6: KPI Live Timestamps & Loading Spinners (BACKLOG)
+- **Goal:** Show latest fetch timestamp on each KPI card in the right sidebar, and add a spinning/circling loading indicator when data is being fetched from the datasource.
+- **Requirements:**
+  - Each KPI card in right sidebar shows the timestamp of the latest fetched data (e.g. "14:32")
+  - Add a spinning/circling animation on each KPI card while data is being fetched/refreshed
+  - Spinner appears on initial load and on each periodic refresh cycle
+  - Spinner disappears once data arrives, replaced by the fresh timestamp
+- **Status:** Backlog
+- **Plans:** 0 plans
+  - [ ] TBD (promote with /gsd:review-backlog when ready)
+
 ### Phase 999.5: Route Driven vs Remaining Line Style (BACKLOG)
 - **Goal:** Differentiate already-driven and still-to-drive portions of bus/train routes with distinct line styles on the map.
 - **Requirements:**
