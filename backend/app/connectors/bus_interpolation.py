@@ -374,8 +374,8 @@ class BusInterpolationConnector(BaseConnector):
         config (``gtfs_url_fallback``). Adds ``follow_redirects`` and a
         ``User-Agent`` header for resilience against server-side blocks.
         """
-        url_hash = hashlib.md5(url.encode()).hexdigest()[:12]
-        cache_path = Path(tempfile.gettempdir()) / f"gtfs_cache_{url_hash}.zip"
+        # Use shared cache path with GTFSConnector
+        cache_path = Path("/tmp/gtfs_cache.zip")
 
         if cache_path.exists():
             age = time.time() - cache_path.stat().st_mtime
@@ -396,7 +396,7 @@ class BusInterpolationConnector(BaseConnector):
         for attempt_url in urls_to_try:
             try:
                 async with httpx.AsyncClient(
-                    timeout=120.0,
+                    timeout=600.0,
                     follow_redirects=True,
                     headers=headers,
                 ) as client:

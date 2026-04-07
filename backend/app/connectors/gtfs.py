@@ -36,9 +36,18 @@ class GTFSConnector(BaseConnector):
             ValueError: If the response is empty (len == 0).
             httpx.HTTPError: On network failure or non-2xx response.
         """
+        import os
         url = self.config.config["gtfs_url"]
+        cache_path = Path("/tmp/gtfs_cache.zip")
+
+        # Use cached file if less than 24h old
+        if cache_path.exists():
+            age_hours = (Path(cache_path).stat().st_mtime - __import__('time').time()) / -3600
+            if age_hours < 24:
+                return cache_path.read_bytes()
+
         async with httpx.AsyncClient(
-            timeout=120.0,
+            timeout=600.0,
             follow_redirects=True,
             headers={"User-Agent": "CityDataPlatform/2.0"},
         ) as client:
@@ -47,6 +56,9 @@ class GTFSConnector(BaseConnector):
             raw = response.content
         if len(raw) == 0:
             raise ValueError(f"Empty response from GTFS URL: {url}")
+
+        # Cache for other connectors (BusInterpolationConnector)
+        cache_path.write_bytes(raw)
         return raw
 
     def normalize(self, raw: bytes) -> list[Observation]:
