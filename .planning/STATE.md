@@ -107,9 +107,10 @@ None yet.
 | 260407-pft | Bus position layer visual overhaul: per-line colors, train/bus distinction, sidebar line filter | 2026-04-07 | d120c78 | [260407-pft-bus-position-layer-visual-overhaul-per-l](./quick/260407-pft-bus-position-layer-visual-overhaul-per-l/) |
 | 260407-sgj | Bus popup shows prev/next stations; fix map re-render when following bus | 2026-04-07 | d4d2c9a | [260407-sgj-bus-click-show-prev-next-stations-fix-ma](./quick/260407-sgj-bus-click-show-prev-next-stations-fix-ma/) |
 | 260408-dbq | Ensure all real bus stops (Haltestellen) appear on map with route info | 2026-04-08 | 8514732 | [260408-dbq-ensure-all-real-bus-stops-haltestellen-f](./quick/260408-dbq-ensure-all-real-bus-stops-haltestellen-f/) |
+| 260408-fm8 | Make buses rectangular-shaped on map: rotated rectangle symbol, stop color fix | 2026-04-08 | bccab62 | [260408-fm8-make-buses-rectangular-shaped-on-map-bus](./quick/260408-fm8-make-buses-rectangular-shaped-on-map-bus/) |
 
 ## Session Continuity
 
-Last session: 2026-04-08T07:47:11.332Z
-Stopped at: Completed quick task 260408-dbq: Ensure all real bus stops (Haltestellen) appear on map
+Last session: 2026-04-08T08:00:00.000Z
+Stopped at: Completed quick task 260408-fm8: Make buses rectangular-shaped on map
 Resume file: None
