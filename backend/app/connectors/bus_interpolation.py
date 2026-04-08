@@ -301,16 +301,43 @@ class BusInterpolationConnector(BaseConnector):
         # 5. Fetch delays from DB
         delays = await self._fetch_delays([t.trip_id for t in active_trips])
 
-        # 6. Interpolate and upsert
-        active_source_ids: set[str] = set()
-        observations: list[Observation] = []
-
+        # 6. Interpolate positions
+        all_positions: list[tuple[ActiveTrip, BusPosition]] = []
         for trip in active_trips:
             trip.delay_seconds = delays.get(trip.trip_id, 0)
             pos = interpolate_position(trip, now_secs)
             if pos is None:
                 continue
+            all_positions.append((trip, pos))
 
+        # 6a. Deduplicate: keep only 1 bus per route+direction
+        # For each (route_id, destination), keep the trip with progress closest
+        # to mid-route (most visible/useful position). This avoids showing 3-4
+        # buses per line when the GTFS feed has overlapping 20-min frequency trips.
+        best_per_route: dict[tuple[str, str], tuple[ActiveTrip, BusPosition]] = {}
+        for trip, pos in all_positions:
+            key = (pos.route_id, pos.destination)
+            if key not in best_per_route:
+                best_per_route[key] = (trip, pos)
+            else:
+                _, existing_pos = best_per_route[key]
+                # Prefer the trip that is most actively in transit (closest to 0.5 progress)
+                # Among departed trips, prefer the one furthest from endpoints
+                existing_score = abs(existing_pos.progress - 0.5) if existing_pos.departed else 1.0
+                new_score = abs(pos.progress - 0.5) if pos.departed else 1.0
+                if new_score < existing_score:
+                    best_per_route[key] = (trip, pos)
+
+        logger.info(
+            "Deduplicated %d positions to %d (1 per route+direction).",
+            len(all_positions), len(best_per_route),
+        )
+
+        # 6b. Upsert deduplicated positions
+        active_source_ids: set[str] = set()
+        observations: list[Observation] = []
+
+        for trip, pos in best_per_route.values():
             source_id = f"bus-pos:{trip.trip_id}"
             active_source_ids.add(source_id)
             wkt = f"POINT({pos.lon} {pos.lat})"
