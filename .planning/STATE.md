@@ -28,7 +28,7 @@ See: .planning/PROJECT.md (updated 2026-04-06)
 Phase: 20
 Plan: Not started
 Status: Phase complete — ready for verification
-Last activity: 2026-04-07 - Completed quick task 260407-mwh: Fix transit layer performance and air quality SQL bug
+Last activity: 2026-04-08 - Completed quick task 260408-fm8: Make buses rectangular shaped on map, bus stops get colored dots
 
 Progress: [██░░░░░░░░] 14%
 
