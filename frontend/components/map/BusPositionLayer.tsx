@@ -2,7 +2,6 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { Source, Layer, useMap } from 'react-map-gl/maplibre';
 import type {
-  CircleLayerSpecification,
   SymbolLayerSpecification,
   LineLayerSpecification,
 } from 'react-map-gl/maplibre';
@@ -292,6 +291,39 @@ export default function BusPositionLayer({
   // This avoids React state updates (and thus re-renders) on every animation frame.
   const { current: mapInstance } = useMap();
 
+  // Register custom 'bus-rect' SDF image once the map instance is available.
+  // SDF mode allows icon-color to tint the white shape with per-feature colors.
+  useEffect(() => {
+    const map = mapInstance?.getMap();
+    if (!map) return;
+    if (map.hasImage('bus-rect')) return;
+
+    const size = { w: 24, h: 12 };
+    const canvas = document.createElement('canvas');
+    canvas.width = size.w;
+    canvas.height = size.h;
+    const ctx = canvas.getContext('2d')!;
+
+    // Rounded rectangle body (white fill — tinted at render time via icon-color in SDF mode)
+    const r = 3;
+    ctx.beginPath();
+    ctx.moveTo(r, 0);
+    ctx.lineTo(size.w - r, 0);
+    ctx.quadraticCurveTo(size.w, 0, size.w, r);
+    ctx.lineTo(size.w, size.h - r);
+    ctx.quadraticCurveTo(size.w, size.h, size.w - r, size.h);
+    ctx.lineTo(r, size.h);
+    ctx.quadraticCurveTo(0, size.h, 0, size.h - r);
+    ctx.lineTo(0, r);
+    ctx.quadraticCurveTo(0, 0, r, 0);
+    ctx.closePath();
+    ctx.fillStyle = '#ffffff';
+    ctx.fill();
+
+    const imageData = ctx.getImageData(0, 0, size.w, size.h);
+    map.addImage('bus-rect', imageData, { sdf: true });
+  }, [mapInstance]);
+
   const animate = useCallback(() => {
     const elapsed = performance.now() - animStartRef.current;
     const t = Math.min(1, elapsed / ANIMATION_DURATION);
@@ -396,30 +428,39 @@ export default function BusPositionLayer({
   // Suppress unused variable warning — colorMatchExpr available for future use
   void colorMatchExpr;
 
-  // Circle layer with per-line colors and delay-based stroke
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const circleLayer = {
+  // Symbol layer: rotated rectangle pointing in direction of travel, tinted by line color.
+  // SDF image 'bus-rect' is registered in the useEffect above.
+  const symbolLayer = {
     id: 'bus-position-points',
-    type: 'circle',
+    type: 'symbol',
     source: 'bus-positions',
-    layout: { visibility: vis },
+    layout: {
+      visibility: vis,
+      'icon-image': 'bus-rect',
+      // Trains (route_type 0,1,2) slightly larger icon; buses (3) standard size
+      'icon-size': ['match', ['get', 'route_type'], 0, 1.4, 1, 1.4, 2, 1.4, 1.0] as unknown,
+      // Rotate rectangle to face direction of travel (bearing property from backend)
+      'icon-rotate': ['get', 'bearing'] as unknown,
+      'icon-rotation-alignment': 'map',
+      'icon-allow-overlap': true,
+      'icon-ignore-placement': true,
+    },
     paint: {
-      'circle-color': ['get', '_color'],
-      // Trains (route_type 0,1,2) get radius 10; buses (3) get 8
-      'circle-radius': ['match', ['get', 'route_type'], 0, 10, 1, 10, 2, 10, 8],
-      'circle-stroke-width': ['match', ['get', 'route_type'], 0, 3, 1, 3, 2, 3, 2],
-      // Delay indicated via stroke color: green/yellow/orange/red
-      'circle-stroke-color': [
+      // SDF tinting: white image gets tinted with the per-line color
+      'icon-color': ['get', '_color'] as unknown,
+      // Delay indication via icon halo: green → yellow → orange → red
+      'icon-halo-color': [
         'step',
         ['coalesce', ['get', 'delay_seconds'], 0],
         '#22c55e',
         120, '#eab308',
         300, '#f97316',
         600, '#ef4444',
-      ],
+      ] as unknown,
+      'icon-halo-width': 2,
     },
     ...(hiddenFilter ? { filter: hiddenFilter } : {}),
-  } as CircleLayerSpecification;
+  } as SymbolLayerSpecification;
 
   const labelLayer = {
     id: 'bus-line-labels',
@@ -481,7 +522,7 @@ export default function BusPositionLayer({
         <Layer {...remainingLineLayer} />
       </Source>
       <Source id="bus-positions" type="geojson" data={positions}>
-        <Layer {...circleLayer} />
+        <Layer {...symbolLayer} />
         <Layer {...labelLayer} />
       </Source>
     </>
