@@ -480,7 +480,11 @@ export default function MapView({
             ) : popupInfo.domain === 'kocher' ? (
               <KocherPopup feature={popupInfo.feature} />
             ) : popupInfo.domain === 'trafficFlow' ? (
-              <TrafficFlowPopup feature={popupInfo.feature} />
+              <TrafficFlowPopup
+                feature={popupInfo.feature}
+                featureId={String(popupInfo.feature.properties?.feature_id ?? popupInfo.feature.id ?? '')}
+                town={town}
+              />
             ) : popupInfo.domain === 'traffic' ? (
               <TrafficPopup feature={popupInfo.feature} lastFetched={null} />
             ) : popupInfo.domain === 'autobahn' ? (
