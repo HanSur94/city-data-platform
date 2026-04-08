@@ -29,13 +29,13 @@ const stopCircleLayer: CircleLayerSpecification = {
   type: 'circle',
   source: 'bus-stops',
   paint: {
-    'circle-radius': 5,
+    'circle-radius': 6,
     'circle-color': [
       'match',
       ['get', 'route_type_color'],
-      '#1565c0', '#1565c0',
-      '#c62828', '#c62828',
-      '#2e7d32', '#2e7d32',
+      'bus',   '#1565c0',
+      'train', '#c62828',
+      'tram',  '#2e7d32',
       '#9ca3af',
     ],
     'circle-stroke-width': 1.5,
