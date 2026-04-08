@@ -95,7 +95,7 @@ None yet.
 
 ### Blockers/Concerns
 
-- TomTom API key needed for Phase 11 (traffic flow)
+- ~~TomTom API key needed for Phase 11 (traffic flow)~~ — resolved: .env + config.py env var resolution (260408-hyd)
 - LHP gauge ident for Huttlingen needs lookup at implementation
 - sw-aalen.de parking page structure may change — scraper fragility
 
