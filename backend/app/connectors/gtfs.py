@@ -101,7 +101,67 @@ class GTFSConnector(BaseConnector):
                 & feed.stops.stop_lon.between(bbox.lon_min, bbox.lon_max)
             ]
 
+        # --- Build stop_id -> route info mapping ---
+        # Route type codes: 0=tram, 1=metro, 2=rail/train, 3=bus, 700-799=bus, 900-999=tram
+        ROUTE_TYPE_COLOR = {
+            "train": "#c62828",
+            "tram": "#2e7d32",
+            "bus": "#1565c0",
+        }
+
+        def _route_type_name(route_type: int) -> str:
+            if route_type in (2, 100, 101, 102, 103, 104, 105, 106, 107, 108, 109):
+                return "train"
+            if route_type in (0, 900, 901, 902, 903, 904, 905, 906):
+                return "tram"
+            return "bus"
+
+        stop_routes: dict[str, set[str]] = {}
+        stop_route_types: dict[str, set[int]] = {}
+
+        if (
+            hasattr(feed, "stop_times") and feed.stop_times is not None and not feed.stop_times.empty
+            and hasattr(feed, "trips") and feed.trips is not None and not feed.trips.empty
+            and hasattr(feed, "routes") and feed.routes is not None and not feed.routes.empty
+        ):
+            try:
+                # Only consider stops within bbox
+                bbox_stop_ids = set(
+                    stops.stop_id.tolist() if hasattr(stops, "stop_id") else []
+                )
+                # Merge stop_times -> trips -> routes
+                st = feed.stop_times[["stop_id", "trip_id"]]
+                tr = feed.trips[["trip_id", "route_id"]]
+                ro = feed.routes[["route_id", "route_short_name", "route_type"]]
+                merged = st.merge(tr, on="trip_id").merge(ro, on="route_id")
+                # Filter to bbox stops
+                merged = merged[merged.stop_id.isin(bbox_stop_ids)]
+                for _, mrow in merged.iterrows():
+                    sid = str(mrow.stop_id)
+                    rname = str(mrow.route_short_name) if mrow.route_short_name else ""
+                    if rname:
+                        stop_routes.setdefault(sid, set()).add(rname)
+                    try:
+                        rt = int(mrow.route_type)
+                    except (ValueError, TypeError):
+                        rt = 3
+                    stop_route_types.setdefault(sid, set()).add(rt)
+            except Exception:
+                pass  # route enrichment is best-effort; proceed without it
+
         for row in (stops.itertuples(index=False) if hasattr(stops, "itertuples") else []):
+            sid = str(row.stop_id)
+            route_names_str = ",".join(sorted(stop_routes.get(sid, set())))
+            # Dominant route type: prefer train > tram > bus
+            rtypes = stop_route_types.get(sid, set())
+            if any(_route_type_name(rt) == "train" for rt in rtypes):
+                dominant = "train"
+            elif any(_route_type_name(rt) == "tram" for rt in rtypes):
+                dominant = "tram"
+            elif rtypes:
+                dominant = "bus"
+            else:
+                dominant = "bus"
             observations.append(
                 Observation(
                     feature_id="PENDING",
@@ -113,6 +173,8 @@ class GTFSConnector(BaseConnector):
                         "stop_name": row.stop_name,
                         "lat": float(row.stop_lat),
                         "lon": float(row.stop_lon),
+                        "route_names": route_names_str,
+                        "route_type_color": ROUTE_TYPE_COLOR[dominant],
                     },
                 )
             )
