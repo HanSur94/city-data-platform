@@ -1,6 +1,9 @@
 'use client';
 import { Source, Layer } from 'react-map-gl/maplibre';
-import type { CircleLayerSpecification } from 'react-map-gl/maplibre';
+import type {
+  CircleLayerSpecification,
+  SymbolLayerSpecification,
+} from 'react-map-gl/maplibre';
 import { useLayerData } from '@/hooks/useLayerData';
 import type { FeatureCollection, Feature } from 'geojson';
 import { useMemo } from 'react';
@@ -26,10 +29,35 @@ const stopCircleLayer: CircleLayerSpecification = {
   type: 'circle',
   source: 'bus-stops',
   paint: {
-    'circle-radius': 4,
-    'circle-color': '#9ca3af',
+    'circle-radius': 5,
+    'circle-color': [
+      'match',
+      ['get', 'route_type_color'],
+      '#1565c0', '#1565c0',
+      '#c62828', '#c62828',
+      '#2e7d32', '#2e7d32',
+      '#9ca3af',
+    ],
     'circle-stroke-width': 1.5,
     'circle-stroke-color': '#ffffff',
+  },
+};
+
+const stopLabelLayer: SymbolLayerSpecification = {
+  id: 'bus-stop-labels',
+  type: 'symbol',
+  source: 'bus-stops',
+  minzoom: 14,
+  layout: {
+    'text-field': ['get', 'stop_name'],
+    'text-font': ['Noto Sans Regular'],
+    'text-size': 11,
+    'text-offset': [0, 1.5],
+    'text-allow-overlap': false,
+  },
+  paint: {
+    'text-halo-color': '#ffffff',
+    'text-halo-width': 1,
   },
 };
 
@@ -46,6 +74,7 @@ export default function BusStopLayer({ town, visible }: BusStopLayerProps) {
   return (
     <Source id="bus-stops" type="geojson" data={stopsData}>
       <Layer {...stopCircleLayer} layout={{ visibility: vis }} />
+      <Layer {...stopLabelLayer} layout={{ ...stopLabelLayer.layout, visibility: vis }} />
     </Source>
   );
 }
