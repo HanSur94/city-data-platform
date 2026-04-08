@@ -239,8 +239,19 @@ export default function MapView({
   }, [buildings3dVisible]);
 
   const [popupInfo, setPopupInfo] = useState<PopupInfo | null>(null);
+  const [followedTripId, setFollowedTripId] = useState<string | null>(null);
+
+  // Cancel follow when user drags/pans the map
+  useEffect(() => {
+    const map = mapRef.current?.getMap();
+    if (!map) return;
+    const cancel = () => setFollowedTripId(null);
+    map.on('dragstart', cancel);
+    return () => { map.off('dragstart', cancel); };
+  });
 
   // Track bus popup position — update coordinates as the bus dot animates
+  // Also center the map on the entity when followedTripId is set
   useEffect(() => {
     if (!popupInfo || popupInfo.domain !== 'busPosition') return;
     const tripId = popupInfo.feature.properties?.trip_id;
@@ -266,12 +277,20 @@ export default function MapView({
           }
           return { ...prev, longitude: lng, latitude: lat, feature: features[0] as GeoJSON.Feature };
         });
+
+        // Center map on followed entity (smooth, no zoom change)
+        if (followedTripId === tripId) {
+          const center = map.getCenter();
+          if (Math.abs(center.lng - lng) > 0.00001 || Math.abs(center.lat - lat) > 0.00001) {
+            map.easeTo({ center: [lng, lat], duration: 300 });
+          }
+        }
       }
       raf = requestAnimationFrame(track);
     };
     raf = requestAnimationFrame(track);
     return () => cancelAnimationFrame(raf);
-  }, [popupInfo?.domain, popupInfo?.feature.properties?.trip_id]);
+  }, [popupInfo?.domain, popupInfo?.feature.properties?.trip_id, followedTripId]);
 
   // Look up the pre-built singleton style — guaranteed stable reference.
   const mapStyle = MAP_STYLES[baseLayer];
@@ -442,7 +461,7 @@ export default function MapView({
           <Popup
             longitude={popupInfo.longitude}
             latitude={popupInfo.latitude}
-            onClose={() => setPopupInfo(null)}
+            onClose={() => { setPopupInfo(null); setFollowedTripId(null); }}
             closeOnClick={false}
             maxWidth="320px"
             anchor="bottom"
@@ -479,7 +498,14 @@ export default function MapView({
             ) : popupInfo.domain === 'police' ? (
               <PolicePopup feature={popupInfo.feature} />
             ) : popupInfo.domain === 'busPosition' ? (
-              <BusPopup feature={popupInfo.feature} />
+              <BusPopup
+                feature={popupInfo.feature}
+                isFollowing={followedTripId === popupInfo.feature.properties?.trip_id}
+                onToggleFollow={() => {
+                  const tripId = popupInfo.feature.properties?.trip_id;
+                  setFollowedTripId(prev => prev === tripId ? null : tripId);
+                }}
+              />
             ) : popupInfo.domain === 'parking' ? (
               <ParkingPopup feature={popupInfo.feature} />
             ) : popupInfo.domain === 'roadworks' ? (

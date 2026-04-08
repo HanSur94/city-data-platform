@@ -6,6 +6,8 @@ import type { Feature } from 'geojson';
 
 interface BusPopupProps {
   feature: Feature;
+  isFollowing?: boolean;
+  onToggleFollow?: () => void;
 }
 
 function delayColor(seconds: number): string {
@@ -21,7 +23,7 @@ function formatDelay(seconds: number): string {
   return `+${minutes} Min`;
 }
 
-export default function BusPopup({ feature }: BusPopupProps) {
+export default function BusPopup({ feature, isFollowing = false, onToggleFollow }: BusPopupProps) {
   const props = feature.properties ?? {};
   const featureId = (props.feature_id as string) ?? (feature.id as string) ?? null;
   const lineName = props.line_name as string | undefined;
@@ -93,6 +95,18 @@ export default function BusPopup({ feature }: BusPopupProps) {
             <span>{totalStops} Halte</span>
           </div>
         </div>
+      )}
+      {onToggleFollow && (
+        <button
+          onClick={onToggleFollow}
+          className={`w-full mt-1 px-2 py-1 text-[12px] font-medium rounded border transition-colors ${
+            isFollowing
+              ? 'bg-blue-500 text-white border-blue-500 hover:bg-blue-600'
+              : 'bg-white text-slate-600 border-slate-300 hover:bg-slate-50'
+          }`}
+        >
+          {isFollowing ? 'Folgen beenden' : 'Folgen'}
+        </button>
       )}
       <DataSourceSection
         sourceName={LAYER_METADATA['busPosition'].sourceName}
