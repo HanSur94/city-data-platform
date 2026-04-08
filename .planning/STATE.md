@@ -110,9 +110,10 @@ None yet.
 | 260408-fm8 | Make buses rectangular-shaped on map: rotated rectangle symbol, stop color fix | 2026-04-08 | bccab62 | [260408-fm8-make-buses-rectangular-shaped-on-map-bus](./quick/260408-fm8-make-buses-rectangular-shaped-on-map-bus/) |
 | 260408-hyd | Set up TomTom env var resolution: ${VAR} substitution in YAML config, .env.example, Docker wiring | 2026-04-08 | 805c59c | [260408-hyd-set-up-tomtom-traffic-busyness-integrati](./quick/260408-hyd-set-up-tomtom-traffic-busyness-integrati/) |
 | 260408-jiz | Batch upsert features to unblock asyncio event loop: batch_upsert_features on BaseConnector, migrate GTFS/BusInterpolation/GTFSRealtime | 2026-04-08 | 86d4ebd | [260408-jiz-batch-upsert-features-to-unblock-asyncio](./quick/260408-jiz-batch-upsert-features-to-unblock-asyncio/) |
+| 260408-kqo | TomTom traffic time-series chart: 24h speed+congestion dual-line chart in TrafficFlowPopup | 2026-04-08 | 83c0865 | [260408-kqo-tomtom-traffic-time-series-chart-congest](./quick/260408-kqo-tomtom-traffic-time-series-chart-congest/) |
 
 ## Session Continuity
 
-Last session: 2026-04-08T11:00:08Z
-Stopped at: Completed quick task 260408-jiz: Batch upsert features to unblock asyncio
+Last session: 2026-04-08T12:00:00Z
+Stopped at: Completed quick task 260408-kqo: TomTom traffic time-series chart in popup
 Resume file: None
