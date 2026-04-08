@@ -11,6 +11,7 @@ Usage in main.py lifespan:
     scheduler.shutdown()
 """
 from __future__ import annotations
+import asyncio
 import importlib
 import logging
 from datetime import datetime, timezone
@@ -111,11 +112,6 @@ def setup_scheduler(town: Town) -> None:
             continue
 
         trigger = IntervalTrigger(seconds=connector_cfg.poll_interval_seconds)
-        # Fire immediately on startup for long-interval connectors (>= 1 hour)
-        # so features populate right away instead of waiting the full interval.
-        run_now = None
-        if connector_cfg.poll_interval_seconds >= 3600:
-            run_now = datetime.now(timezone.utc)
 
         scheduler.add_job(
             _run_connector,
@@ -125,7 +121,7 @@ def setup_scheduler(town: Town) -> None:
             coalesce=True,     # collapse missed runs into one
             id=f"{town.id}_{connector_cfg.connector_class}",
             replace_existing=True,
-            next_run_time=run_now,  # fire immediately for long-interval connectors
+            next_run_time=datetime.now(timezone.utc),  # fire all connectors immediately on startup
         )
         logger.info(
             "Scheduled %s every %ds",

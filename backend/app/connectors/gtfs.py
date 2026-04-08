@@ -179,6 +179,26 @@ class GTFSConnector(BaseConnector):
                 )
             )
 
+        # --- Build shape_id -> route info mapping ---
+        shape_route_info: dict[str, tuple[str, str]] = {}  # shape_id -> (route_type_color_name, route_short_name)
+        if (
+            hasattr(feed, "trips") and feed.trips is not None and not feed.trips.empty
+            and hasattr(feed, "routes") and feed.routes is not None and not feed.routes.empty
+        ):
+            try:
+                tr = feed.trips[["shape_id", "route_id"]].dropna(subset=["shape_id"]).drop_duplicates("shape_id")
+                ro = feed.routes[["route_id", "route_type", "route_short_name"]]
+                merged = tr.merge(ro, on="route_id")
+                for _, mrow in merged.iterrows():
+                    try:
+                        rt = int(mrow.route_type)
+                    except (ValueError, TypeError):
+                        rt = 3
+                    rname = str(mrow.route_short_name) if mrow.route_short_name else ""
+                    shape_route_info[str(mrow.shape_id)] = (_route_type_name(rt), rname)
+            except Exception:
+                pass  # best-effort
+
         # --- Shapes (LineString features) ---
         if hasattr(feed, "shapes") and feed.shapes is not None and not feed.shapes.empty:
             for shape_id, group in feed.shapes.groupby("shape_id"):
@@ -195,6 +215,8 @@ class GTFSConnector(BaseConnector):
                     for row in pts.itertuples(index=False)
                 )
                 wkt = f"LINESTRING({coords})"
+                sid = str(shape_id)
+                rt_name, rt_short = shape_route_info.get(sid, ("bus", ""))
                 observations.append(
                     Observation(
                         feature_id="PENDING",
@@ -204,6 +226,8 @@ class GTFSConnector(BaseConnector):
                             "geometry_type": "LineString",
                             "feature_type": "shape",
                             "linestring_wkt": wkt,
+                            "route_type_color": rt_name,
+                            "route_short_name": rt_short,
                         },
                     )
                 )

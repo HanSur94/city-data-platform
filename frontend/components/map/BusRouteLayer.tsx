@@ -31,9 +31,22 @@ const routeLineLayer: LineLayerSpecification = {
     'line-join': 'round',
   },
   paint: {
-    'line-color': '#6366f1',
-    'line-opacity': 0.25,
-    'line-width': 2,
+    'line-color': [
+      'match',
+      ['get', 'route_type_color'],
+      'bus',   '#1565c0',
+      'train', '#c62828',
+      'tram',  '#2e7d32',
+      '#9ca3af',  // fallback gray
+    ] as unknown as string,
+    'line-opacity': 0.35,
+    'line-width': [
+      'match',
+      ['get', 'route_type_color'],
+      'train', 3,
+      'tram',  2.5,
+      2,  // bus default
+    ] as unknown as number,
   },
 };
 

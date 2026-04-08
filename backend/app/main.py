@@ -4,6 +4,7 @@ On startup, loads and validates the town config identified by the TOWN
 environment variable (default: "aalen"). Fails fast on missing or invalid config.
 After town and DB are ready, starts APScheduler with all enabled connectors.
 """
+import json
 import os
 from contextlib import asynccontextmanager
 from pathlib import Path
@@ -11,7 +12,10 @@ from pathlib import Path
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
+from sqlalchemy import text
+
 from app.config import load_town, Town
+from app.db import AsyncSessionLocal
 from app.dependencies import set_current_town, get_current_town
 from app.scheduler import scheduler, setup_scheduler
 from app.routers import layers, timeseries, kpi, connectors, admin, metadata, features
@@ -26,6 +30,22 @@ async def lifespan(app: FastAPI):
     town = load_town(town_id, towns_dir=towns_dir)
     set_current_town(town)
     print(f"[startup] Loaded town config: {town.display_name} ({town.id})")
+
+    # Ensure town row exists in database (required FK for features/sources)
+    async with AsyncSessionLocal() as session:
+        bbox = [town.bbox.lon_min, town.bbox.lat_min, town.bbox.lon_max, town.bbox.lat_max]
+        await session.execute(
+            text(
+                "INSERT INTO towns (id, display_name, country, bbox) "
+                "VALUES (:id, :display_name, :country, CAST(:bbox AS jsonb)) "
+                "ON CONFLICT (id) DO UPDATE SET "
+                "display_name = EXCLUDED.display_name, bbox = EXCLUDED.bbox"
+            ),
+            {"id": town.id, "display_name": town.display_name, "country": town.country,
+             "bbox": json.dumps(bbox)},
+        )
+        await session.commit()
+    print(f"[startup] Ensured town '{town.id}' exists in database")
 
     # Start APScheduler with all enabled connectors
     # NOTE: Must come after town config is loaded and verified.

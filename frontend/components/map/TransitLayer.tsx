@@ -41,7 +41,7 @@ const unclusteredStopLayer: CircleLayerSpecification = {
   id: 'transit-stops',
   type: 'circle',
   source: 'transit',
-  filter: ['!', ['has', 'point_count']],
+  filter: ['all', ['!', ['has', 'point_count']], ['==', ['get', 'feature_type'], 'stop']],
   layout: { visibility: 'visible' },
   paint: {
     'circle-radius': 4,
