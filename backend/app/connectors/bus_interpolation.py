@@ -230,23 +230,9 @@ def interpolate_position(
                 route_type=trip.route_type,
             )
 
-    # Fallback: past last computed segment, show at last stop
-    lon, lat, brng = shape_walk(trip.shape_coords, 1.0)
-    return BusPosition(
-        trip_id=trip.trip_id,
-        route_id=trip.route_id,
-        line_name=trip.line_name,
-        destination=trip.destination,
-        next_stop=trip.stop_times[-1][0],
-        prev_stop=trip.stop_times[-2][0] if len(trip.stop_times) >= 2 else "",
-        lat=lat,
-        lon=lon,
-        bearing=brng,
-        delay_seconds=delay,
-        progress=1.0,
-        departed=True,
-        route_type=trip.route_type,
-    )
+    # Fallback: past last computed segment — trip has effectively completed
+    # Return None to let cleanup remove this bus from the map
+    return None
 
 
 class BusInterpolationConnector(BaseConnector):
@@ -655,8 +641,10 @@ class BusInterpolationConnector(BaseConnector):
             first_dep = stop_time_list[0][2]
             last_arr = stop_time_list[-1][1]
 
-            # Active if first departure <= now <= last arrival (with generous buffer for delays)
-            if first_dep - 600 <= now_secs <= last_arr + 600:
+            # Active if first departure <= now <= last arrival
+            # Small pre-departure buffer (5 min) for showing buses about to depart,
+            # minimal post-arrival buffer (60s) to avoid keeping completed trips visible
+            if first_dep - 300 <= now_secs <= last_arr + 60:
                 line_name, _, route_type = route_info.get(route_id, ("", "", 3))
                 headsign = _safe_str(getattr(trip_row, "trip_headsign", ""))
                 destination = headsign if headsign else stop_time_list[-1][0]
