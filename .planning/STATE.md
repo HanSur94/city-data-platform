@@ -3,11 +3,11 @@ gsd_state_version: 1.0
 milestone: v2.0
 milestone_name: — AalenPulse Feature Parity
 status: verifying
-stopped_at: Completed 20-03-PLAN.md (Weather Skybox & Bus Interpolation)
-last_updated: "2026-04-07T10:49:29.556Z"
-last_activity: 2026-04-07
+stopped_at: "Completed quick task 260408-dbq: Ensure all real bus stops (Haltestellen) appear on map"
+last_updated: "2026-04-08T07:47:11.341Z"
+last_activity: "2026-04-07 - Completed quick task 260407-mwh: Fix transit layer performance and air quality SQL bug"
 progress:
-  total_phases: 10
+  total_phases: 19
   completed_phases: 10
   total_plans: 23
   completed_plans: 23
@@ -106,9 +106,10 @@ None yet.
 | 260407-mwh | Fix transit layer performance and air quality SQL bug | 2026-04-07 | 5c9cc3d | [260407-mwh-fix-transit-layer-performance-and-air-qu](./quick/260407-mwh-fix-transit-layer-performance-and-air-qu/) |
 | 260407-pft | Bus position layer visual overhaul: per-line colors, train/bus distinction, sidebar line filter | 2026-04-07 | d120c78 | [260407-pft-bus-position-layer-visual-overhaul-per-l](./quick/260407-pft-bus-position-layer-visual-overhaul-per-l/) |
 | 260407-sgj | Bus popup shows prev/next stations; fix map re-render when following bus | 2026-04-07 | d4d2c9a | [260407-sgj-bus-click-show-prev-next-stations-fix-ma](./quick/260407-sgj-bus-click-show-prev-next-stations-fix-ma/) |
+| 260408-dbq | Ensure all real bus stops (Haltestellen) appear on map with route info | 2026-04-08 | 8514732 | [260408-dbq-ensure-all-real-bus-stops-haltestellen-f](./quick/260408-dbq-ensure-all-real-bus-stops-haltestellen-f/) |
 
 ## Session Continuity
 
-Last session: 2026-04-07T18:33:40Z
-Stopped at: Completed quick task 260407-sgj: Bus Popup Prev/Next Stations + Fix Map Re-render on Follow
+Last session: 2026-04-08T07:47:11.332Z
+Stopped at: Completed quick task 260408-dbq: Ensure all real bus stops (Haltestellen) appear on map
 Resume file: None
