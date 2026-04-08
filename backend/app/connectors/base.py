@@ -343,6 +343,59 @@ class BaseConnector(ABC):
             row = result.fetchone()
             return str(row[0])
 
+    async def batch_upsert_features(
+        self,
+        features: list[tuple[str, str, str, dict]],  # (source_id, domain, geometry_wkt, properties)
+        batch_size: int = 500,
+    ) -> dict[str, str]:  # source_id -> UUID
+        """Upsert a list of spatial features in batches. Returns source_id -> UUID mapping.
+
+        Opens ONE database session for the entire batch, commits per chunk of
+        batch_size, and yields control to the asyncio event loop between chunks
+        via asyncio.sleep(0). This reduces N individual sessions to ~ceil(N/batch_size)
+        commits, dramatically reducing database overhead for high-volume connectors.
+
+        Preserves the same ON CONFLICT upsert semantics as upsert_feature().
+        """
+        import asyncio
+        import json
+        from app.db import AsyncSessionLocal
+        from sqlalchemy import text
+
+        result_map: dict[str, str] = {}
+
+        async with AsyncSessionLocal() as session:
+            for chunk_start in range(0, len(features), batch_size):
+                chunk = features[chunk_start : chunk_start + batch_size]
+                for source_id, domain, geometry_wkt, properties in chunk:
+                    semantic_id = compute_semantic_id(domain, source_id)
+                    result = await session.execute(
+                        text(
+                            "INSERT INTO features (town_id, domain, source_id, geometry, properties, semantic_id) "
+                            "VALUES (:town_id, :domain, :source_id, "
+                            "ST_GeomFromText(:geom, 4326), CAST(:properties AS jsonb), :semantic_id) "
+                            "ON CONFLICT (town_id, domain, source_id) "
+                            "DO UPDATE SET geometry = EXCLUDED.geometry, "
+                            "properties = EXCLUDED.properties, "
+                            "semantic_id = EXCLUDED.semantic_id "
+                            "RETURNING id"
+                        ),
+                        {
+                            "town_id": self.town.id,
+                            "domain": domain,
+                            "source_id": source_id,
+                            "geom": geometry_wkt,
+                            "properties": json.dumps(properties),
+                            "semantic_id": semantic_id,
+                        },
+                    )
+                    row = result.fetchone()
+                    result_map[source_id] = str(row[0])
+                await session.commit()
+                await asyncio.sleep(0)  # yield event loop between batches
+
+        return result_map
+
     async def _update_staleness(self) -> None:
         """Update sources.last_successful_fetch for this connector's source row.
 
