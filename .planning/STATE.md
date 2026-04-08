@@ -109,9 +109,10 @@ None yet.
 | 260408-dbq | Ensure all real bus stops (Haltestellen) appear on map with route info | 2026-04-08 | 8514732 | [260408-dbq-ensure-all-real-bus-stops-haltestellen-f](./quick/260408-dbq-ensure-all-real-bus-stops-haltestellen-f/) |
 | 260408-fm8 | Make buses rectangular-shaped on map: rotated rectangle symbol, stop color fix | 2026-04-08 | bccab62 | [260408-fm8-make-buses-rectangular-shaped-on-map-bus](./quick/260408-fm8-make-buses-rectangular-shaped-on-map-bus/) |
 | 260408-hyd | Set up TomTom env var resolution: ${VAR} substitution in YAML config, .env.example, Docker wiring | 2026-04-08 | 805c59c | [260408-hyd-set-up-tomtom-traffic-busyness-integrati](./quick/260408-hyd-set-up-tomtom-traffic-busyness-integrati/) |
+| 260408-jiz | Batch upsert features to unblock asyncio event loop: batch_upsert_features on BaseConnector, migrate GTFS/BusInterpolation/GTFSRealtime | 2026-04-08 | 86d4ebd | [260408-jiz-batch-upsert-features-to-unblock-asyncio](./quick/260408-jiz-batch-upsert-features-to-unblock-asyncio/) |
 
 ## Session Continuity
 
 Last session: 2026-04-08T11:00:08Z
-Stopped at: Completed quick task 260408-hyd: Set up TomTom env var resolution
+Stopped at: Completed quick task 260408-jiz: Batch upsert features to unblock asyncio
 Resume file: None
