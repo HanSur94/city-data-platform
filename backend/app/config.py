@@ -9,9 +9,48 @@ Usage:
     town = load_town("aalen")       # reads towns/aalen.yaml
     town = load_town("example")     # reads towns/example.yaml
 """
+import os
+import re
 from pathlib import Path
 from pydantic import BaseModel, field_validator
 import yaml
+
+
+def resolve_env_vars(value):
+    """Recursively resolve ${VAR} patterns in YAML config values.
+
+    Replaces ``${VAR}`` placeholders in strings with the corresponding
+    ``os.environ`` values. Dicts and lists are processed recursively.
+    Non-string scalar values (int, float, bool, None) pass through unchanged.
+
+    Args:
+        value: Any YAML-parsed value.
+
+    Returns:
+        The value with all ``${VAR}`` patterns substituted.
+
+    Raises:
+        KeyError: If a referenced environment variable is not set.
+    """
+    if isinstance(value, str):
+        def _lookup(match):
+            var = match.group(1)
+            if var not in os.environ:
+                raise KeyError(
+                    f"Environment variable '{var}' not set "
+                    "(referenced in town YAML config)"
+                )
+            return os.environ[var]
+
+        return re.sub(r'\$\{([^}]+)\}', _lookup, value)
+
+    if isinstance(value, dict):
+        return {k: resolve_env_vars(v) for k, v in value.items()}
+
+    if isinstance(value, list):
+        return [resolve_env_vars(item) for item in value]
+
+    return value
 
 
 class ConnectorConfig(BaseModel):
@@ -76,4 +115,5 @@ def load_town(town_id: str, towns_dir: Path = Path("towns")) -> Town:
             f"Available towns: {[p.stem for p in towns_dir.glob('*.yaml')]}"
         )
     raw = yaml.safe_load(yaml_path.read_text(encoding="utf-8"))
+    raw = resolve_env_vars(raw)
     return Town.model_validate(raw)
