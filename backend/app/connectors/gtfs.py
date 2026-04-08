@@ -244,6 +244,7 @@ class GTFSConnector(BaseConnector):
         raw = await self.fetch()
         normalized = self.normalize(raw)
 
+        features = []
         for item in normalized:
             geom_type = item.values["geometry_type"]
             if geom_type == "Point":
@@ -252,12 +253,8 @@ class GTFSConnector(BaseConnector):
                 wkt = item.values["linestring_wkt"]
 
             properties = {k: v for k, v in item.values.items() if k != "linestring_wkt"}
+            features.append((item.source_id, "transit", wkt, properties))
 
-            await self.upsert_feature(
-                source_id=item.source_id,
-                domain="transit",
-                geometry_wkt=wkt,
-                properties=properties,
-            )
+        await self.batch_upsert_features(features)
 
         await self._update_staleness()

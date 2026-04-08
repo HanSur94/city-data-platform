@@ -390,7 +390,8 @@ class BusInterpolationConnector(BaseConnector):
 
         # 6b. Upsert deduplicated positions
         active_source_ids: set[str] = set()
-        observations: list[Observation] = []
+        features_to_upsert: list[tuple[str, str, str, dict]] = []
+        pending_obs: list[tuple[str, dict]] = []  # (source_id, obs_values)
 
         for trip, pos in best_per_route.values():
             source_id = f"bus-pos:{trip.trip_id}"
@@ -431,24 +432,24 @@ class BusInterpolationConnector(BaseConnector):
                 "total_stops": total_stops,
             }
 
-            feature_id = await self.upsert_feature(
-                source_id=source_id,
-                domain="transit",
-                geometry_wkt=wkt,
-                properties=properties,
-            )
+            features_to_upsert.append((source_id, "transit", wkt, properties))
+            pending_obs.append((source_id, {
+                "trip_id": pos.trip_id,
+                "route_id": pos.route_id,
+                "delay_seconds": pos.delay_seconds,
+            }))
 
+        feature_ids_map = await self.batch_upsert_features(features_to_upsert)
+
+        observations: list[Observation] = []
+        for src_id, obs_vals in pending_obs:
             observations.append(
                 Observation(
-                    feature_id=feature_id,
+                    feature_id=feature_ids_map[src_id],
                     domain="transit",
-                    values={
-                        "trip_id": pos.trip_id,
-                        "route_id": pos.route_id,
-                        "delay_seconds": pos.delay_seconds,
-                    },
+                    values=obs_vals,
                     timestamp=now_utc,
-                    source_id=source_id,
+                    source_id=src_id,
                 )
             )
 

@@ -148,8 +148,9 @@ class GTFSRealtimeConnector(BaseConnector):
         feed_msg = gtfs_realtime_pb2.FeedMessage()
         feed_msg.ParseFromString(raw)
 
-        # Upsert a feature for each unique vehicle/trip entity, get UUID
-        feature_ids: dict[str, str] = {}  # entity.id -> UUID
+        # Collect features for batch upsert, track entity.id -> source_id mapping
+        features_to_upsert: list[tuple[str, str, str, dict]] = []
+        entity_source_ids: dict[str, str] = {}  # entity.id -> source_id
 
         for entity in feed_msg.entity:
             if entity.HasField("vehicle"):
@@ -157,31 +158,37 @@ class GTFSRealtimeConnector(BaseConnector):
                 lat = vp.position.latitude
                 lon = vp.position.longitude
                 source_id = f"vehicle:{entity.id}"
-                feature_id = await self.upsert_feature(
-                    source_id=source_id,
-                    domain="transit",
-                    geometry_wkt=f"POINT({lon} {lat})",
-                    properties={
+                features_to_upsert.append((
+                    source_id,
+                    "transit",
+                    f"POINT({lon} {lat})",
+                    {
                         "feature_type": "bus_position",
                         "trip_id": vp.trip.trip_id,
                         "route_id": vp.trip.route_id,
                     },
-                )
-                feature_ids[entity.id] = feature_id
+                ))
+                entity_source_ids[entity.id] = source_id
 
             elif entity.HasField("trip_update"):
                 # TripUpdates don't have a position; upsert a placeholder feature
                 source_id = f"trip:{entity.trip_update.trip.trip_id}"
-                feature_id = await self.upsert_feature(
-                    source_id=source_id,
-                    domain="transit",
-                    geometry_wkt="POINT(0 0)",  # no position for trip updates
-                    properties={
+                features_to_upsert.append((
+                    source_id,
+                    "transit",
+                    "POINT(0 0)",  # no position for trip updates
+                    {
                         "feature_type": "trip_update",
                         "trip_id": entity.trip_update.trip.trip_id,
                     },
-                )
-                feature_ids[entity.id] = feature_id
+                ))
+                entity_source_ids[entity.id] = source_id
+
+        feature_ids_map = await self.batch_upsert_features(features_to_upsert)
+        feature_ids: dict[str, str] = {
+            eid: feature_ids_map[src_id]
+            for eid, src_id in entity_source_ids.items()
+        }
 
         # Normalize with real feature UUIDs
         observations = self.normalize(raw, feature_ids=feature_ids)
