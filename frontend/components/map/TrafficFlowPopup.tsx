@@ -2,10 +2,13 @@
 import { Badge } from '@/components/ui/badge';
 import { DataSourceSection } from '@/components/map/DataSourceSection';
 import { LAYER_METADATA } from '@/lib/layer-metadata';
+import TrafficFlowPopupChart from '@/components/map/TrafficFlowPopupChart';
 import type { Feature } from 'geojson';
 
 interface TrafficFlowPopupProps {
   feature: Feature;
+  featureId: string;
+  town: string;
 }
 
 const CONGESTION_LABELS: Record<string, string> = {
@@ -20,7 +23,7 @@ const CONGESTION_COLORS: Record<string, string> = {
   congested: '#ef4444',
 };
 
-export default function TrafficFlowPopup({ feature }: TrafficFlowPopupProps) {
+export default function TrafficFlowPopup({ feature, featureId, town }: TrafficFlowPopupProps) {
   const props = feature.properties ?? {};
   const roadName = props.road_name as string | undefined;
   const speedAvgKmh = props.speed_avg_kmh as number | undefined;
@@ -62,6 +65,7 @@ export default function TrafficFlowPopup({ feature }: TrafficFlowPopupProps) {
         dataType={LAYER_METADATA['trafficFlow'].dataType}
         timestamp={(props.measured_at as string) ?? (props.fetched_at as string) ?? null}
       />
+      <TrafficFlowPopupChart featureId={featureId} town={town} freeflowKmh={freeflowKmh ?? null} />
     </div>
   );
 }
