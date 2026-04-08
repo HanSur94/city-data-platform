@@ -251,3 +251,12 @@ Implement all missing features from the AalenPulse requirements document to reac
 - **Goal:** Automatically remove or hide bus and train entities from the map when they are no longer actively serving a route.
 - **Status:** Complete (2026-04-07)
 - **Implementation:** _cleanup_old_features() in BusInterpolationConnector now compares active source_ids against DB, deletes stale bus-pos features whose trips have ended.
+
+### Phase 999.9: Follow Button for Moveable Entities (BACKLOG)
+
+**Goal:** Add a "Follow" button to the context menu/popup of buses (and all moveable entities) that keeps the entity centered on the map — the user's view follows the entity as it moves. System should work generically for all moveable entities in the city (buses, trains, etc.).
+**Requirements:** TBD
+**Plans:** 0 plans
+
+Plans:
+- [ ] TBD (promote with /gsd:review-backlog when ready)
