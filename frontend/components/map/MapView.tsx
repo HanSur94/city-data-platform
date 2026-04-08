@@ -319,7 +319,8 @@ export default function MapView({
           'buildings-3d',
         ]}
         onClick={(e) => {
-          const feature = e.features?.[0];
+          let features = e.features ?? [];
+          const feature = features[0];
           if (!feature || !e.lngLat) return;
           const layerId = feature.layer?.id ?? '';
           const domain: PopupInfo['domain'] = layerId === 'heat-demand-points'
