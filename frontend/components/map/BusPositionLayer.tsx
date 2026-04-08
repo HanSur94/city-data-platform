@@ -5,9 +5,9 @@ import type {
   SymbolLayerSpecification,
   LineLayerSpecification,
 } from 'react-map-gl/maplibre';
-import type { FilterSpecification } from 'maplibre-gl';
+import type { FilterSpecification, FillExtrusionLayerSpecification } from 'maplibre-gl';
 import { fetchLayer } from '@/lib/api';
-import type { FeatureCollection, Feature, LineString, Point } from 'geojson';
+import type { FeatureCollection, Feature, LineString, Point, Polygon } from 'geojson';
 
 // ── Color palette for per-line deterministic colors ──────────────────────────
 
@@ -37,6 +37,47 @@ function buildColorMatchExpr(lineNames: string[], fallback: string): MatchExpres
   return parts as MatchExpression;
 }
 
+// ── 3D bus rectangle polygon generator ────────────────────────────────────────
+
+/** Approximate metres per degree at a given latitude. */
+function metersPerDeg(lat: number): { lon: number; lat: number } {
+  const latRad = (lat * Math.PI) / 180;
+  return { lon: 111_320 * Math.cos(latRad), lat: 111_132 };
+}
+
+/**
+ * Create a small rectangular polygon centred at [lon, lat], rotated by bearing.
+ * lengthM / widthM are in metres. Bearing is clockwise from north in degrees.
+ */
+function busRectPoly(
+  lon: number,
+  lat: number,
+  bearing: number,
+  lengthM: number,
+  widthM: number,
+): [number, number][] {
+  const m = metersPerDeg(lat);
+  const halfL = lengthM / 2;
+  const halfW = widthM / 2;
+  // Corner offsets in local metres (length along bearing, width perpendicular)
+  const corners = [
+    [-halfL, -halfW],
+    [halfL, -halfW],
+    [halfL, halfW],
+    [-halfL, halfW],
+  ];
+  const rad = (bearing * Math.PI) / 180; // bearing: clockwise from north (0=N, 90=E)
+  const cosB = Math.cos(rad);
+  const sinB = Math.sin(rad);
+  // dx = along bus length (forward), dy = perpendicular (sideways)
+  // Geographic bearing: forward = (sin(B), cos(B)) in (east, north)
+  return corners.map(([dx, dy]) => {
+    const rx = dx * sinB + dy * cosB;  // east offset in metres
+    const ry = dx * cosB - dy * sinB;  // north offset in metres
+    return [lon + rx / m.lon, lat + ry / m.lat] as [number, number];
+  });
+}
+
 // ── Props ─────────────────────────────────────────────────────────────────────
 
 interface BusPositionLayerProps {
@@ -54,11 +95,13 @@ interface BusPositionLayerProps {
  */
 function processBusData(fc: FeatureCollection): {
   positions: FeatureCollection;
+  busPolygons: FeatureCollection;
   routesDriven: FeatureCollection;
   routesRemaining: FeatureCollection;
   lineNames: string[];
 } {
   const positions: Feature<Point>[] = [];
+  const busPolys: Feature<Polygon>[] = [];
   const drivenLines: Feature<LineString>[] = [];
   const remainingLines: Feature<LineString>[] = [];
   const lineNameSet = new Set<string>();
@@ -70,14 +113,36 @@ function processBusData(fc: FeatureCollection): {
     const lineName: string = f.properties?.line_name ?? '';
     if (lineName) lineNameSet.add(lineName);
 
-    // Bus dot — include route_type and pre-computed _color for data-driven styling
+    const color = lineColor(lineName);
+    const bearing = (f.properties?.bearing as number) ?? 0;
+    const routeType = (f.properties?.route_type as number) ?? 3;
+    const [lon, lat] = (f.geometry as Point).coordinates;
+
+    // Bus label point
     positions.push({
       type: 'Feature',
       id: f.properties?.trip_id as string,
       geometry: f.geometry as Point,
       properties: {
         ...f.properties,
-        _color: lineColor(lineName),
+        _color: color,
+      },
+    });
+
+    // 3D bus rectangle polygon — trains are longer
+    const length = routeType <= 2 ? 18 : 12; // metres
+    const width = routeType <= 2 ? 5 : 4;
+    const corners = busRectPoly(lon, lat, bearing, length, width);
+    corners.push(corners[0]); // close ring
+    busPolys.push({
+      type: 'Feature',
+      geometry: { type: 'Polygon', coordinates: [corners] },
+      properties: {
+        trip_id: f.properties?.trip_id,
+        line_name: lineName,
+        _color: color,
+        route_type: routeType,
+        delay_seconds: f.properties?.delay_seconds ?? 0,
       },
     });
 
@@ -127,6 +192,7 @@ function processBusData(fc: FeatureCollection): {
 
   return {
     positions: { type: 'FeatureCollection', features: positions },
+    busPolygons: { type: 'FeatureCollection', features: busPolys },
     routesDriven: { type: 'FeatureCollection', features: drivenLines },
     routesRemaining: { type: 'FeatureCollection', features: remainingLines },
     lineNames: [...lineNameSet].sort((a, b) => a.localeCompare(b, undefined, { numeric: true })),
@@ -134,13 +200,34 @@ function processBusData(fc: FeatureCollection): {
 }
 
 /**
- * Walk along a shape polyline at a given progress fraction (0..1).
- * Returns [lon, lat] at that position along the shape.
+ * Compute bearing in degrees (0-360) from point 1 to point 2.
+ * Uses the forward azimuth formula for WGS84 coordinates.
  */
-function shapeWalk(coords: [number, number][], progress: number): [number, number] {
-  if (coords.length === 0) return [0, 0];
-  if (coords.length === 1 || progress <= 0) return coords[0];
-  if (progress >= 1) return coords[coords.length - 1];
+function calcBearing(lon1: number, lat1: number, lon2: number, lat2: number): number {
+  const toRad = Math.PI / 180;
+  const rlat1 = lat1 * toRad;
+  const rlat2 = lat2 * toRad;
+  const dlon = (lon2 - lon1) * toRad;
+  const x = Math.sin(dlon) * Math.cos(rlat2);
+  const y = Math.cos(rlat1) * Math.sin(rlat2) - Math.sin(rlat1) * Math.cos(rlat2) * Math.cos(dlon);
+  return ((Math.atan2(x, y) * 180) / Math.PI + 360) % 360;
+}
+
+/**
+ * Walk along a shape polyline at a given progress fraction (0..1).
+ * Returns [lon, lat, bearing] — bearing follows the current segment direction.
+ */
+function shapeWalk(coords: [number, number][], progress: number): [number, number, number] {
+  if (coords.length === 0) return [0, 0, 0];
+  if (coords.length === 1 || progress <= 0) {
+    const brng = coords.length >= 2 ? calcBearing(coords[0][0], coords[0][1], coords[1][0], coords[1][1]) : 0;
+    return [coords[0][0], coords[0][1], brng];
+  }
+  if (progress >= 1) {
+    const last = coords[coords.length - 1];
+    const prev = coords[coords.length - 2];
+    return [last[0], last[1], calcBearing(prev[0], prev[1], last[0], last[1])];
+  }
 
   // Compute cumulative segment lengths
   let totalDist = 0;
@@ -152,21 +239,23 @@ function shapeWalk(coords: [number, number][], progress: number): [number, numbe
     segLens.push(len);
     totalDist += len;
   }
-  if (totalDist === 0) return coords[0];
+  if (totalDist === 0) return [coords[0][0], coords[0][1], 0];
 
   const target = progress * totalDist;
   let cum = 0;
   for (let i = 0; i < segLens.length; i++) {
     if (cum + segLens[i] >= target) {
       const frac = segLens[i] === 0 ? 0 : (target - cum) / segLens[i];
-      return [
-        coords[i][0] + frac * (coords[i + 1][0] - coords[i][0]),
-        coords[i][1] + frac * (coords[i + 1][1] - coords[i][1]),
-      ];
+      const lon = coords[i][0] + frac * (coords[i + 1][0] - coords[i][0]);
+      const lat = coords[i][1] + frac * (coords[i + 1][1] - coords[i][1]);
+      const brng = calcBearing(coords[i][0], coords[i][1], coords[i + 1][0], coords[i + 1][1]);
+      return [lon, lat, brng];
     }
     cum += segLens[i];
   }
-  return coords[coords.length - 1];
+  const last = coords[coords.length - 1];
+  const prev = coords[coords.length - 2];
+  return [last[0], last[1], calcBearing(prev[0], prev[1], last[0], last[1])];
 }
 
 /**
@@ -208,10 +297,11 @@ function lerpPositions(
       if (coords.length >= 2) {
         // Lerp progress value, then walk the shape at that progress
         const interpProgress = prevData.progress + (newProgress - prevData.progress) * t;
-        const [lng, lat] = shapeWalk(coords, interpProgress);
+        const [lng, lat, brng] = shapeWalk(coords, interpProgress);
         return {
           ...f,
           geometry: { type: 'Point' as const, coordinates: [lng, lat] },
+          properties: { ...f.properties, bearing: brng },
         };
       }
     }
@@ -224,9 +314,11 @@ function lerpPositions(
         const oldCoords = (oldFeature.geometry as Point).coordinates as [number, number];
         const lng = oldCoords[0] + (newCoords[0] - oldCoords[0]) * t;
         const lat = oldCoords[1] + (newCoords[1] - oldCoords[1]) * t;
+        const brng = calcBearing(oldCoords[0], oldCoords[1], newCoords[0], newCoords[1]);
         return {
           ...f,
           geometry: { type: 'Point' as const, coordinates: [lng, lat] },
+          properties: { ...f.properties, bearing: brng },
         };
       }
     }
@@ -235,6 +327,36 @@ function lerpPositions(
   });
 
   return { type: 'FeatureCollection', features };
+}
+
+/**
+ * Generate 3D bus polygon features from a point-based positions FeatureCollection.
+ * Each point becomes a small rotated rectangle polygon for fill-extrusion rendering.
+ */
+function buildBusPolygons(positions: FeatureCollection): FeatureCollection {
+  const polys: Feature<Polygon>[] = [];
+  for (const f of positions.features) {
+    if (f.geometry?.type !== 'Point') continue;
+    const [lon, lat] = (f.geometry as Point).coordinates;
+    const bearing = (f.properties?.bearing as number) ?? 0;
+    const routeType = (f.properties?.route_type as number) ?? 3;
+    const length = routeType <= 2 ? 18 : 12;
+    const width = routeType <= 2 ? 5 : 4;
+    const corners = busRectPoly(lon, lat, bearing, length, width);
+    corners.push(corners[0]);
+    polys.push({
+      type: 'Feature',
+      geometry: { type: 'Polygon', coordinates: [corners] },
+      properties: {
+        trip_id: f.properties?.trip_id,
+        line_name: f.properties?.line_name,
+        _color: f.properties?._color,
+        route_type: routeType,
+        delay_seconds: f.properties?.delay_seconds ?? 0,
+      },
+    });
+  }
+  return { type: 'FeatureCollection', features: polys };
 }
 
 const emptyFC: FeatureCollection = { type: 'FeatureCollection', features: [] };
@@ -269,10 +391,8 @@ export default function BusPositionLayer({
   hiddenLines,
   onLinesDiscovered,
 }: BusPositionLayerProps) {
-  // React state only used for the initial/stable render of <Source> data.
-  // During animation, we bypass React state entirely and call map.getSource().setData()
-  // imperatively to avoid triggering React re-renders at 60fps.
   const [positions, setPositions] = useState<FeatureCollection>(emptyFC);
+  const [busPolygons, setBusPolygons] = useState<FeatureCollection>(emptyFC);
   const [routesDriven, setRoutesDriven] = useState<FeatureCollection>(emptyFC);
   const [routesRemaining, setRoutesRemaining] = useState<FeatureCollection>(emptyFC);
   const [lineNames, setLineNames] = useState<string[]>([]);
@@ -284,50 +404,13 @@ export default function BusPositionLayer({
   const animFrameRef = useRef<number>(0);
   const animStartRef = useRef<number>(0);
 
-  // Track discovered lines to avoid calling onLinesDiscovered on every render
   const prevLinesKeyRef = useRef('');
 
-  // Get the MapLibre map instance for imperative source updates during animation.
-  // This avoids React state updates (and thus re-renders) on every animation frame.
   const { current: mapInstance } = useMap();
-
-  // Register custom 'bus-rect' SDF image once the map instance is available.
-  // SDF mode allows icon-color to tint the white shape with per-feature colors.
-  useEffect(() => {
-    const map = mapInstance?.getMap();
-    if (!map) return;
-    if (map.hasImage('bus-rect')) return;
-
-    const size = { w: 24, h: 12 };
-    const canvas = document.createElement('canvas');
-    canvas.width = size.w;
-    canvas.height = size.h;
-    const ctx = canvas.getContext('2d')!;
-
-    // Rounded rectangle body (white fill — tinted at render time via icon-color in SDF mode)
-    const r = 3;
-    ctx.beginPath();
-    ctx.moveTo(r, 0);
-    ctx.lineTo(size.w - r, 0);
-    ctx.quadraticCurveTo(size.w, 0, size.w, r);
-    ctx.lineTo(size.w, size.h - r);
-    ctx.quadraticCurveTo(size.w, size.h, size.w - r, size.h);
-    ctx.lineTo(r, size.h);
-    ctx.quadraticCurveTo(0, size.h, 0, size.h - r);
-    ctx.lineTo(0, r);
-    ctx.quadraticCurveTo(0, 0, r, 0);
-    ctx.closePath();
-    ctx.fillStyle = '#ffffff';
-    ctx.fill();
-
-    const imageData = ctx.getImageData(0, 0, size.w, size.h);
-    map.addImage('bus-rect', imageData, { sdf: true });
-  }, [mapInstance]);
 
   const animate = useCallback(() => {
     const elapsed = performance.now() - animStartRef.current;
     const t = Math.min(1, elapsed / ANIMATION_DURATION);
-    // Linear interpolation — bus moves at constant speed matching real velocity
 
     const interpolated = lerpPositions(
       prevPositionsRef.current,
@@ -335,25 +418,25 @@ export default function BusPositionLayer({
       t,
     );
 
-    // Imperatively update the MapLibre source — bypasses React state and avoids
-    // triggering a React re-render cascade on every animation frame.
+    // Build 3D polygons from interpolated positions
+    const polys = buildBusPolygons(interpolated);
+
     const map = mapInstance?.getMap();
     if (map) {
-      const src = map.getSource('bus-positions');
-      // GeoJSONSource exposes setData(); the type is a maplibre-gl internal
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      (src as any)?.setData(interpolated);
+      (map.getSource('bus-positions') as any)?.setData(interpolated);
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      (map.getSource('bus-polygons') as any)?.setData(polys);
     } else {
-      // Map not yet available (first few frames) — fall back to React state
       setPositions(interpolated);
+      setBusPolygons(polys);
     }
 
     if (t < 1) {
       animFrameRef.current = requestAnimationFrame(animate);
     } else {
-      // Animation finished — sync React state once so the Source JSX reflects
-      // the final position for future renders (e.g. visibility toggles).
       setPositions(nextPositionsRef.current);
+      setBusPolygons(buildBusPolygons(nextPositionsRef.current));
     }
   }, [mapInstance]);
 
@@ -361,37 +444,38 @@ export default function BusPositionLayer({
     try {
       const json = await fetchLayer('transit', town, null, 'bus_position');
       const fc = json as unknown as FeatureCollection;
-      const { positions: pos, routesDriven: dr, routesRemaining: rem, lineNames: names } =
-        processBusData(fc);
+      const {
+        positions: pos,
+        busPolygons: polys,
+        routesDriven: dr,
+        routesRemaining: rem,
+        lineNames: names,
+      } = processBusData(fc);
 
       if (pos.features.length > 0) {
         const fp = fingerprint(pos);
         if (fp === prevFingerprintRef.current) return;
         prevFingerprintRef.current = fp;
 
-        // Start smooth animation from current to new positions
         prevPositionsRef.current = nextPositionsRef.current.features.length > 0
           ? nextPositionsRef.current
-          : pos; // First load: no animation
+          : pos;
         nextPositionsRef.current = pos;
 
-        // Cancel any running animation
         if (animFrameRef.current) cancelAnimationFrame(animFrameRef.current);
 
         if (prevPositionsRef.current !== pos) {
-          // Animate transition imperatively (no React state updates during rAF loop)
           animStartRef.current = performance.now();
           animFrameRef.current = requestAnimationFrame(animate);
         } else {
-          // First load: set immediately via React state (map source may not exist yet)
           setPositions(pos);
+          setBusPolygons(polys);
         }
 
         setRoutesDriven(dr);
         setRoutesRemaining(rem);
       }
 
-      // Report discovered line names (only when they change)
       const namesKey = names.join(',');
       if (namesKey !== prevLinesKeyRef.current) {
         prevLinesKeyRef.current = namesKey;
@@ -415,52 +499,30 @@ export default function BusPositionLayer({
 
   const vis = visible ? 'visible' : 'none';
 
-  // Build filter for hidden lines
   const hiddenFilter = hiddenLines && hiddenLines.size > 0
     ? buildHiddenLinesFilter(hiddenLines)
     : undefined;
 
-  // Build data-driven color match expression from discovered line names
-  const colorMatchExpr = lineNames.length > 0
-    ? buildColorMatchExpr(lineNames, '#6b7280')
-    : ('#6b7280' as unknown as MatchExpression);
+  // Suppress unused — lineNames used for discovery callback
+  void lineNames;
 
-  // Suppress unused variable warning — colorMatchExpr available for future use
-  void colorMatchExpr;
-
-  // Symbol layer: rotated rectangle pointing in direction of travel, tinted by line color.
-  // SDF image 'bus-rect' is registered in the useEffect above.
-  const symbolLayer = {
-    id: 'bus-position-points',
-    type: 'symbol',
-    source: 'bus-positions',
-    layout: {
-      visibility: vis,
-      'icon-image': 'bus-rect',
-      // Trains (route_type 0,1,2) slightly larger icon; buses (3) standard size
-      'icon-size': ['match', ['get', 'route_type'], 0, 1.4, 1, 1.4, 2, 1.4, 1.0] as unknown,
-      // Rotate rectangle to face direction of travel (bearing property from backend)
-      'icon-rotate': ['get', 'bearing'] as unknown,
-      'icon-rotation-alignment': 'map',
-      'icon-allow-overlap': true,
-      'icon-ignore-placement': true,
-    },
+  // 3D extruded bus rectangles
+  const busExtrusionLayer = {
+    id: 'bus-position-3d',
+    type: 'fill-extrusion',
+    source: 'bus-polygons',
     paint: {
-      // SDF tinting: white image gets tinted with the per-line color
-      'icon-color': ['get', '_color'] as unknown,
-      // Delay indication via icon halo: green → yellow → orange → red
-      'icon-halo-color': [
-        'step',
-        ['coalesce', ['get', 'delay_seconds'], 0],
-        '#22c55e',
-        120, '#eab308',
-        300, '#f97316',
-        600, '#ef4444',
+      'fill-extrusion-color': ['get', '_color'] as unknown,
+      'fill-extrusion-height': [
+        'match', ['get', 'route_type'],
+        0, 6, 1, 6, 2, 6, // trains taller
+        4, // buses
       ] as unknown,
-      'icon-halo-width': 2,
+      'fill-extrusion-base': 0,
+      'fill-extrusion-opacity': 0.9,
     },
     ...(hiddenFilter ? { filter: hiddenFilter } : {}),
-  } as SymbolLayerSpecification;
+  } as FillExtrusionLayerSpecification;
 
   const labelLayer = {
     id: 'bus-line-labels',
@@ -521,8 +583,10 @@ export default function BusPositionLayer({
       <Source id="bus-routes-remaining" type="geojson" data={routesRemaining}>
         <Layer {...remainingLineLayer} />
       </Source>
+      <Source id="bus-polygons" type="geojson" data={busPolygons}>
+        <Layer {...busExtrusionLayer} />
+      </Source>
       <Source id="bus-positions" type="geojson" data={positions}>
-        <Layer {...symbolLayer} />
         <Layer {...labelLayer} />
       </Source>
     </>

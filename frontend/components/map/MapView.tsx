@@ -313,7 +313,7 @@ export default function MapView({
         interactiveLayerIds={[
           'transit-stops', 'aqi-points', 'water-gauges', 'traffic-circles', 'traffic-flow-lines', 'autobahn-markers', 'energy-points', 'kocher-gauge', 'kocher-river-line',
           'community-schools-points', 'community-healthcare-points', 'community-parks-points', 'community-waste-points',
-          'infrastructure-ev-points', 'infrastructure-roadworks-points', 'parking-points', 'bus-position-points', 'bus-stop-points',
+          'infrastructure-ev-points', 'infrastructure-roadworks-points', 'parking-points', 'bus-position-3d', 'bus-stop-points',
           'solar-glow-points', 'ev-charging-live-points',
           'heat-demand-points', 'cycling-infra-lines', 'police-reports-bg',
           'buildings-3d',
@@ -344,7 +344,7 @@ export default function MapView({
             ? 'autobahn'
             : layerId.startsWith('energy')
             ? 'energy'
-            : layerId === 'bus-position-points'
+            : layerId === 'bus-position-3d'
             ? 'busPosition'
             : layerId === 'bus-stop-points'
             ? 'busStop'
