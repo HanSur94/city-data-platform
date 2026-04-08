@@ -135,37 +135,101 @@ function processBusData(fc: FeatureCollection): {
 }
 
 /**
+ * Walk along a shape polyline at a given progress fraction (0..1).
+ * Returns [lon, lat] at that position along the shape.
+ */
+function shapeWalk(coords: [number, number][], progress: number): [number, number] {
+  if (coords.length === 0) return [0, 0];
+  if (coords.length === 1 || progress <= 0) return coords[0];
+  if (progress >= 1) return coords[coords.length - 1];
+
+  // Compute cumulative segment lengths
+  let totalDist = 0;
+  const segLens: number[] = [];
+  for (let i = 1; i < coords.length; i++) {
+    const dx = coords[i][0] - coords[i - 1][0];
+    const dy = coords[i][1] - coords[i - 1][1];
+    const len = Math.sqrt(dx * dx + dy * dy);
+    segLens.push(len);
+    totalDist += len;
+  }
+  if (totalDist === 0) return coords[0];
+
+  const target = progress * totalDist;
+  let cum = 0;
+  for (let i = 0; i < segLens.length; i++) {
+    if (cum + segLens[i] >= target) {
+      const frac = segLens[i] === 0 ? 0 : (target - cum) / segLens[i];
+      return [
+        coords[i][0] + frac * (coords[i + 1][0] - coords[i][0]),
+        coords[i][1] + frac * (coords[i + 1][1] - coords[i][1]),
+      ];
+    }
+    cum += segLens[i];
+  }
+  return coords[coords.length - 1];
+}
+
+/**
  * Smoothly interpolate between old and new bus positions over a duration.
- * Returns a new FeatureCollection at each animation frame with lerped coordinates.
+ * Uses shape-aware interpolation: lerps progress along the route shape
+ * so buses follow actual road geometry during animation.
  */
 function lerpPositions(
   prev: FeatureCollection,
   next: FeatureCollection,
   t: number, // 0..1
 ): FeatureCollection {
-  // Build lookup of previous positions by trip_id
-  const prevMap = new Map<string, [number, number]>();
+  // Build lookup of previous progress + shape by trip_id
+  const prevMap = new Map<string, { progress: number }>();
   for (const f of prev.features) {
     const tid = f.properties?.trip_id;
-    const geom = f.geometry as Point | undefined;
-    if (tid && geom?.coordinates) {
-      prevMap.set(tid, geom.coordinates as [number, number]);
+    if (tid) {
+      prevMap.set(tid, {
+        progress: (f.properties?.progress as number) ?? 0,
+      });
     }
   }
 
   const features: Feature<Point>[] = next.features.map((f) => {
     const tid = f.properties?.trip_id;
-    const newCoords = (f.geometry as Point).coordinates as [number, number];
-    const oldCoords = tid ? prevMap.get(tid) : undefined;
+    const prevData = tid ? prevMap.get(tid) : undefined;
+    const newProgress = (f.properties?.progress as number) ?? 0;
 
-    if (oldCoords && t < 1) {
-      // Lerp between old and new position
-      const lng = oldCoords[0] + (newCoords[0] - oldCoords[0]) * t;
-      const lat = oldCoords[1] + (newCoords[1] - oldCoords[1]) * t;
-      return {
-        ...f,
-        geometry: { type: 'Point' as const, coordinates: [lng, lat] },
-      };
+    // Try shape-aware interpolation
+    const shapeRaw = f.properties?.shape_coords;
+    if (prevData && t < 1 && shapeRaw) {
+      let coords: [number, number][];
+      try {
+        coords = typeof shapeRaw === 'string' ? JSON.parse(shapeRaw) : shapeRaw;
+      } catch {
+        coords = [];
+      }
+
+      if (coords.length >= 2) {
+        // Lerp progress value, then walk the shape at that progress
+        const interpProgress = prevData.progress + (newProgress - prevData.progress) * t;
+        const [lng, lat] = shapeWalk(coords, interpProgress);
+        return {
+          ...f,
+          geometry: { type: 'Point' as const, coordinates: [lng, lat] },
+        };
+      }
+    }
+
+    // Fallback: simple coordinate lerp (no shape available)
+    if (prevData && t < 1) {
+      const newCoords = (f.geometry as Point).coordinates as [number, number];
+      const oldFeature = prev.features.find(pf => pf.properties?.trip_id === tid);
+      if (oldFeature) {
+        const oldCoords = (oldFeature.geometry as Point).coordinates as [number, number];
+        const lng = oldCoords[0] + (newCoords[0] - oldCoords[0]) * t;
+        const lat = oldCoords[1] + (newCoords[1] - oldCoords[1]) * t;
+        return {
+          ...f,
+          geometry: { type: 'Point' as const, coordinates: [lng, lat] },
+        };
+      }
     }
 
     return f as Feature<Point>;

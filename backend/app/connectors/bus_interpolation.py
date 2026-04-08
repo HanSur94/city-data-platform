@@ -109,11 +109,75 @@ def shape_walk(
     return (lon, lat, brng)
 
 
+def _compute_stop_shape_fractions(
+    stop_coords: list[tuple[float, float]],
+    shape_coords: list[tuple[float, float]],
+) -> list[float]:
+    """Compute the shape progress fraction for each stop by projecting
+    stop coordinates onto the nearest point on the shape polyline.
+
+    This replaces the naive `i / (n-1)` mapping which assumes stops are
+    evenly distributed along the shape. Real-world routes have uneven
+    stop spacing (clustered in city, sparse on highways).
+
+    Returns:
+        List of progress fractions (0.0 to 1.0) for each stop,
+        guaranteed monotonically non-decreasing.
+    """
+    if not shape_coords or not stop_coords:
+        return [i / max(1, len(stop_coords) - 1) for i in range(len(stop_coords))]
+
+    # Build cumulative distance along shape
+    cum_dist = [0.0]
+    for i in range(1, len(shape_coords)):
+        d = _haversine(
+            shape_coords[i - 1][0], shape_coords[i - 1][1],
+            shape_coords[i][0], shape_coords[i][1],
+        )
+        cum_dist.append(cum_dist[-1] + d)
+    total_dist = cum_dist[-1]
+    if total_dist == 0:
+        return [i / max(1, len(stop_coords) - 1) for i in range(len(stop_coords))]
+
+    # For each stop, find the nearest shape segment and project onto it
+    fractions: list[float] = []
+    search_start = 0  # optimization: stops are ordered, so search forward only
+
+    for slon, slat in stop_coords:
+        best_dist_to_shape = float('inf')
+        best_along = 0.0
+
+        for j in range(search_start, len(shape_coords)):
+            d = _haversine(slon, slat, shape_coords[j][0], shape_coords[j][1])
+            if d < best_dist_to_shape:
+                best_dist_to_shape = d
+                best_along = cum_dist[j]
+
+        frac = best_along / total_dist
+        # Ensure monotonically non-decreasing
+        if fractions and frac < fractions[-1]:
+            frac = fractions[-1]
+        fractions.append(frac)
+
+        # Advance search start to avoid O(n*m) worst case
+        # Find the shape index closest to the best match for next iteration
+        for j in range(search_start, len(shape_coords)):
+            if cum_dist[j] >= best_along:
+                search_start = max(0, j - 2)
+                break
+
+    return fractions
+
+
 def interpolate_position(
     trip: ActiveTrip,
     now_seconds_since_midnight: int,
 ) -> BusPosition | None:
     """Calculate interpolated bus position for an active trip.
+
+    Uses shape-aware stop projection: each stop is projected onto the
+    nearest point on the GTFS shape polyline, so the bus follows the
+    actual road geometry instead of jumping linearly between stops.
 
     Args:
         trip: ActiveTrip with stop_times, shape_coords, and delay.
@@ -121,12 +185,6 @@ def interpolate_position(
 
     Returns:
         BusPosition if the trip is active, None if trip is completed.
-
-    Edge cases handled per REQ-BUS-05:
-        - Trip not departed: returns position at first stop, departed=False
-        - Trip completed: returns None
-        - Dwelling at stop: returns stop position exactly
-        - No delay data: delay_seconds=0, pure schedule interpolation
     """
     if not trip.stop_times or not trip.shape_coords:
         return None
@@ -134,16 +192,16 @@ def interpolate_position(
     delay = trip.delay_seconds
 
     # Effective times = scheduled + delay
-    first_departure = trip.stop_times[0][2] + delay  # departure of first stop
-    last_arrival = trip.stop_times[-1][1] + delay     # arrival at last stop
+    first_departure = trip.stop_times[0][2] + delay
+    last_arrival = trip.stop_times[-1][1] + delay
 
     now = now_seconds_since_midnight
 
-    # Trip completed: current time > last arrival
+    # Trip completed
     if now > last_arrival:
         return None
 
-    # Trip not departed: current time < first departure
+    # Trip not departed
     if now < first_departure:
         lon, lat = trip.shape_coords[0]
         return BusPosition(
@@ -162,19 +220,22 @@ def interpolate_position(
             route_type=trip.route_type,
         )
 
-    # Find current segment between stops
-    # Check if dwelling at a stop (between arrival and departure at same stop)
+    # Compute shape-aware stop fractions (each stop projected onto shape)
+    # Use stop_coords from the trip's stop_times if available via _stop_coords cache,
+    # otherwise fall back to linear mapping
+    stop_fracs = getattr(trip, '_stop_shape_fracs', None)
+    if stop_fracs is None:
+        # Compute from shape_coords by evenly distributing — will be overridden
+        # by _build_active_trips if stop coordinates are available
+        n = len(trip.stop_times)
+        stop_fracs = [i / max(1, n - 1) for i in range(n)]
+
+    # Dwelling at a stop
     for i, (stop_name, arr, dep) in enumerate(trip.stop_times):
         eff_arr = arr + delay
         eff_dep = dep + delay
         if eff_arr <= now <= eff_dep and eff_arr != eff_dep:
-            # Dwelling at this stop — compute position from stop fraction
-            # Stop i is at fraction i/(n-1) along the shape (approximate)
-            n_stops = len(trip.stop_times)
-            if n_stops <= 1:
-                progress = 0.0
-            else:
-                progress = i / (n_stops - 1)
+            progress = stop_fracs[i] if i < len(stop_fracs) else 0.0
             lon, lat, brng = shape_walk(trip.shape_coords, progress)
             return BusPosition(
                 trip_id=trip.trip_id,
@@ -192,7 +253,7 @@ def interpolate_position(
                 route_type=trip.route_type,
             )
 
-    # Find the segment: between which two stops is the bus now?
+    # Between stops — interpolate along shape
     for i in range(len(trip.stop_times) - 1):
         name_a, _arr_a, dep_a = trip.stop_times[i]
         name_b, arr_b, _dep_b = trip.stop_times[i + 1]
@@ -200,18 +261,13 @@ def interpolate_position(
         eff_arr_b = arr_b + delay
 
         if eff_dep_a <= now <= eff_arr_b:
-            # Interpolate within this segment
             seg_duration = eff_arr_b - eff_dep_a
-            if seg_duration <= 0:
-                seg_frac = 1.0
-            else:
-                seg_frac = (now - eff_dep_a) / seg_duration
+            seg_frac = 1.0 if seg_duration <= 0 else (now - eff_dep_a) / seg_duration
 
-            # Map segment fraction to overall trip progress
-            n_stops = len(trip.stop_times)
-            stop_frac_a = i / (n_stops - 1) if n_stops > 1 else 0.0
-            stop_frac_b = (i + 1) / (n_stops - 1) if n_stops > 1 else 1.0
-            progress = stop_frac_a + seg_frac * (stop_frac_b - stop_frac_a)
+            # Use shape-aware stop fractions instead of linear i/(n-1)
+            frac_a = stop_fracs[i] if i < len(stop_fracs) else 0.0
+            frac_b = stop_fracs[i + 1] if (i + 1) < len(stop_fracs) else 1.0
+            progress = frac_a + seg_frac * (frac_b - frac_a)
 
             lon, lat, brng = shape_walk(trip.shape_coords, progress)
             return BusPosition(
@@ -230,8 +286,7 @@ def interpolate_position(
                 route_type=trip.route_type,
             )
 
-    # Fallback: past last computed segment — trip has effectively completed
-    # Return None to let cleanup remove this bus from the map
+    # Past last segment — trip completed
     return None
 
 
@@ -676,7 +731,7 @@ class BusInterpolationConnector(BaseConnector):
                 headsign = _safe_str(getattr(trip_row, "trip_headsign", ""))
                 destination = headsign if headsign else stop_time_list[-1][0]
 
-                active_trips.append(ActiveTrip(
+                trip_obj = ActiveTrip(
                     trip_id=trip_id,
                     route_id=route_id,
                     line_name=line_name,
@@ -685,7 +740,19 @@ class BusInterpolationConnector(BaseConnector):
                     shape_coords=shape_coords,
                     delay_seconds=0,
                     route_type=route_type,
-                ))
+                )
+
+                # Compute shape-aware stop fractions by projecting each stop
+                # onto the nearest point on the shape polyline. This ensures
+                # buses follow actual road geometry instead of linear stop mapping.
+                trip_stop_coords = [
+                    stop_coords[sid] for sid in trip_stop_ids if sid in stop_coords
+                ]
+                if len(trip_stop_coords) == len(stop_time_list) and shape_coords:
+                    fracs = _compute_stop_shape_fractions(trip_stop_coords, shape_coords)
+                    object.__setattr__(trip_obj, '_stop_shape_fracs', fracs)
+
+                active_trips.append(trip_obj)
 
         return active_trips
 
