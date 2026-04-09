@@ -48,9 +48,9 @@ TOMTOM_FLOW_URL = (
     "https://api.tomtom.com/traffic/services/4/flowSegmentData/absolute/10/json"
 )
 
-# FRC classes to keep: FRC0 (motorway) through FRC3 (secondary road).
-# FRC4+ (local roads, residential) are excluded to reduce noise.
-ALLOWED_FRC = {"FRC0", "FRC1", "FRC2", "FRC3"}
+# FRC classes to keep: FRC0 (motorway) through FRC4 (local connecting road).
+# FRC5+ (minor local, residential) are excluded to reduce noise.
+ALLOWED_FRC = {"FRC0", "FRC1", "FRC2", "FRC3", "FRC4"}
 
 # Cache TTL: 7 days in seconds
 _CACHE_TTL_SECONDS = 7 * 24 * 3600
@@ -246,15 +246,42 @@ class TomTomConnector(BaseConnector):
 
                 road_key = _make_road_key(coords)
                 if road_key not in seen:
+                    # Use midpoint of segment for reverse geocoding
+                    mid_idx = len(coords) // 2
+                    mid_lat = coords[mid_idx]["latitude"]
+                    mid_lon = coords[mid_idx]["longitude"]
                     seen[road_key] = {
                         "id": road_key,
-                        "name": frc,
+                        "name": frc,  # placeholder, resolved below
                         "lat": probe_lat,
                         "lon": probe_lon,
                         "frc": frc,
                         "road_key": road_key,
+                        "mid_lat": mid_lat,
+                        "mid_lon": mid_lon,
                     }
 
+                await asyncio.sleep(0.05)
+
+        # Reverse-geocode each segment to get actual street names
+        logger.info("TomTom: reverse-geocoding %d segments for street names", len(seen))
+        async with httpx.AsyncClient(timeout=15.0) as client:
+            for seg in seen.values():
+                try:
+                    geo_url = (
+                        f"https://api.tomtom.com/search/2/reverseGeocode/"
+                        f"{seg['mid_lat']},{seg['mid_lon']}.json"
+                        f"?key={api_key}"
+                    )
+                    resp = await client.get(geo_url)
+                    resp.raise_for_status()
+                    addresses = resp.json().get("addresses", [])
+                    if addresses:
+                        addr = addresses[0].get("address", {})
+                        street = addr.get("streetName") or addr.get("freeformAddress") or seg["frc"]
+                        seg["name"] = street
+                except Exception:
+                    pass  # keep FRC as fallback name
                 await asyncio.sleep(0.05)
 
         segments = list(seen.values())
