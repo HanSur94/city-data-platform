@@ -320,6 +320,17 @@ export default function MapView({
         ]}
         onClick={(e) => {
           let features = e.features ?? [];
+          // Fallback: if react-map-gl didn't match interactive features (common with
+          // dynamically-added line layers), manually query with a bbox tolerance area
+          if (features.length === 0 && mapRef.current && e.point) {
+            const map = mapRef.current.getMap();
+            const tolerance = 10; // px
+            const bbox: [[number, number], [number, number]] = [
+              [e.point.x - tolerance, e.point.y - tolerance],
+              [e.point.x + tolerance, e.point.y + tolerance],
+            ];
+            features = map.queryRenderedFeatures(bbox) as any[];
+          }
           const feature = features[0];
           if (!feature || !e.lngLat) return;
           const layerId = feature.layer?.id ?? '';
