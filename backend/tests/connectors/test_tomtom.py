@@ -338,13 +338,14 @@ def test_make_road_key_different_segments() -> None:
 # ---------------------------------------------------------------------------
 
 @pytest.mark.asyncio
-async def test_discover_filters_frc4_plus(connector) -> None:
-    """_discover_segments keeps only FRC0-FRC3, discards FRC4+."""
+async def test_discover_filters_frc5_plus(connector) -> None:
+    """_discover_segments keeps FRC0-FRC4, discards FRC5+."""
     from app.connectors.tomtom import _generate_grid_points
 
-    frc4_response = {
+    # FRC5 is a minor local road — should be discarded
+    frc5_response = {
         "flowSegmentData": {
-            "frc": "FRC4",
+            "frc": "FRC5",
             "currentSpeed": 40,
             "freeFlowSpeed": 50,
             "confidence": 0.9,
@@ -370,17 +371,22 @@ async def test_discover_filters_frc4_plus(connector) -> None:
             },
         }
     }
+    # Reverse geocode response stub
+    reverse_geocode_response = {"addresses": [{"address": {"streetName": "Teststraße"}}]}
 
     # Mock grid to produce just 2 probe points
     mock_points = [(48.840, 10.090), (48.850, 10.100)]
-    responses = [frc4_response, frc2_response]
+    grid_responses = [frc5_response, frc2_response]
     call_count = [0]
 
     async def mock_get(url):
         r = MagicMock()
         r.raise_for_status = MagicMock()
-        r.json.return_value = responses[call_count[0]]
-        call_count[0] += 1
+        if "reverseGeocode" in url:
+            r.json.return_value = reverse_geocode_response
+        else:
+            r.json.return_value = grid_responses[min(call_count[0], len(grid_responses) - 1)]
+            call_count[0] += 1
         return r
 
     with patch("app.connectors.tomtom._generate_grid_points", return_value=mock_points), \
@@ -394,9 +400,11 @@ async def test_discover_filters_frc4_plus(connector) -> None:
         with patch.object(connector, "_save_cache"):
             segments = await connector._discover_segments()
 
-    # Only FRC2 segment should be kept
+    # Only FRC2 segment should be kept (FRC5 is discarded)
     assert len(segments) == 1
     assert segments[0]["frc"] == "FRC2"
+    # Street name should be resolved via reverse geocode
+    assert segments[0]["name"] == "Teststraße"
 
 
 # ---------------------------------------------------------------------------
@@ -420,13 +428,17 @@ async def test_discover_deduplicates_same_segment(connector) -> None:
             },
         }
     }
+    reverse_geocode_response = {"addresses": [{"address": {"streetName": "Teststraße"}}]}
 
     mock_points = [(48.840, 10.090), (48.841, 10.091)]  # Two different probe points
 
     async def mock_get(url):
         r = MagicMock()
         r.raise_for_status = MagicMock()
-        r.json.return_value = same_response
+        if "reverseGeocode" in url:
+            r.json.return_value = reverse_geocode_response
+        else:
+            r.json.return_value = same_response
         return r
 
     with patch("app.connectors.tomtom._generate_grid_points", return_value=mock_points), \
@@ -505,6 +517,114 @@ def test_cache_expired_returns_none(connector, tmp_path) -> None:
         result = connector._load_cache()
 
     assert result is None
+
+
+# ---------------------------------------------------------------------------
+# Test 14: Reverse geocode uses streetName only (no entityType — invalid for this endpoint)
+# ---------------------------------------------------------------------------
+
+@pytest.mark.asyncio
+async def test_discover_reverse_geocode_uses_street_name(connector) -> None:
+    """_discover_segments resolves streetName from reverseGeocode and does NOT use entityType=Street."""
+    flow_response = {
+        "flowSegmentData": {
+            "frc": "FRC2",
+            "currentSpeed": 45,
+            "freeFlowSpeed": 60,
+            "confidence": 0.95,
+            "coordinates": {
+                "coordinate": [
+                    {"latitude": 48.840, "longitude": 10.090},
+                    {"latitude": 48.841, "longitude": 10.092},
+                    {"latitude": 48.842, "longitude": 10.095},
+                ]
+            },
+        }
+    }
+    reverse_geocode_response = {"addresses": [{"address": {"streetName": "Hauptstraße"}}]}
+
+    mock_points = [(48.840, 10.090)]
+    seen_urls: list[str] = []
+
+    async def mock_get(url):
+        seen_urls.append(url)
+        r = MagicMock()
+        r.raise_for_status = MagicMock()
+        if "reverseGeocode" in url:
+            r.json.return_value = reverse_geocode_response
+        else:
+            r.json.return_value = flow_response
+        return r
+
+    with patch("app.connectors.tomtom._generate_grid_points", return_value=mock_points), \
+         patch("httpx.AsyncClient") as mock_cls:
+        mock_client = AsyncMock()
+        mock_client.__aenter__ = AsyncMock(return_value=mock_client)
+        mock_client.__aexit__ = AsyncMock(return_value=False)
+        mock_client.get = mock_get
+        mock_cls.return_value = mock_client
+
+        with patch.object(connector, "_save_cache"):
+            segments = await connector._discover_segments()
+
+    assert len(segments) == 1
+    # Street name must be resolved from reverseGeocode streetName field
+    assert segments[0]["name"] == "Hauptstraße"
+    # The reverse geocode URL must NOT include entityType (TomTom returns 400 for entityType=Street)
+    reverse_geocode_urls = [u for u in seen_urls if "reverseGeocode" in u]
+    assert len(reverse_geocode_urls) == 1
+    assert "entityType" not in reverse_geocode_urls[0]
+
+
+@pytest.mark.asyncio
+async def test_discover_reverse_geocode_freeform_address_not_used_as_fallback(connector) -> None:
+    """When streetName is absent, freeformAddress is NOT used — frc fallback is kept instead."""
+    flow_response = {
+        "flowSegmentData": {
+            "frc": "FRC3",
+            "currentSpeed": 30,
+            "freeFlowSpeed": 50,
+            "confidence": 0.8,
+            "coordinates": {
+                "coordinate": [
+                    {"latitude": 48.850, "longitude": 10.100},
+                    {"latitude": 48.852, "longitude": 10.105},
+                ]
+            },
+        }
+    }
+    # Response has freeformAddress but no streetName
+    reverse_geocode_response = {
+        "addresses": [{"address": {"freeformAddress": "Bahnhofstraße 1, 73430 Aalen"}}]
+    }
+
+    mock_points = [(48.850, 10.100)]
+
+    async def mock_get(url):
+        r = MagicMock()
+        r.raise_for_status = MagicMock()
+        if "reverseGeocode" in url:
+            r.json.return_value = reverse_geocode_response
+        else:
+            r.json.return_value = flow_response
+        return r
+
+    with patch("app.connectors.tomtom._generate_grid_points", return_value=mock_points), \
+         patch("httpx.AsyncClient") as mock_cls:
+        mock_client = AsyncMock()
+        mock_client.__aenter__ = AsyncMock(return_value=mock_client)
+        mock_client.__aexit__ = AsyncMock(return_value=False)
+        mock_client.get = mock_get
+        mock_cls.return_value = mock_client
+
+        with patch.object(connector, "_save_cache"):
+            segments = await connector._discover_segments()
+
+    assert len(segments) == 1
+    # freeformAddress ("Bahnhofstraße 1, 73430 Aalen") must NOT be used as display name.
+    # When streetName is absent, the frc placeholder is kept.
+    assert segments[0]["name"] == "FRC3"
+    assert segments[0]["name"] != "Bahnhofstraße 1, 73430 Aalen"
 
 
 # ---------------------------------------------------------------------------

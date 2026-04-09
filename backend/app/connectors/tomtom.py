@@ -263,7 +263,11 @@ class TomTomConnector(BaseConnector):
 
                 await asyncio.sleep(0.05)
 
-        # Reverse-geocode each segment to get actual street names
+        # Reverse-geocode each segment to get actual street names.
+        # Note: TomTom reverseGeocode does not support entityType=Street (returns 400).
+        # The plain endpoint reliably returns streetName for most road coordinates.
+        # We use streetName only — freeformAddress includes house number and city suffix,
+        # making it unsuitable as a bare display name.
         logger.info("TomTom: reverse-geocoding %d segments for street names", len(seen))
         async with httpx.AsyncClient(timeout=15.0) as client:
             for seg in seen.values():
@@ -278,10 +282,16 @@ class TomTomConnector(BaseConnector):
                     addresses = resp.json().get("addresses", [])
                     if addresses:
                         addr = addresses[0].get("address", {})
-                        street = addr.get("streetName") or addr.get("freeformAddress") or seg["frc"]
-                        seg["name"] = street
-                except Exception:
-                    pass  # keep FRC as fallback name
+                        street = addr.get("streetName")
+                        if street:
+                            seg["name"] = street
+                        # If streetName absent, keep frc placeholder (logged below)
+                except Exception as exc:
+                    logger.debug(
+                        "TomTom reverse-geocode failed for segment %s (%.5f,%.5f): %s",
+                        seg["id"], seg["mid_lat"], seg["mid_lon"], exc,
+                    )
+                    # Keep frc as fallback name (already set)
                 await asyncio.sleep(0.05)
 
         segments = list(seen.values())
