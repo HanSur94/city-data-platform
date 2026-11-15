@@ -68,6 +68,40 @@ _CONNECTOR_MODULES = {
     "PoliceConnector": "app.connectors.police",
 }
 
+# Domain each registered connector writes to (sources.domain). Values must be
+# members of VALID_DOMAINS (app/schemas/geojson.py) and match the domain the
+# connector passes to upsert_feature / Observation. StubConnector has no domain
+# and is intentionally absent.
+CONNECTOR_DOMAINS: dict[str, str] = {
+    "UBAConnector": "air_quality",
+    "SensorCommunityConnector": "air_quality",
+    "AirQualityGridConnector": "air_quality",
+    "WeatherConnector": "weather",
+    "GTFSConnector": "transit",
+    "GTFSRealtimeConnector": "transit",
+    "BusInterpolationConnector": "transit",
+    "PegelonlineConnector": "water",
+    "LubwWfsConnector": "water",
+    "LhpConnector": "water",
+    "BastConnector": "traffic",
+    "AutobahnConnector": "traffic",
+    "MobiDataBWConnector": "traffic",
+    "TomTomConnector": "traffic",
+    "SmardConnector": "energy",
+    "MastrConnector": "energy",
+    "SolarPotentialConnector": "energy",
+    "SolarProductionConnector": "energy",
+    "HeatDemandConnector": "energy",
+    "OverpassCommunityConnector": "community",
+    "OverpassRoadworksConnector": "infrastructure",
+    "LadesaeulenConnector": "infrastructure",
+    "ParkingConnector": "infrastructure",
+    "EvChargingConnector": "infrastructure",
+    "CyclingInfraConnector": "infrastructure",
+    "OsmBuildingsConnector": "buildings",
+    "PoliceConnector": "police",
+}
+
 
 def _resolve_connector(connector_class: str):
     """Resolve a connector class by its string name."""
@@ -128,3 +162,58 @@ def setup_scheduler(town: Town) -> None:
             connector_cfg.connector_class,
             connector_cfg.poll_interval_seconds,
         )
+
+
+async def register_sources(town: Town) -> int:
+    """Upsert one ``sources`` row per enabled, registered connector of a town.
+
+    Row id is ``{town_id}:{connector_class}``. Idempotent: an existing row keeps
+    last_successful_fetch / validation_error_count. The connector ``config`` is
+    never written (it contains resolved API keys).
+
+    Must run after the towns row exists (FK sources.town_id -> towns.id).
+    Exceptions propagate; the caller decides how to handle them.
+    """
+    from sqlalchemy import text
+
+    from app.db import AsyncSessionLocal
+
+    stmt = text(
+        "INSERT INTO sources (id, town_id, domain, connector_class, "
+        "poll_interval_seconds, enabled) "
+        "VALUES (:id, :town_id, :domain, :connector_class, "
+        ":poll_interval_seconds, true) "
+        "ON CONFLICT (id) DO UPDATE SET "
+        "domain = EXCLUDED.domain, "
+        "connector_class = EXCLUDED.connector_class, "
+        "poll_interval_seconds = EXCLUDED.poll_interval_seconds, "
+        "enabled = true"
+    )
+
+    rows: list[dict] = []
+    seen: set[str] = set()
+    for cfg in town.connectors:
+        if not cfg.enabled:
+            continue
+        name = cfg.connector_class
+        if name in seen:
+            continue
+        if name not in _CONNECTOR_MODULES or name not in CONNECTOR_DOMAINS:
+            logger.warning("Not registering source for unknown connector: %r", name)
+            continue
+        seen.add(name)
+        rows.append(
+            {
+                "id": f"{town.id}:{name}",
+                "town_id": town.id,
+                "domain": CONNECTOR_DOMAINS[name],
+                "connector_class": name,
+                "poll_interval_seconds": cfg.poll_interval_seconds,
+            }
+        )
+
+    async with AsyncSessionLocal() as session:
+        for params in rows:
+            await session.execute(stmt, params)
+        await session.commit()
+    return len(rows)
