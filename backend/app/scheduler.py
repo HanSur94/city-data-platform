@@ -66,6 +66,11 @@ _CONNECTOR_MODULES = {
     "OsmBuildingsConnector": "app.connectors.osm_buildings",
     # Backlog 999.4: Police reports
     "PoliceConnector": "app.connectors.police",
+    # Demographics connectors (DEMO-01..04)
+    "WegweiserKommuneConnector": "app.connectors.wegweiser_kommune",
+    "StatistikBWConnector": "app.connectors.statistik_bw",
+    "ZensusConnector": "app.connectors.zensus",
+    "BundesagenturConnector": "app.connectors.bundesagentur",
 }
 
 # Domain each registered connector writes to (sources.domain). Values must be
@@ -100,6 +105,10 @@ CONNECTOR_DOMAINS: dict[str, str] = {
     "CyclingInfraConnector": "infrastructure",
     "OsmBuildingsConnector": "buildings",
     "PoliceConnector": "police",
+    "WegweiserKommuneConnector": "demographics",
+    "StatistikBWConnector": "demographics",
+    "ZensusConnector": "demographics",
+    "BundesagenturConnector": "demographics",
 }
 
 

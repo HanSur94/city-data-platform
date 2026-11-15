@@ -46,6 +46,8 @@ STALENESS_THRESHOLDS: dict[str, dict[str, int]] = {
     "community": {"yellow": 172800, "red": 604800},      # 2d/7d — Overpass is daily
     "infrastructure": {"yellow": 172800, "red": 604800}, # 2d/7d
     "demographics": {"yellow": 604800, "red": 2592000},  # 7d/30d — slow-moving data
+    "buildings": {"yellow": 172800, "red": 604800},      # 2d/7d — OSM buildings polled daily
+    "police": {"yellow": 7200, "red": 21600},            # 2h/6h — polled every 30 min
 }
 
 # Default thresholds for domains not in the map above
