@@ -6,8 +6,9 @@ import type { MapRef } from 'react-map-gl/maplibre';
 import { Protocol } from 'pmtiles';
 import * as maplibregl from 'maplibre-gl';
 import { format } from 'date-fns';
-import { buildMapStyle, buildOrthophotoStyle, buildSatelliteStyle } from '@/lib/map-styles';
+import { getMapStyle, DEFAULT_BASE_LAYER } from '@/lib/map-styles';
 import type { BaseLayer } from '@/lib/map-styles';
+import type { StyleSpecification } from 'maplibre-gl';
 import TransitLayer from './TransitLayer';
 import AQILayer from './AQILayer';
 import AirQualityHeatmapLayer from './AirQualityHeatmapLayer';
@@ -74,11 +75,15 @@ const PMTILES_URL = 'pmtiles:///tiles/aalen.pmtiles';
 // If a new object is passed on every render, it calls map.setStyle() which tears down
 // and rebuilds ALL layers, causing visible flicker. Module-scope singletons guarantee
 // the same reference across all renders and component remounts.
-const MAP_STYLES: Record<BaseLayer, ReturnType<typeof buildMapStyle>> = {
-  osm: buildMapStyle(PMTILES_URL),
-  orthophoto: buildOrthophotoStyle(),
-  satellite: buildSatelliteStyle(),
+const MAP_STYLES: Record<BaseLayer, StyleSpecification> = {
+  dark: getMapStyle('dark', PMTILES_URL),
+  light: getMapStyle('light', PMTILES_URL),
+  orthophoto: getMapStyle('orthophoto', PMTILES_URL),
+  satellite: getMapStyle('satellite', PMTILES_URL),
 };
+
+// Town centre used for the initial camera (and, later, the sun position).
+const TOWN_CENTER = { lng: 10.0918, lat: 48.8374 };
 
 interface MapViewProps {
   layerVisibility: {
@@ -134,6 +139,7 @@ interface MapViewProps {
   cadastralVisible?: boolean;
   hillshadeVisible?: boolean;
   buildings3dVisible?: boolean;
+  terrain3dVisible?: boolean;
   onFlyTo?: (lng: number, lat: number, zoom?: number) => void;
   /** Called when the map is ready, passing the flyTo function */
   onMapReady?: (flyTo: (lng: number, lat: number, zoom?: number) => void) => void;
@@ -186,10 +192,11 @@ export default function MapView({
   noiseMetric = 'lden',
   demographicMetric = 'population',
   weatherCondition = null,
-  baseLayer = 'osm',
+  baseLayer = DEFAULT_BASE_LAYER,
   cadastralVisible = false,
   hillshadeVisible = false,
   buildings3dVisible = true,
+  terrain3dVisible = true,
   hiddenBusLines,
   onBusLinesDiscovered,
   onMapReady,
@@ -232,14 +239,16 @@ export default function MapView({
     }
   }, [externalPopup, onExternalPopupClear]);
 
-  // Auto-tilt map when 3D buildings are toggled
+  // Auto-tilt map when 3D buildings / terrain are toggled. The first run is skipped
+  // so the initial pitch (60) from initialViewState is not overridden.
+  const tiltInitializedRef = useRef(false);
   useEffect(() => {
-    if (buildings3dVisible) {
-      mapRef.current?.easeTo({ pitch: 45, duration: 500 });
-    } else {
-      mapRef.current?.easeTo({ pitch: 0, duration: 500 });
+    if (!tiltInitializedRef.current) {
+      tiltInitializedRef.current = true;
+      return;
     }
-  }, [buildings3dVisible]);
+    mapRef.current?.easeTo({ pitch: buildings3dVisible || terrain3dVisible ? 60 : 0, duration: 500 });
+  }, [buildings3dVisible, terrain3dVisible]);
 
   const [popupInfo, setPopupInfo] = useState<PopupInfo | null>(null);
   const [followedTripId, setFollowedTripId] = useState<string | null>(null);
@@ -303,11 +312,13 @@ export default function MapView({
       <Map
         ref={mapRef}
         initialViewState={{
-          longitude: 10.0918,
-          latitude: 48.8374,
+          longitude: TOWN_CENTER.lng,
+          latitude: TOWN_CENTER.lat,
           zoom: 13,
-          pitch: 45,
+          pitch: 60,
+          bearing: -20,
         }}
+        maxPitch={80}
         minZoom={8}
         maxZoom={18}
         style={{ width: '100%', height: '100%' }}
