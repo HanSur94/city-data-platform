@@ -55,7 +55,7 @@ import HeatDemandPopup from './HeatDemandPopup';
 import UnifiedBuildingPopup from './UnifiedBuildingPopup';
 import CyclingLayer from './CyclingLayer';
 import CyclingPopup from './CyclingPopup';
-import WeatherSkybox from './WeatherSkybox';
+import MapAtmosphere from './MapAtmosphere';
 import LegendOverlay from './LegendOverlay';
 import type { DemographicMetric } from './DemographicsGridLayer';
 import type { LayerResponse } from '@/types/geojson';
@@ -484,7 +484,7 @@ export default function MapView({
         />
         <BuildingsLayer visible={buildings3dVisible} baseLayer={baseLayer} beforeId={labelBeforeId} />
         <NavigationControl position="top-right" showCompass={true} showZoom={true} visualizePitch={true} />
-        <WeatherSkybox condition={weatherCondition ?? null} />
+        <MapAtmosphere condition={weatherCondition ?? null} timestamp={historicalTimestamp ?? null} center={TOWN_CENTER} />
         <KocherLayer data={waterData ?? null} visible={kocherVisible} />
         {popupInfo && (
           <Popup
