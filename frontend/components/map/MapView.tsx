@@ -4,7 +4,7 @@ import Map, { NavigationControl } from 'react-map-gl/maplibre';
 import { Popup } from 'react-map-gl/maplibre';
 import type { MapRef } from 'react-map-gl/maplibre';
 import { Protocol } from 'pmtiles';
-import maplibregl from 'maplibre-gl';
+import * as maplibregl from 'maplibre-gl';
 import { format } from 'date-fns';
 import { buildMapStyle, buildOrthophotoStyle, buildSatelliteStyle } from '@/lib/map-styles';
 import type { BaseLayer } from '@/lib/map-styles';
@@ -59,6 +59,9 @@ import LegendOverlay from './LegendOverlay';
 import type { DemographicMetric } from './DemographicsGridLayer';
 import type { LayerResponse } from '@/types/geojson';
 import type GeoJSON from 'geojson';
+
+// maplibre-gl v6 needs an explicit worker URL under the Next bundler (it cannot derive it from its own chunk URL).
+maplibregl.setWorkerUrl(new URL('maplibre-gl/dist/maplibre-gl-worker.mjs', import.meta.url).toString());
 
 // PMTiles file extracted from Protomaps daily build for Aalen bbox
 // Extract command: npx pmtiles extract https://build.protomaps.com/{date}.pmtiles \
