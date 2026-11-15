@@ -18,6 +18,8 @@ import math
 import os
 import tempfile
 import time
+import types
+import zlib
 from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any
@@ -29,6 +31,13 @@ logger = logging.getLogger(__name__)
 
 # Cache GTFS zip for 24 hours
 _GTFS_CACHE_MAX_AGE = 604800  # 7 days — GTFS schedules update weekly
+
+# Parsed + town-reduced GTFS feed, one entry per town bbox:
+#   (lon_min, lat_min, lon_max, lat_max) -> ((len(zip_bytes), crc32), reduced_feed)
+# Module level because the scheduler builds a NEW connector instance for every run
+# (see app/scheduler.py), so instance attributes would never survive to the next run.
+_REDUCED_FEED_CACHE: dict[tuple[float, float, float, float], tuple[tuple[int, int], Any]] = {}
+_REDUCED_FEED_LOCK = asyncio.Lock()
 
 
 def _haversine(lon1: float, lat1: float, lon2: float, lat2: float) -> float:
@@ -290,15 +299,109 @@ def interpolate_position(
     return None
 
 
+def reduce_feed_to_bbox(feed: Any, bbox: Any) -> types.SimpleNamespace:
+    """Cut a (statewide) GTFS feed down to the trips that touch a town bbox.
+
+    A trip is kept when at least one of its stop_times is at a stop inside the
+    bbox. Kept trips retain ALL their stop_times (including stops outside the
+    bbox) because interpolation needs the whole trip. Every other table is
+    filtered to the ids still referenced by the kept trips.
+
+    Pure and vectorised (pandas only, no per-row Python loops). Tables that are
+    missing (None) or empty are returned unchanged; a missing upstream table
+    yields empty id sets so downstream tables filter to zero rows instead of
+    raising. The original feed is not referenced by the result, so the
+    statewide tables can be garbage-collected.
+
+    Args:
+        feed: object with calendar, calendar_dates, routes, trips, stop_times,
+            stops and shapes DataFrames (gtfs_kit Feed or a namespace).
+        bbox: object with lon_min, lat_min, lon_max and lat_max.
+
+    Returns:
+        types.SimpleNamespace with exactly the seven tables listed above.
+    """
+    import pandas as pd
+
+    def _get(name: str):
+        return getattr(feed, name, None)
+
+    def _present(df: Any) -> bool:
+        return df is not None and not df.empty
+
+    def _ids(df: Any, column: str) -> set:
+        if _present(df) and column in df.columns:
+            return set(df[column])
+        return set()
+
+    def _keep(df: Any, column: str, ids: set):
+        if not _present(df) or column not in df.columns:
+            return df
+        return df[df[column].isin(ids)]
+
+    stops = _get("stops")
+    trips = _get("trips")
+    stop_times = _get("stop_times")
+
+    # 1. stops inside the bbox (inclusive; NaN / non-numeric coordinates drop out)
+    bbox_stop_ids: set = set()
+    if _present(stops):
+        lon = pd.to_numeric(stops["stop_lon"], errors="coerce")
+        lat = pd.to_numeric(stops["stop_lat"], errors="coerce")
+        in_bbox = lon.between(bbox.lon_min, bbox.lon_max) & lat.between(
+            bbox.lat_min, bbox.lat_max
+        )
+        bbox_stop_ids = set(stops.loc[in_bbox, "stop_id"])
+
+    # 2. trips visiting at least one bbox stop
+    town_trip_ids: set = set()
+    if bbox_stop_ids and _present(stop_times):
+        town_trip_ids = set(
+            stop_times.loc[stop_times["stop_id"].isin(bbox_stop_ids), "trip_id"]
+        )
+
+    # 3. whole trips: trips, ALL their stop_times, and the stops those reference
+    trips_r = _keep(trips, "trip_id", town_trip_ids)
+    trip_ids = _ids(trips_r, "trip_id")
+    stop_times_r = _keep(stop_times, "trip_id", trip_ids)
+    stops_r = _keep(stops, "stop_id", _ids(stop_times_r, "stop_id"))
+
+    # 4. tables hanging off the kept trips
+    routes_r = _keep(_get("routes"), "route_id", _ids(trips_r, "route_id"))
+    shapes_r = _keep(_get("shapes"), "shape_id", _ids(trips_r, "shape_id"))
+    service_ids = _ids(trips_r, "service_id")
+    calendar_r = _keep(_get("calendar"), "service_id", service_ids)
+    calendar_dates_r = _keep(_get("calendar_dates"), "service_id", service_ids)
+
+    reduced = types.SimpleNamespace(
+        calendar=calendar_r,
+        calendar_dates=calendar_dates_r,
+        routes=routes_r,
+        trips=trips_r,
+        stop_times=stop_times_r,
+        stops=stops_r,
+        shapes=shapes_r,
+    )
+
+    def _n(df: Any) -> int:
+        return 0 if df is None else len(df)
+
+    logger.info(
+        "Reduced GTFS feed to town bbox: %d trips, %d stop_times, %d stops, %d shape rows.",
+        _n(trips_r), _n(stop_times_r), _n(stops_r), _n(shapes_r),
+    )
+    return reduced
+
+
 class BusInterpolationConnector(BaseConnector):
     """Computation connector: interpolates bus positions from GTFS schedule + RT delay.
 
     Does NOT use the standard fetch/normalize/persist pipeline.
     run() orchestrates the full computation:
     1. Download/cache GTFS zip
-    2. Parse with gtfs_kit (in thread — blocking)
-    3. Determine active service_ids for today
-    4. Find active trips
+    2. Parse with gtfs_kit + reduce to town bbox (cached per zip, in thread)
+    3. Determine active service_ids for today (in thread)
+    4. Find active trips (in thread)
     5. Fetch GTFS-RT delays from DB
     6. Interpolate positions
     7. Upsert features + persist to transit_positions
@@ -326,8 +429,8 @@ class BusInterpolationConnector(BaseConnector):
         if not zip_bytes:
             return
 
-        # 2. Parse GTFS (blocking, run in thread)
-        feed = await asyncio.to_thread(self._parse_gtfs, zip_bytes)
+        # 2. Parse GTFS + reduce to the town bbox (blocking, in a thread, cached per zip)
+        feed = await self._get_reduced_feed(zip_bytes)
         if feed is None:
             return
 
@@ -343,14 +446,18 @@ class BusInterpolationConnector(BaseConnector):
         today = now_local.date()
         now_secs = now_local.hour * 3600 + now_local.minute * 60 + now_local.second
 
-        active_service_ids = self._get_active_service_ids(feed, today)
+        active_service_ids = await asyncio.to_thread(
+            self._get_active_service_ids, feed, today
+        )
         if not active_service_ids:
             logger.info("No active services for %s — skipping interpolation.", today)
             await self._update_staleness()
             return
 
         # 4. Find active trips
-        active_trips = self._build_active_trips(feed, active_service_ids, now_secs)
+        active_trips = await asyncio.to_thread(
+            self._build_active_trips, feed, active_service_ids, now_secs
+        )
         logger.info("Found %d active trips for interpolation.", len(active_trips))
 
         # 5. Fetch delays from DB
@@ -530,6 +637,35 @@ class BusInterpolationConnector(BaseConnector):
 
         logger.error("Could not download GTFS zip from any URL and no cache available.")
         return None
+
+    def _parse_and_reduce(self, zip_bytes: bytes, bbox: Any) -> types.SimpleNamespace | None:
+        """Parse the GTFS zip and reduce it to the town bbox. Called in a thread."""
+        feed = self._parse_gtfs(zip_bytes)
+        if feed is None:
+            return None
+        return reduce_feed_to_bbox(feed, bbox)
+
+    async def _get_reduced_feed(self, zip_bytes: bytes) -> types.SimpleNamespace | None:
+        """Return the town-reduced feed for this zip, parsing only when the zip changed.
+
+        The statewide feed is parsed once per distinct zip and bbox, not on every
+        30 s run. Parsing and reduction share one worker-thread call, serialised
+        by a module-level lock so concurrent runs do not parse twice.
+        """
+        b = self.town.bbox
+        bbox_key = (b.lon_min, b.lat_min, b.lon_max, b.lat_max)
+        async with _REDUCED_FEED_LOCK:
+            zip_key = (len(zip_bytes), await asyncio.to_thread(zlib.crc32, zip_bytes))
+            cached = _REDUCED_FEED_CACHE.get(bbox_key)
+            if cached is not None and cached[0] == zip_key:
+                logger.debug("Using cached reduced GTFS feed for bbox %s.", bbox_key)
+                return cached[1]
+
+            reduced = await asyncio.to_thread(self._parse_and_reduce, zip_bytes, b)
+            if reduced is None:
+                return None
+            _REDUCED_FEED_CACHE[bbox_key] = (zip_key, reduced)
+            return reduced
 
     def _parse_gtfs(self, zip_bytes: bytes):
         """Parse GTFS zip bytes with gtfs_kit. Called in a thread."""
