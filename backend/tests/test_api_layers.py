@@ -78,3 +78,60 @@ async def test_unknown_domain_404(client):
     with patch("app.routers.layers.get_db", return_value=AsyncMock()):
         resp = await client.get("/api/layers/badomain?town=aalen")
     assert resp.status_code == 404
+
+
+@pytest.mark.asyncio
+async def test_layer_features_not_duplicated_by_sources(client):
+    """F2: several sources rows per domain must not multiply feature rows."""
+    import json
+    from unittest.mock import MagicMock
+    from app.db import get_db
+
+    feature_rows = [
+        {
+            "id": f"feat-{i}",
+            "geometry": json.dumps({"type": "Point", "coordinates": [10.0 + i, 48.8]}),
+            "properties": {"name": f"Sensor {i}"},
+            "source_id": f"src-{i}",
+            "pm25": 5.0,
+        }
+        for i in (1, 2)
+    ]
+    attribution_rows = [
+        {"connector_class": "UBAConnector"},
+        {"connector_class": "SensorCommunityConnector"},
+        {"connector_class": "AirQualityGridConnector"},
+    ]
+    executed: list[str] = []
+
+    async def fake(stmt, params=None):
+        sql = str(stmt)
+        executed.append(sql)
+        result = MagicMock()
+        if "FROM sources" in sql:
+            result.mappings.return_value.all.return_value = attribution_rows
+        else:
+            result.mappings.return_value.all.return_value = feature_rows
+        return result
+
+    session = AsyncMock()
+    session.execute = AsyncMock(side_effect=fake)
+
+    async def _db():
+        yield session
+
+    app.dependency_overrides[get_db] = _db
+    resp = await client.get("/api/layers/air_quality?town=aalen")
+
+    assert resp.status_code == 200
+    data = resp.json()
+    ids = [f["id"] for f in data["features"]]
+    assert len(ids) == 2 and len(set(ids)) == 2
+    assert [a["source_name"] for a in data["attribution"]] == [
+        "IDW Interpolation",
+        "Sensor.Community",
+        "Umweltbundesamt (UBA)",
+    ]
+    sources_stmts = [sql for sql in executed if "sources" in sql]
+    assert len(sources_stmts) == 1
+    assert "SELECT DISTINCT connector_class" in sources_stmts[0]

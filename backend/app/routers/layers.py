@@ -25,6 +25,34 @@ from app.schemas.geojson import (
 router = APIRouter(tags=["layers"])
 
 
+async def _fetch_attribution(
+    db: AsyncSession, town_id: str, domain: str
+) -> list[Attribution]:
+    """Attribution list for the connectors registered for a town + domain.
+
+    Kept separate from the feature queries so rows are never multiplied by the
+    number of sources rows. Must be the last DB call of the request.
+    """
+    try:
+        result = await db.execute(
+            text(
+                "SELECT DISTINCT connector_class FROM sources "
+                "WHERE town_id = :town_id AND domain = :domain"
+            ),
+            {"town_id": town_id, "domain": domain},
+        )
+        classes = {
+            row.get("connector_class") for row in result.mappings().all()
+        }
+        return [
+            Attribution(**CONNECTOR_ATTRIBUTION[cc])
+            for cc in sorted(c for c in classes if c in CONNECTOR_ATTRIBUTION)
+        ]
+    except Exception:
+        # Sources table may not exist / be reachable; attribution is best-effort.
+        return []
+
+
 @router.get("/layers/{domain}", response_model=None)
 async def get_layer(
     domain: str,
@@ -64,14 +92,12 @@ async def get_layer(
                     ST_AsGeoJSON(f.geometry)::text AS geometry,
                     f.properties,
                     f.source_id,
-                    s.connector_class,
                     MAX(f.created_at)              AS last_updated
                 FROM features f
-                LEFT JOIN sources s ON s.town_id = f.town_id AND s.domain = f.domain
                 WHERE f.town_id = :town_id
                   AND f.domain   = 'transit'
                   {ft_filter}
-                GROUP BY f.id, f.geometry, f.properties, f.source_id, s.connector_class
+                GROUP BY f.id, f.geometry, f.properties, f.source_id
             """),
             transit_params,
         )
@@ -98,11 +124,9 @@ async def get_layer(
                     ST_AsGeoJSON(f.geometry)::text AS geometry,
                     f.properties,
                     f.source_id,
-                    s.connector_class,
                     r.pm25, r.pm10, r.no2, r.o3, r.aqi,
                     r.time                         AS reading_time
                 FROM features f
-                LEFT JOIN sources s ON s.town_id = f.town_id AND s.domain = f.domain
                 LEFT JOIN LATERAL (
                     SELECT pm25, pm10, no2, o3, aqi, time
                     FROM air_quality_readings
@@ -133,12 +157,10 @@ async def get_layer(
                     ST_AsGeoJSON(f.geometry)::text AS geometry,
                     f.properties,
                     f.source_id,
-                    s.connector_class,
                     r.time                         AS reading_time,
                     r.vehicle_count_total, r.vehicle_count_hgv,
                     r.speed_avg_kmh, r.congestion_level
                 FROM features f
-                LEFT JOIN sources s ON s.town_id = f.town_id AND s.domain = f.domain
                 LEFT JOIN LATERAL (
                     SELECT time, vehicle_count_total, vehicle_count_hgv,
                            speed_avg_kmh, congestion_level
@@ -169,10 +191,8 @@ async def get_layer(
                     f.id::text                     AS id,
                     ST_AsGeoJSON(f.geometry)::text AS geometry,
                     f.properties,
-                    f.source_id,
-                    s.connector_class
+                    f.source_id
                 FROM features f
-                LEFT JOIN sources s ON s.town_id = f.town_id AND s.domain = f.domain
                 WHERE f.town_id = :town_id
                   AND f.domain   = 'energy'
             """),
@@ -189,11 +209,9 @@ async def get_layer(
                     ST_AsGeoJSON(f.geometry)::text AS geometry,
                     f.properties,
                     f.source_id,
-                    s.connector_class,
                     r.values                       AS reading_values,
                     r.time                         AS reading_time
                 FROM features f
-                LEFT JOIN sources s ON s.town_id = f.town_id AND s.domain = f.domain
                 LEFT JOIN LATERAL (
                     SELECT values, time
                     FROM demographics_readings
@@ -229,10 +247,8 @@ async def get_layer(
                     f.id::text                     AS id,
                     ST_AsGeoJSON(f.geometry)::text AS geometry,
                     f.properties,
-                    f.source_id,
-                    s.connector_class
+                    f.source_id
                 FROM features f
-                LEFT JOIN sources s ON s.town_id = f.town_id AND s.domain = f.domain
                 WHERE f.town_id = :town_id
                   AND f.domain   = :domain
                   {source_filter}
@@ -249,10 +265,8 @@ async def get_layer(
                     f.id::text                     AS id,
                     ST_AsGeoJSON(f.geometry)::text AS geometry,
                     f.properties,
-                    f.source_id,
-                    s.connector_class
+                    f.source_id
                 FROM features f
-                LEFT JOIN sources s ON s.town_id = f.town_id AND s.domain = f.domain
                 WHERE f.town_id = :town_id
                   AND f.domain   = :domain
             """),
@@ -317,16 +331,9 @@ async def get_layer(
         }
         features.append(feature)
 
-    # Collect unique connector_class values for attribution
-    seen_classes: set[str] = set()
-    for row in rows:
-        cc = row.get("connector_class")
-        if cc and cc in CONNECTOR_ATTRIBUTION:
-            seen_classes.add(cc)
-
-    attributions: list[Attribution] = [
-        Attribution(**CONNECTOR_ATTRIBUTION[cc]) for cc in sorted(seen_classes)
-    ]
+    # Attribution: one separate query, executed last (a failure must not
+    # abort the transaction before the feature query).
+    attributions = await _fetch_attribution(db, current_town.id, domain)
 
     return LayerResponse(
         features=features,

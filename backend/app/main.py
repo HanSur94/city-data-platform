@@ -17,7 +17,7 @@ from sqlalchemy import text
 from app.config import load_town, Town
 from app.db import AsyncSessionLocal
 from app.dependencies import set_current_town, get_current_town
-from app.scheduler import scheduler, setup_scheduler
+from app.scheduler import register_sources, scheduler, setup_scheduler
 from app.routers import layers, timeseries, kpi, connectors, admin, metadata, features
 
 
@@ -46,6 +46,14 @@ async def lifespan(app: FastAPI):
         )
         await session.commit()
     print(f"[startup] Ensured town '{town.id}' exists in database")
+
+    # Register connector sources (health/admin/attribution read these rows).
+    # Must come after the towns upsert (FK). A failure here must not block startup.
+    try:
+        n = await register_sources(town)
+        print(f"[startup] Registered {n} connector source(s)")
+    except Exception as exc:
+        print(f"[startup] WARNING: could not register connector sources: {exc}")
 
     # Start APScheduler with all enabled connectors
     # NOTE: Must come after town config is loaded and verified.
