@@ -3,7 +3,7 @@ name = "city-data-platform-backend"
 version = "0.1.0"
 description = "City Data Platform backend — FastAPI ingestion service"
 readme = "README.md"
-requires-python = ">=3.11"
+requires-python = ">=3.11.5"
 dependencies = [
     "alembic>=1.18.4",
     "apscheduler==3.11.2",
