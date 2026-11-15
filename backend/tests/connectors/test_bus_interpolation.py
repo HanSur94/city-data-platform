@@ -426,3 +426,138 @@ async def test_two_fresh_instances_parse_once_and_compute_off_loop(
         list(_STOP_A), list(_STOP_B), list(_STOP_C),
     ]
     mocks.cleanup.assert_awaited_with({"bus-pos:T1"})
+
+
+# ---------------------------------------------------------------------------
+# Edge cases: equivalence, optional tables, cache invalidation, failure,
+# concurrency and stale-dot cleanup (quick-261115-ved, Task 2)
+# ---------------------------------------------------------------------------
+
+_MONDAY = date(2026, 11, 16)
+
+
+def test_reduced_feed_yields_same_active_trips_as_full_feed(aalen_town):
+    connector = _connector(aalen_town)
+    full = _synthetic_feed()
+    reduced = bi.reduce_feed_to_bbox(full, aalen_town.bbox)
+
+    full_services = connector._get_active_service_ids(full, _MONDAY)
+    reduced_services = connector._get_active_service_ids(reduced, _MONDAY)
+    assert full_services == {"SV1", "SV2"}
+    assert reduced_services == {"SV1"}
+    assert reduced_services <= full_services
+
+    now_secs = 21600
+    full_trips = connector._build_active_trips(full, full_services, now_secs)
+    reduced_trips = connector._build_active_trips(reduced, reduced_services, now_secs)
+
+    assert [t.trip_id for t in full_trips] == ["T1"]
+    assert [t.trip_id for t in reduced_trips] == ["T1"]
+    assert [t.model_dump() for t in reduced_trips] == [t.model_dump() for t in full_trips]
+    assert [t._stop_shape_fracs for t in reduced_trips] == [
+        t._stop_shape_fracs for t in full_trips
+    ]
+
+
+@pytest.mark.parametrize(
+    "variant",
+    ["shapes_and_dates_none", "shapes_and_dates_empty", "calendar_none"],
+)
+def test_missing_optional_tables_do_not_raise(aalen_town, variant):
+    if variant == "shapes_and_dates_none":
+        overrides = {"shapes": None, "calendar_dates": None}
+    elif variant == "shapes_and_dates_empty":
+        overrides = {"shapes": pd.DataFrame(), "calendar_dates": pd.DataFrame()}
+    else:
+        overrides = {
+            "calendar": None,
+            "calendar_dates": pd.DataFrame(
+                {"service_id": ["SV1"], "date": ["20261116"], "exception_type": [1]}
+            ),
+        }
+    feed = _synthetic_feed(**overrides)
+
+    reduced = bi.reduce_feed_to_bbox(feed, aalen_town.bbox)
+
+    for name, value in overrides.items():
+        if value is None:
+            assert getattr(reduced, name) is None
+
+    connector = _connector(aalen_town)
+    services = connector._get_active_service_ids(reduced, _MONDAY)
+    assert "SV1" in services
+    trips = connector._build_active_trips(reduced, services, 21600)
+    assert [t.trip_id for t in trips] == ["T1"]
+    if variant != "calendar_none":
+        # No shapes table: straight line through the stop coordinates
+        assert trips[0].shape_coords == [_STOP_A, _STOP_B, _STOP_C]
+
+
+async def test_different_zip_reparses_and_keeps_one_entry_per_bbox(
+    aalen_town, monkeypatch
+):
+    mocks = _patch_io(monkeypatch, _synthetic_feed())
+    connector = _connector(aalen_town)
+
+    first = await connector._get_reduced_feed(b"zip-v1")
+    again = await connector._get_reduced_feed(b"zip-v1")
+    assert again is first
+    assert mocks.parse_calls == [b"zip-v1"]
+
+    second = await connector._get_reduced_feed(b"zip-v2")
+    assert second is not first
+    assert mocks.parse_calls == [b"zip-v1", b"zip-v2"]
+    assert len(bi._REDUCED_FEED_CACHE) == 1
+
+
+async def test_parse_failure_is_not_cached(aalen_town, monkeypatch):
+    mocks = _patch_io(monkeypatch, None)
+    connector = _connector(aalen_town)
+
+    assert await connector._get_reduced_feed(b"zip-v1") is None
+    assert bi._REDUCED_FEED_CACHE == {}
+    assert await connector._get_reduced_feed(b"zip-v1") is None
+    assert len(mocks.parse_calls) == 2
+
+
+async def test_concurrent_calls_parse_once(aalen_town, monkeypatch):
+    calls: list[bytes] = []
+    feed = _synthetic_feed()
+
+    def _slow_parse(self, zip_bytes):
+        calls.append(zip_bytes)
+        time.sleep(0.2)  # runs in a worker thread
+        return feed
+
+    monkeypatch.setattr(BusInterpolationConnector, "_parse_gtfs", _slow_parse)
+
+    first, second = await asyncio.gather(
+        _connector(aalen_town)._get_reduced_feed(b"zip-v1"),
+        _connector(aalen_town)._get_reduced_feed(b"zip-v1"),
+    )
+
+    assert calls == [b"zip-v1"]
+    assert first is second
+    assert first is not None
+
+
+async def test_no_active_town_service_still_removes_stale_bus_features(
+    aalen_town, monkeypatch
+):
+    no_service_today = pd.DataFrame(
+        {
+            "service_id": ["SV1", "SV2"],
+            **{d: [0, 1] for d in _ALL_DAYS},
+            "start_date": ["20000101", "20000101"],
+            "end_date": ["20991231", "20991231"],
+        }
+    )
+    feed = _synthetic_feed(calendar=no_service_today, calendar_dates=None)
+    mocks = _patch_io(monkeypatch, feed)
+
+    await _connector(aalen_town).run()
+
+    mocks.cleanup.assert_awaited_once_with(set())
+    mocks.staleness.assert_awaited_once()
+    for call in mocks.upsert.await_args_list:
+        assert not call.args[0]
