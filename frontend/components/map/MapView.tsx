@@ -6,7 +6,7 @@ import type { MapRef } from 'react-map-gl/maplibre';
 import { Protocol } from 'pmtiles';
 import * as maplibregl from 'maplibre-gl';
 import { format } from 'date-fns';
-import { getMapStyle, DEFAULT_BASE_LAYER } from '@/lib/map-styles';
+import { getMapStyle, DEFAULT_BASE_LAYER, firstSymbolLayerId } from '@/lib/map-styles';
 import type { BaseLayer } from '@/lib/map-styles';
 import type { StyleSpecification } from 'maplibre-gl';
 import TransitLayer from './TransitLayer';
@@ -306,6 +306,8 @@ export default function MapView({
 
   // Look up the pre-built singleton style — guaranteed stable reference.
   const mapStyle = MAP_STYLES[baseLayer];
+  // First label layer id ('address_label' in every style) — 3D buildings are inserted beneath it.
+  const labelBeforeId = firstSymbolLayerId(mapStyle);
 
   return (
     <div className="relative w-full h-full">
@@ -478,8 +480,9 @@ export default function MapView({
         <GeospatialOverlayLayer
           cadastralVisible={cadastralVisible}
           hillshadeVisible={hillshadeVisible}
+          terrainVisible={terrain3dVisible}
         />
-        <BuildingsLayer visible={buildings3dVisible} />
+        <BuildingsLayer visible={buildings3dVisible} baseLayer={baseLayer} beforeId={labelBeforeId} />
         <NavigationControl position="top-right" showCompass={true} showZoom={true} visualizePitch={true} />
         <WeatherSkybox condition={weatherCondition ?? null} />
         <KocherLayer data={waterData ?? null} visible={kocherVisible} />
