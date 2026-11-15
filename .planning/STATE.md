@@ -1,11 +1,14 @@
 ---
-gsd_state_version: 1.0
+gsd_state_version: "1.0"
 milestone: v2.0
-milestone_name: — AalenPulse Feature Parity
+milestone_name: AalenPulse Feature Parity
+current_phase: 20
 status: verifying
 stopped_at: "Completed quick task 260408-dbq: Ensure all real bus stops (Haltestellen) appear on map"
-last_updated: "2026-04-08T07:47:11.341Z"
-last_activity: "2026-04-07 - Completed quick task 260407-mwh: Fix transit layer performance and air quality SQL bug"
+last_updated: "2026-11-15T17:46:14.305Z"
+last_activity: 2026-04-08
+last_activity_desc: "Completed quick task 260408-fm8: Make buses rectangular shaped on map, bus stops get colored dots"
+state_head: cf2fba8f99a2601c31df4856e73cce9ca2544b0a
 progress:
   total_phases: 19
   completed_phases: 10
@@ -28,9 +31,9 @@ See: .planning/PROJECT.md (updated 2026-04-06)
 Phase: 20
 Plan: Not started
 Status: Phase complete — ready for verification
-Last activity: 2026-04-08 - Completed quick task 260408-fm8: Make buses rectangular shaped on map, bus stops get colored dots
+Last activity: 2026-11-15 - Completed quick task 261115-pn5: Fix top 4 review findings: populate sources table, de-duplicate layer sources join, register demographics connectors, bbox-filter GTFS-RT
 
-Progress: [██░░░░░░░░] 14%
+Progress: [█░░░░░░░░░] 14%
 
 ## Performance Metrics
 
@@ -111,6 +114,7 @@ None yet.
 | 260408-hyd | Set up TomTom env var resolution: ${VAR} substitution in YAML config, .env.example, Docker wiring | 2026-04-08 | 805c59c | [260408-hyd-set-up-tomtom-traffic-busyness-integrati](./quick/260408-hyd-set-up-tomtom-traffic-busyness-integrati/) |
 | 260408-jiz | Batch upsert features to unblock asyncio event loop: batch_upsert_features on BaseConnector, migrate GTFS/BusInterpolation/GTFSRealtime | 2026-04-08 | 86d4ebd | [260408-jiz-batch-upsert-features-to-unblock-asyncio](./quick/260408-jiz-batch-upsert-features-to-unblock-asyncio/) |
 | 260408-kqo | TomTom traffic time-series chart: 24h speed+congestion dual-line chart in TrafficFlowPopup | 2026-04-08 | 83c0865 | [260408-kqo-tomtom-traffic-time-series-chart-congest](./quick/260408-kqo-tomtom-traffic-time-series-chart-congest/) |
+| 261115-pn5 | Fix top 4 review findings: populate sources table, de-duplicate layer sources join, register demographics connectors, bbox-filter GTFS-RT | 2026-11-15 | cf2fba8 | [261115-pn5-fix-top-4-review-findings-populate-sourc](./quick/261115-pn5-fix-top-4-review-findings-populate-sourc/) |
 
 ## Session Continuity
 

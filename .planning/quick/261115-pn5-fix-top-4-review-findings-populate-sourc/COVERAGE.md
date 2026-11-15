@@ -1,0 +1,1 @@
+No external API integration: the task changes how already-integrated sources are registered, filtered and attributed (sources-table upsert, layers attribution query, scheduler registry entries for existing connector modules, bbox/relevance filtering of the already-configured GTFS-RT feed); the detector matched only the repo's own /api/* routes.
