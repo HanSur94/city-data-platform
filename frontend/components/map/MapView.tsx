@@ -325,6 +325,9 @@ export default function MapView({
         maxZoom={18}
         style={{ width: '100%', height: '100%' }}
         mapStyle={mapStyle}
+        // Full reload on base-map change: MapLibre's style diff leaves stale fill colours
+        // (water, landcover) behind when switching between the dark and light flavors.
+        styleDiffing={false}
         attributionControl={{ compact: false }}
         interactiveLayerIds={[
           'transit-stops', 'aqi-points', 'water-gauges', 'traffic-circles', 'traffic-flow-lines', 'autobahn-markers', 'energy-points', 'kocher-gauge', 'kocher-river-line',
@@ -484,7 +487,7 @@ export default function MapView({
         />
         <BuildingsLayer visible={buildings3dVisible} baseLayer={baseLayer} beforeId={labelBeforeId} />
         <NavigationControl position="top-right" showCompass={true} showZoom={true} visualizePitch={true} />
-        <MapAtmosphere condition={weatherCondition ?? null} timestamp={historicalTimestamp ?? null} center={TOWN_CENTER} />
+        <MapAtmosphere condition={weatherCondition ?? null} timestamp={historicalTimestamp ?? null} center={TOWN_CENTER} darkBase={baseLayer === 'dark'} />
         <KocherLayer data={waterData ?? null} visible={kocherVisible} />
         {popupInfo && (
           <Popup

@@ -12,6 +12,8 @@ interface MapAtmosphereProps {
   /** Time-slider timestamp; null = live (current time). */
   timestamp: Date | null;
   center: { lat: number; lng: number };
+  /** True when the dark basemap is active; it uses its own darker sky presets. */
+  darkBase?: boolean;
 }
 
 const REFRESH_MS = 5 * 60 * 1000;
@@ -21,7 +23,7 @@ const REFRESH_MS = 5 * 60 * 1000;
  * the current time (or the time-slider timestamp) and the current weather.
  * Renders nothing to the DOM.
  */
-export default function MapAtmosphere({ condition, timestamp, center }: MapAtmosphereProps) {
+export default function MapAtmosphere({ condition, timestamp, center, darkBase = false }: MapAtmosphereProps) {
   const { current: mapRef } = useMap();
   const [now, setNow] = useState(() => new Date());
 
@@ -42,7 +44,10 @@ export default function MapAtmosphere({ condition, timestamp, center }: MapAtmos
     () => sunPosition(time, center.lat, center.lng),
     [time, center.lat, center.lng],
   );
-  const sky = useMemo(() => skyFor(condition, sun.altitudeDeg), [condition, sun.altitudeDeg]);
+  const sky = useMemo(
+    () => skyFor(condition, sun.altitudeDeg, darkBase),
+    [condition, sun.altitudeDeg, darkBase],
+  );
   const light = useMemo(
     () => lightFor(sun.azimuthDeg, sun.altitudeDeg),
     [sun.azimuthDeg, sun.altitudeDeg],

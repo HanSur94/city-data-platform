@@ -91,13 +91,111 @@ export const HILLSHADE_PAINT: Record<BaseLayer, NonNullable<HillshadeLayerSpecif
 
 /** 3D building colour ramp (height in metres -> colour) and opacity per base style. */
 export const BUILDING_PALETTES: Record<BaseLayer, { stops: Array<[number, string]>; opacity: number }> = {
-  dark: { stops: [[0, '#232a36'], [20, '#3b4a61'], [60, '#6f86a8']], opacity: 1 },
+  dark: { stops: [[0, '#3a4763'], [20, '#55688f'], [60, '#8ea8d6']], opacity: 1 },
   light: { stops: [[0, '#ece7dd'], [20, '#cfc8b8'], [60, '#a89f8d']], opacity: 1 },
   orthophoto: { stops: [[0, '#e6e6e6'], [20, '#d2d2d2'], [60, '#bdbdbd']], opacity: 0.9 },
   satellite: { stops: [[0, '#e6e6e6'], [20, '#d2d2d2'], [60, '#bdbdbd']], opacity: 0.9 },
 };
 
 // Clear-day fallback until MapAtmosphere applies the live, sun/weather-driven values.
+type Flavor = ReturnType<typeof namedFlavor>;
+
+const TWIN_BG = '#0a0e15';
+
+/**
+ * Basemap flavor per vector style. "dark" is a blue-tinted digital-twin variant of
+ * the Protomaps dark flavor: the stock one is near-black grey on grey, so roads,
+ * water and parks are hard to tell apart under 3D buildings and data layers.
+ */
+function flavorFor(flavor: 'dark' | 'light'): Flavor {
+  const base = namedFlavor(flavor);
+  if (flavor === 'light') return base;
+  return {
+    ...base,
+    background: TWIN_BG,
+    earth: '#111722',
+    park_a: '#14261f',
+    park_b: '#163326',
+    wood_a: '#12261d',
+    wood_b: '#132c20',
+    scrub_a: '#152420',
+    scrub_b: '#152820',
+    pedestrian: '#1a2130',
+    industrial: '#151b27',
+    school: '#1a202d',
+    hospital: '#1b202c',
+    water: '#0f3558',
+    buildings: '#1e2738',
+    pier: '#2a3445',
+    other: '#2a3446',
+    minor_service: '#2c3649',
+    minor_a: '#3a4762',
+    minor_b: '#323d54',
+    link: '#4a5a7c',
+    major: '#52648a',
+    highway: '#7088b8',
+    railway: '#454e63',
+    minor_service_casing: TWIN_BG,
+    minor_casing: TWIN_BG,
+    link_casing: TWIN_BG,
+    major_casing_late: TWIN_BG,
+    major_casing_early: TWIN_BG,
+    highway_casing_late: TWIN_BG,
+    highway_casing_early: TWIN_BG,
+    bridges_other: '#2a3446',
+    bridges_minor: '#3a4762',
+    bridges_link: '#4a5a7c',
+    bridges_major: '#52648a',
+    bridges_highway: '#7088b8',
+    bridges_other_casing: TWIN_BG,
+    bridges_minor_casing: TWIN_BG,
+    bridges_link_casing: TWIN_BG,
+    bridges_major_casing: TWIN_BG,
+    bridges_highway_casing: TWIN_BG,
+    tunnel_other: '#222b3a',
+    tunnel_minor: '#222b3a',
+    tunnel_link: '#222b3a',
+    tunnel_major: '#222b3a',
+    tunnel_highway: '#222b3a',
+    tunnel_other_casing: TWIN_BG,
+    tunnel_minor_casing: TWIN_BG,
+    tunnel_link_casing: TWIN_BG,
+    tunnel_major_casing: TWIN_BG,
+    tunnel_highway_casing: TWIN_BG,
+    boundaries: '#5b6b8a',
+    city_label: '#d5def0',
+    city_label_halo: TWIN_BG,
+    subplace_label: '#94a1bb',
+    subplace_label_halo: TWIN_BG,
+    roads_label_major: '#aab6cf',
+    roads_label_major_halo: TWIN_BG,
+    roads_label_minor: '#8591aa',
+    roads_label_minor_halo: TWIN_BG,
+    address_label: '#66728a',
+    address_label_halo: TWIN_BG,
+    landcover: base.landcover && {
+      ...base.landcover,
+      grassland: 'rgba(22, 44, 33, 1)',
+      farmland: 'rgba(21, 32, 28, 1)',
+      forest: 'rgba(16, 42, 30, 1)',
+      scrub: 'rgba(20, 38, 30, 1)',
+      urban_area: 'rgba(19, 24, 34, 1)',
+      barren: 'rgba(26, 28, 32, 1)',
+    },
+  };
+}
+
+/**
+ * Basemap layers without the generic POI icons (shops, restaurants, ...). The
+ * platform's own data layers are the points of interest; the stock icons only
+ * clutter the 3D scene.
+ */
+function basemapLayers(flavor: 'dark' | 'light'): LayerSpecification[] {
+  return layers(PROTOMAPS_SOURCE_ID, flavorFor(flavor), { lang: 'de' }).filter(
+    (l) => l.id !== 'pois',
+  );
+}
+
 function defaultSky(): SkySpecification {
   return {
     'sky-color': '#5a8fd8',
@@ -158,7 +256,7 @@ function hillshadeLayer(base: BaseLayer): HillshadeLayerSpecification {
 }
 
 function buildVectorStyle(flavor: 'dark' | 'light', pmtilesUrl: string): StyleSpecification {
-  const base = layers(PROTOMAPS_SOURCE_ID, namedFlavor(flavor), { lang: 'de' });
+  const base = basemapLayers(flavor);
   const firstRoad = base.findIndex((l) => l.id.startsWith('roads'));
   const insertAt = firstRoad === -1 ? base.length : firstRoad;
   const withHillshade: LayerSpecification[] = [
@@ -183,9 +281,7 @@ function buildRasterStyle(
   rasterSource: SourceSpecification,
 ): StyleSpecification {
   // Dark-flavor labels (light text, dark halo) read best on aerial imagery.
-  const labels = layers(PROTOMAPS_SOURCE_ID, namedFlavor('dark'), { lang: 'de' }).filter(
-    (l) => l.type === 'symbol',
-  );
+  const labels = basemapLayers('dark').filter((l) => l.type === 'symbol');
   return {
     version: 8,
     glyphs: GLYPHS_URL,

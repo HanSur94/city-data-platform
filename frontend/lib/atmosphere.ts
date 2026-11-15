@@ -88,11 +88,61 @@ const NIGHT_SKY: SkySpecification = {
 };
 
 /** Sky colours for the current weather and sun altitude (degrees). */
-export function skyFor(condition: string | null | undefined, altitudeDeg: number): SkySpecification {
+/**
+ * Sky presets for the dark basemap. A realistic bright sky above a near-black
+ * ground reads as a rendering error, so the dark style keeps a deep-blue sky and
+ * only varies its tint with weather and sun height.
+ */
+const DARK_DAY_SKY: Record<WeatherCategory, SkySpecification> = {
+  clear: {
+    'sky-color': '#0d1b33',
+    'horizon-color': '#2f5184',
+    'fog-color': '#1a2b45',
+    'sky-horizon-blend': 0.6,
+    'horizon-fog-blend': 0.7,
+    'fog-ground-blend': 0.4,
+  },
+  overcast: {
+    'sky-color': '#161b24',
+    'horizon-color': '#3a4352',
+    'fog-color': '#222a36',
+    'sky-horizon-blend': 0.7,
+    'horizon-fog-blend': 0.8,
+    'fog-ground-blend': 0.5,
+  },
+  precip: {
+    'sky-color': '#0f1319',
+    'horizon-color': '#2a313c',
+    'fog-color': '#1a2029',
+    'sky-horizon-blend': 0.8,
+    'horizon-fog-blend': 0.9,
+    'fog-ground-blend': 0.6,
+  },
+};
+
+const DARK_TWILIGHT_SKY: SkySpecification = {
+  'sky-color': '#141a33',
+  'horizon-color': '#b3683a',
+  'fog-color': '#3a2c33',
+  'sky-horizon-blend': 0.6,
+  'horizon-fog-blend': 0.7,
+  'fog-ground-blend': 0.4,
+};
+
+/**
+ * @param darkBase true when the dark basemap is active (see DARK_DAY_SKY).
+ */
+export function skyFor(
+  condition: string | null | undefined,
+  altitudeDeg: number,
+  darkBase = false,
+): SkySpecification {
   if (altitudeDeg < NIGHT_MAX) return { ...NIGHT_SKY };
   const category = weatherCategory(condition);
-  if (altitudeDeg <= TWILIGHT_MAX) return { ...TWILIGHT_SKY[category] };
-  return { ...DAY_SKY[category] };
+  if (altitudeDeg <= TWILIGHT_MAX) {
+    return darkBase ? { ...DARK_TWILIGHT_SKY } : { ...TWILIGHT_SKY[category] };
+  }
+  return darkBase ? { ...DARK_DAY_SKY[category] } : { ...DAY_SKY[category] };
 }
 
 /**
