@@ -451,6 +451,12 @@ class BusInterpolationConnector(BaseConnector):
         )
         if not active_service_ids:
             logger.info("No active services for %s — skipping interpolation.", today)
+            # The reduced calendar only covers services of trips touching the town,
+            # so an empty set now means no bus runs in the town today. On the old
+            # full-feed path this case never got here (statewide services are always
+            # active): it went on to _build_active_trips -> [] and then
+            # _cleanup_old_features(set()), which removed all bus-pos dots. Keep that.
+            await self._cleanup_old_features(set())
             await self._update_staleness()
             return
 
