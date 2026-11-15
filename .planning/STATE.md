@@ -5,10 +5,10 @@ milestone_name: AalenPulse Feature Parity
 current_phase: 20
 status: verifying
 stopped_at: "Completed quick task 260408-dbq: Ensure all real bus stops (Haltestellen) appear on map"
-last_updated: "2026-11-15T20:31:38.078Z"
+last_updated: "2026-11-15T20:53:25.986Z"
 last_activity: 2026-11-15
 last_activity_desc: "Completed quick task 260408-fm8: Make buses rectangular shaped on map, bus stops get colored dots"
-state_head: a1af8f766b7ac90f10c9ad5525419f37f5f9a0d8
+state_head: 58f2b75955507a297ae52ae37c1426e05a7d4dc7
 progress:
   total_phases: 19
   completed_phases: 10
@@ -116,6 +116,7 @@ None yet.
 | 260408-kqo | TomTom traffic time-series chart: 24h speed+congestion dual-line chart in TrafficFlowPopup | 2026-04-08 | 83c0865 | [260408-kqo-tomtom-traffic-time-series-chart-congest](./quick/260408-kqo-tomtom-traffic-time-series-chart-congest/) |
 | 261115-pn5 | Fix top 4 review findings: populate sources table, de-duplicate layer sources join, register demographics connectors, bbox-filter GTFS-RT | 2026-11-15 | cf2fba8 | [261115-pn5-fix-top-4-review-findings-populate-sourc](./quick/261115-pn5-fix-top-4-review-findings-populate-sourc/) |
 | 261115-ss1 | Resolve open Dependabot alerts: update vulnerable backend (uv.lock) and frontend (package.json, package-lock.json) dependencies | 2026-11-15 | a1af8f7 | [261115-ss1-resolve-open-dependabot-alerts-update-vu](./quick/261115-ss1-resolve-open-dependabot-alerts-update-vu/) |
+| 11 | Resolve soupsieve Dependabot alerts: soupsieve 4.1.1, requires-python >=3.11.5 | 2026-11-15 | 58f2b75 | — |
 
 ## Session Continuity
 
