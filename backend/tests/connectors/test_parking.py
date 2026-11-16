@@ -1,41 +1,77 @@
 """Unit tests for ParkingConnector (Stadtwerke Aalen parking garage scraper)."""
 from __future__ import annotations
 
+from unittest.mock import AsyncMock, patch
+
 import pytest
 
 from app.config import ConnectorConfig, Town
-from app.connectors.parking import ParkingConnector
+from app.connectors.parking import GARAGES, ParkingConnector, _find_entry, _slugify
 from app.models.parking import ParkingGarage
 
 
-# Sample HTML mimicking the Stadtwerke Aalen parking page structure
+# Table rows cut verbatim from the current Stadtwerke Aalen page, plus the second table
+# of the page (office opening hours) which must be ignored.
 SAMPLE_HTML = """
 <html>
 <body>
-<div class="parkhaus">
-  <div class="parkhaus-item">
-    <h3>Parkhaus Stadtmitte</h3>
-    <span class="free">120</span>
-    <span class="total">300</span>
-  </div>
-  <div class="parkhaus-item">
-    <h3>Parkhaus Gmünder Tor</h3>
-    <span class="free">0</span>
-    <span class="total">200</span>
-  </div>
-  <div class="parkhaus-item">
-    <h3>Parkhaus Reichsstädter Markt</h3>
-    <span class="free">geschlossen</span>
-    <span class="total">150</span>
-  </div>
-  <div class="parkhaus-item">
-    <h3>Parkhaus Spitalstraße</h3>
-    <span class="free">45</span>
-    <span class="total">180</span>
-  </div>
-</div>
+<table class="table">
+<thead>
+<tr>
+<th colspan="3" scope="col">Unsere Parkhäuser in Aalen</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<th scope="row">P1 Rathaus</th>
+<td>75 freie Plätze</td>
+<td><span class="badge badge-success">geöffnet</span></td>
+</tr>
+<tr>
+<th scope="row">P2 Reichsstädter Markt</th>
+<td>116 freie Plätze</td>
+<td><span class="badge badge-success">geöffnet</span></td>
+</tr>
+<tr>
+<th scope="row">P3 Spritzenhausplatz</th>
+<td>42 freie Plätze</td>
+<td><span class="badge badge-success">geöffnet</span></td>
+</tr>
+<tr>
+<th scope="row">P5 Spitalstraße</th>
+<td>66 freie Plätze</td>
+<td><span class="badge badge-success">geöffnet</span></td>
+</tr>
+<tr>
+<th scope="row">P6 Bahnhof</th>
+<td>81 freie Plätze</td>
+<td><span class="badge badge-success">geöffnet</span></td>
+</tr>
+<tr>
+<th scope="row">P1 Kubus</th>
+<td>0 freie Plätze</td>
+<td><span class="badge badge-warning">besetzt</span></td>
+</tr>
+</tbody>
+</table>
+<table class="table table-sm table-borderless font-weight-bold">
+<tbody>
+<tr><td>Mo:</td><td>08.00 - 13.00 Uhr</td></tr>
+<tr><td>Di:</td><td>13.00 - 17.00 Uhr</td></tr>
+</tbody>
+</table>
 </body>
 </html>
+"""
+
+CLOSED_ROW_HTML = """
+<table class="table"><tbody>
+<tr>
+<th scope="row">P4 Testgarage</th>
+<td>geschlossen</td>
+<td><span class="badge badge-danger">geschlossen</span></td>
+</tr>
+</tbody></table>
 """
 
 UNPARSEABLE_HTML = """
@@ -68,43 +104,130 @@ def _make_connector() -> ParkingConnector:
 class TestNormalize:
     """Tests for ParkingConnector.normalize()."""
 
-    def test_extracts_garage_names_and_spots(self):
-        """normalize() extracts garage names, free spots, total from mock HTML."""
-        connector = _make_connector()
-        garages = connector.normalize(SAMPLE_HTML)
+    def test_extracts_six_garages_in_page_order(self):
+        garages = _make_connector().normalize(SAMPLE_HTML)
 
-        # Should extract at least the garages with valid numeric free spots
-        valid_garages = [g for g in garages if g.free_spots >= 0]
-        assert len(valid_garages) >= 2
+        assert [g.name for g in garages] == [
+            "P1 Rathaus",
+            "P2 Reichsstädter Markt",
+            "P3 Spritzenhausplatz",
+            "P5 Spitalstraße",
+            "P6 Bahnhof",
+            "P1 Kubus",
+        ]
+        assert [g.free_spots for g in garages] == [75, 116, 42, 66, 81, 0]
 
-        names = [g.name for g in garages]
-        assert any("Stadtmitte" in n for n in names)
+    def test_open_state_from_badge(self):
+        garages = {g.name: g for g in _make_connector().normalize(SAMPLE_HTML)}
 
-        stadtmitte = next(g for g in garages if "Stadtmitte" in g.name)
-        assert stadtmitte.free_spots == 120
-        assert stadtmitte.total_spots == 300
-        assert abs(stadtmitte.occupancy_pct - 60.0) < 0.1
+        assert garages["P1 Rathaus"].is_open is True
+        assert garages["P1 Rathaus"].status_text == "geöffnet"
+        assert garages["P1 Kubus"].free_spots == 0
+        assert garages["P1 Kubus"].status_text == "besetzt"
+        assert garages["P1 Kubus"].is_open is True
 
-    def test_handles_geschlossen_as_zero(self):
-        """normalize() handles 'geschlossen' or '0' free spots."""
-        connector = _make_connector()
-        garages = connector.normalize(SAMPLE_HTML)
+    def test_closed_garage_has_zero_free_and_is_not_open(self):
+        garages = _make_connector().normalize(CLOSED_ROW_HTML)
 
-        # Gmunder Tor has 0 free spots
-        gmuender = next((g for g in garages if "Gm" in g.name), None)
-        if gmuender:
-            assert gmuender.free_spots == 0
+        assert len(garages) == 1
+        assert garages[0].free_spots == 0
+        assert garages[0].is_open is False
 
-        # Reichsstadter Markt has "geschlossen" -> should be 0
-        reichs = next((g for g in garages if "Reichs" in g.name), None)
-        if reichs:
-            assert reichs.free_spots == 0
+    def test_opening_hours_table_is_ignored(self):
+        names = [g.name for g in _make_connector().normalize(SAMPLE_HTML)]
+        assert not any("Mo" == n.rstrip(":") for n in names)
+        assert len(names) == 6
 
     def test_returns_empty_for_unparseable_html(self):
         """normalize() returns empty list for unparseable HTML."""
+        assert _make_connector().normalize(UNPARSEABLE_HTML) == []
+
+    def test_capacity_unknown_leaves_total_and_occupancy_empty(self):
+        garages = _make_connector().normalize(SAMPLE_HTML)
+        rathaus = next(g for g in garages if g.name == "P1 Rathaus")
+        assert rathaus.total_spots is None
+        assert rathaus.occupancy_pct is None
+
+    def test_known_capacity_gives_total_and_occupancy(self):
+        table = {"rathaus": {"lat": 48.8, "lon": 10.0, "capacity": 100}}
+        with patch.dict("app.connectors.parking.GARAGES", table, clear=True):
+            garages = _make_connector().normalize(SAMPLE_HTML)
+
+        rathaus = next(g for g in garages if g.name == "P1 Rathaus")
+        assert rathaus.total_spots == 100
+        assert rathaus.occupancy_pct == pytest.approx(25.0)
+        kubus = next(g for g in garages if g.name == "P1 Kubus")
+        assert kubus.total_spots is None
+
+    def test_free_spots_are_clamped_to_capacity(self):
+        table = {"rathaus": {"lat": 48.8, "lon": 10.0, "capacity": 50}}
+        with patch.dict("app.connectors.parking.GARAGES", table, clear=True):
+            garages = _make_connector().normalize(SAMPLE_HTML)
+
+        rathaus = next(g for g in garages if g.name == "P1 Rathaus")
+        assert rathaus.free_spots == 50
+        assert rathaus.occupancy_pct == 0.0
+
+
+class TestMatching:
+    """Garage names resolve to different slugs and the right static entries."""
+
+    def test_two_p1_garages_have_different_slugs(self):
+        assert _slugify("P1 Rathaus") != _slugify("P1 Kubus")
+        assert _slugify("P2 Reichsstädter Markt") == "p2-reichsstaedter-markt"
+
+    def test_umlaut_and_sharp_s_names_match_static_entries(self):
+        assert _find_entry("P2 Reichsstädter Markt") is GARAGES["reichsstaedter"]
+        assert _find_entry("P5 Spitalstraße") is GARAGES["spitalstr"]
+
+    def test_unknown_garage_has_no_entry(self):
+        assert _find_entry("P3 Spritzenhausplatz") is None
+        assert _find_entry("P1 Kubus") is None
+
+
+class TestRun:
+    """run() writes properties incl. state, code and an approximate-location flag."""
+
+    @pytest.mark.asyncio
+    async def test_run_upserts_one_feature_per_garage(self):
         connector = _make_connector()
-        garages = connector.normalize(UNPARSEABLE_HTML)
-        assert garages == []
+        connector.fetch = AsyncMock(return_value=SAMPLE_HTML)
+        connector.upsert_feature = AsyncMock(return_value="uuid")
+        connector._update_staleness = AsyncMock()
+
+        await connector.run()
+
+        calls = {c.kwargs["source_id"]: c.kwargs for c in connector.upsert_feature.await_args_list}
+        assert set(calls) == {
+            "parking:p1-rathaus",
+            "parking:p2-reichsstaedter-markt",
+            "parking:p3-spritzenhausplatz",
+            "parking:p5-spitalstrasse",
+            "parking:p6-bahnhof",
+            "parking:p1-kubus",
+        }
+        rathaus = calls["parking:p1-rathaus"]["properties"]
+        assert rathaus["garage_code"] == "P1"
+        assert rathaus["free_spots"] == 75
+        assert rathaus["is_open"] is True
+        assert rathaus["status_text"] == "geöffnet"
+        assert rathaus["location_approximate"] is True
+        assert "total_spots" not in rathaus or rathaus["total_spots"] is None
+        reichs = calls["parking:p2-reichsstaedter-markt"]["properties"]
+        assert "location_approximate" not in reichs
+        connector._update_staleness.assert_awaited_once()
+
+    @pytest.mark.asyncio
+    async def test_run_without_garages_does_not_touch_staleness(self):
+        connector = _make_connector()
+        connector.fetch = AsyncMock(return_value=UNPARSEABLE_HTML)
+        connector.upsert_feature = AsyncMock()
+        connector._update_staleness = AsyncMock()
+
+        await connector.run()
+
+        connector.upsert_feature.assert_not_awaited()
+        connector._update_staleness.assert_not_awaited()
 
 
 class TestParkingGarageModel:
@@ -131,3 +254,14 @@ class TestParkingGarageModel:
                 total_spots=100,
                 occupancy_pct=101.0,
             )
+
+    def test_capacity_and_percentage_are_optional(self):
+        garage = ParkingGarage(name="P1 Rathaus", free_spots=75)
+        assert garage.total_spots is None
+        assert garage.occupancy_pct is None
+        assert garage.is_open is None
+        assert garage.status_text is None
+
+    def test_rejects_zero_total_spots_when_given(self):
+        with pytest.raises(Exception):
+            ParkingGarage(name="Test", free_spots=0, total_spots=0)

@@ -1,14 +1,22 @@
-"""BastConnector: fetches annual traffic count data from BASt (Bundesanstalt fuer Strassenwesen).
+"""BastConnector: annual traffic count results from BASt (Bundesanstalt fuer Strassenwesen).
 
-Implements TRAF-03: retrieves vehicle counts for stations near Aalen from BASt CSV
-and writes traffic readings to the traffic_readings hypertable.
+Implements TRAF-03: reads the permanent traffic count stations near the town from the
+annual results CSV of the BASt automatic traffic counts and stores each station as a
+'traffic' feature.
 
 BASt data source:
-    Annual hourly traffic count CSV at:
-    https://www.bast.de/DE/Verkehrstechnik/Fachthemen/v2-verkehrszaehlung/Daten/
+    One CSV per year, newest published year first (current year minus 1, 2, 3):
+    https://www.bast.de/DE/Themen/Digitales/HF_1/Massnahmen/verkehrszaehlung/Daten/<Y>_1/Jawe<Y>.csv?view=renderTcDataExportCSV
+    A year that is not published yet answers 404 or an HTML page and is skipped.
 
-CSV format (windows-1252 encoded, semicolon-delimited):
-    Zst;Land;Strasse;Abschnitt;ANr;VNr;Dat;Stunde;KFZ;SV;V_PKW;V_LKW;PLat;PLon;Richtung;Fahrstreifen
+CSV format (ISO-8859-15, semicolon-delimited, German numbers: "." thousands, "," decimal).
+Columns used: DZ_Nr (station number), DZ_Name, Str_Kl / Str_Nr / Str_Zus (road),
+Fernziel_Ri1 / Fernziel_Ri2 (directions), Anz_Fs_Q (lanes), DTV_Kfz_MobisSo_Q and
+DTV_SV_MobisSo_Q (average vehicles and heavy vehicles per day), pSV_MobisSo_Q (heavy
+vehicle share in %), Koor_WGS84_N / Koor_WGS84_E (position) and Anmerkungen (remark).
+
+The file holds annual averages, not a time series, so they are stored as feature
+properties (average vehicles per hour = DTV / 24) and no traffic_readings rows are written.
 
 License: Datenlizenz Deutschland – Namensnennung – Version 2.0 (DL-DE-BY-2.0)
 """
@@ -16,32 +24,51 @@ from __future__ import annotations
 
 import csv
 import io
-import math
+import logging
+import re
 from datetime import datetime, timezone
 from typing import Any
 
 import httpx
 
 from app.connectors.base import BaseConnector, Observation
-from app.config import ConnectorConfig, Town
+from app.config import ConnectorConfig, Town, TownBbox
 
+logger = logging.getLogger(__name__)
 
-# Latest annual hourly data CSV from BASt (2023 data)
-BAST_CSV_URL = (
-    "https://www.bast.de/DE/Verkehrstechnik/Fachthemen/v2-verkehrszaehlung/"
-    "Daten/2023_1/Jawe2023.csv?__blob=publicationFile&v=13"
+USER_AGENT = "city-data-platform/0.1 (open-source city dashboard)"
+
+# Annual results CSV; {year} is the data year.
+BAST_CSV_URL_TEMPLATE = (
+    "https://www.bast.de/DE/Themen/Digitales/HF_1/Massnahmen/verkehrszaehlung/Daten/"
+    "{year}_1/Jawe{year}.csv?view=renderTcDataExportCSV"
 )
 
-# Aalen bounding box + ~20km buffer
-# Aalen center: lat=48.84, lon=10.09
-# 20km ~ 0.18 deg lat, 0.26 deg lon
-BBOX_LAT_MIN = 48.56
-BBOX_LAT_MAX = 49.10
-BBOX_LON_MIN = 9.77
-BBOX_LON_MAX = 10.42
+# How many past years are tried (current year - 1 ... current year - 3).
+YEARS_BACK = 3
+
+# Stations this far (degrees) outside the town bbox are still shown; config key buffer_deg.
+DEFAULT_BUFFER_DEG = 0.2
 
 # Road capacity per lane per hour (standard German autobahn estimate)
 LANE_CAPACITY_VEH_H = 800
+
+DEFAULT_ATTRIBUTION = (
+    "Bundesanstalt fuer Strassenwesen (BASt), "
+    "Datenlizenz Deutschland – Namensnennung – Version 2.0"
+)
+
+
+def _current_year() -> int:
+    return datetime.now(timezone.utc).year
+
+
+def candidate_csv_urls(current_year: int) -> list[tuple[int, str]]:
+    """Return (year, url) pairs for current_year - 1 down to current_year - YEARS_BACK."""
+    return [
+        (year, BAST_CSV_URL_TEMPLATE.format(year=year))
+        for year in range(current_year - 1, current_year - 1 - YEARS_BACK, -1)
+    ]
 
 
 def _compute_congestion(count: int, lanes: int) -> str:
@@ -67,184 +94,241 @@ def _compute_congestion(count: int, lanes: int) -> str:
         return "congested"
 
 
+# Legacy hourly-format parser, still imported by MobiDataBWConnector (disabled in
+# towns/aalen.yaml, code kept). It keeps its own fixed filter box; BastConnector itself
+# derives the box from the town (see _parse_stations).
+_LEGACY_BBOX_LAT_MIN = 48.56
+_LEGACY_BBOX_LAT_MAX = 49.10
+_LEGACY_BBOX_LON_MIN = 9.77
+_LEGACY_BBOX_LON_MAX = 10.42
+
+
 def _parse_bast_csv(raw: bytes) -> list[dict]:
-    """Parse BASt CSV bytes into a list of row dicts.
+    """Parse a windows-1252 hourly-count CSV into row dicts inside the legacy filter box.
 
-    Handles windows-1252 encoding and semicolon delimiter.
-    Filters rows to those within Aalen bbox + 20km buffer.
-
-    Args:
-        raw: Raw CSV bytes from BASt.
-
-    Returns:
-        List of dicts with keys matching CSV column names, filtered by bbox.
+    Used by MobiDataBWConnector only; BastConnector reads the annual results through
+    _parse_stations().
     """
     text = raw.decode("windows-1252", errors="replace")
     reader = csv.DictReader(io.StringIO(text), delimiter=";")
     rows = []
     for row in reader:
-        # Strip whitespace from keys and values
         row = {k.strip(): v.strip() for k, v in row.items() if k}
         try:
             lat = float(row.get("PLat", "").replace(",", "."))
             lon = float(row.get("PLon", "").replace(",", "."))
         except (ValueError, KeyError):
             continue
-        # Filter to Aalen bbox + 20km buffer
-        if not (BBOX_LAT_MIN <= lat <= BBOX_LAT_MAX and BBOX_LON_MIN <= lon <= BBOX_LON_MAX):
+        if not (
+            _LEGACY_BBOX_LAT_MIN <= lat <= _LEGACY_BBOX_LAT_MAX
+            and _LEGACY_BBOX_LON_MIN <= lon <= _LEGACY_BBOX_LON_MAX
+        ):
             continue
         rows.append(row)
     return rows
 
 
+def _german_int(value: str | None) -> int | None:
+    """Parse '24.073' -> 24073. Empty or malformed -> None."""
+    if value is None:
+        return None
+    text = value.strip().replace(".", "")
+    if not text:
+        return None
+    try:
+        return int(text)
+    except ValueError:
+        return None
+
+
+def _german_float(value: str | None) -> float | None:
+    """Parse '48,80440378' -> 48.80440378. Empty or malformed -> None."""
+    if value is None:
+        return None
+    text = value.strip().replace(",", ".")
+    if not text:
+        return None
+    try:
+        return float(text)
+    except ValueError:
+        return None
+
+
+def _clean(value: str | None) -> str:
+    return (value or "").strip()
+
+
+def _parse_stations(
+    raw: bytes,
+    bbox: TownBbox,
+    buffer_deg: float,
+    data_year: int | None = None,
+) -> list[dict[str, Any]]:
+    """Parse the BASt annual CSV into station dicts inside the town bbox plus buffer.
+
+    Rows without both WGS84 coordinates are skipped. vehicle_count_total,
+    vehicle_count_hgv and congestion_level are only present when the station has a DTV.
+
+    Args:
+        raw: Raw CSV bytes (ISO-8859-15).
+        bbox: Town bounding box.
+        buffer_deg: Degrees added on every side of the bbox.
+        data_year: Year of the file, stored on every station.
+    """
+    text = raw.decode("iso-8859-15", errors="replace")
+    reader = csv.DictReader(io.StringIO(text), delimiter=";")
+    stations: list[dict[str, Any]] = []
+
+    for row in reader:
+        lat = _german_float(row.get("Koor_WGS84_N"))
+        lon = _german_float(row.get("Koor_WGS84_E"))
+        station_id = _clean(row.get("DZ_Nr"))
+        if lat is None or lon is None or not station_id:
+            continue
+        if not (
+            bbox.lat_min - buffer_deg <= lat <= bbox.lat_max + buffer_deg
+            and bbox.lon_min - buffer_deg <= lon <= bbox.lon_max + buffer_deg
+        ):
+            continue
+
+        road_name = " ".join(
+            part for part in (_clean(row.get("Str_Kl")), _clean(row.get("Str_Nr"))) if part
+        )
+        road_name = (road_name + _clean(row.get("Str_Zus"))).strip()
+        direction_parts = [_clean(row.get("Fernziel_Ri1")), _clean(row.get("Fernziel_Ri2"))]
+        direction = " - ".join(direction_parts) if all(direction_parts) else ""
+
+        lanes = _german_int(row.get("Anz_Fs_Q"))
+        dtv_kfz = _german_int(row.get("DTV_Kfz_MobisSo_Q"))
+        dtv_sv = _german_int(row.get("DTV_SV_MobisSo_Q"))
+
+        station: dict[str, Any] = {
+            "station_id": station_id,
+            "station_name": _clean(row.get("DZ_Name")),
+            "road_name": road_name,
+            "lanes": lanes,
+            "data_year": data_year,
+            "lat": lat,
+            "lon": lon,
+        }
+        if direction:
+            station["direction"] = direction
+        if dtv_kfz is not None:
+            station["dtv_kfz"] = dtv_kfz
+            station["vehicle_count_total"] = round(dtv_kfz / 24)
+            station["congestion_level"] = _compute_congestion(
+                station["vehicle_count_total"], lanes or 1
+            )
+        if dtv_sv is not None:
+            station["dtv_sv"] = dtv_sv
+            if dtv_kfz is not None:
+                station["vehicle_count_hgv"] = round(dtv_sv / 24)
+        sv_share = _german_float(row.get("pSV_MobisSo_Q"))
+        if sv_share is not None:
+            station["sv_share_pct"] = sv_share
+        remark = _clean(row.get("Anmerkungen"))
+        if remark:
+            station["remark"] = remark
+
+        stations.append(station)
+
+    return stations
+
+
 class BastConnector(BaseConnector):
-    """Fetches BASt annual traffic count data for stations near Aalen.
+    """Fetches BASt annual traffic count results for stations near the town.
 
     Config keys (from ConnectorConfig.config dict):
-        csv_url: Override for the BASt CSV URL (optional, uses default if absent).
+        csv_url: Explicit CSV URL (optional). Without it the newest published year is used.
+        data_year: Data year of csv_url (optional, else read from "Jawe<YYYY>" in the URL).
+        buffer_deg: Degrees around the town bbox in which stations are kept (default 0.2).
         attribution: Attribution string (optional).
     """
 
     def __init__(self, config: ConnectorConfig, town: Town) -> None:
         super().__init__(config, town)
-        # Maps BASt station_id -> features table UUID
-        self._feature_ids: dict[str, str] = {}
+        self._data_year: int | None = None
 
     async def fetch(self) -> bytes:
-        """Fetch the BASt annual traffic count CSV.
+        """Fetch the newest published BASt annual results CSV.
+
+        Without config csv_url the years current-1, current-2, current-3 are tried in
+        order; a year that answers anything but a CSV (404, other status, HTML) counts
+        as not published yet.
 
         Returns:
-            Raw CSV bytes.
+            Raw CSV bytes. The data year is kept in self._data_year.
 
         Raises:
-            httpx.HTTPError: On network/HTTP failure.
+            httpx.HTTPError: On network failure.
+            ValueError: No candidate year is published.
         """
-        url = self.config.config.get("csv_url", BAST_CSV_URL)
+        explicit_url = self.config.config.get("csv_url")
         async with httpx.AsyncClient(timeout=60.0) as client:
-            response = await client.get(url)
-            response.raise_for_status()
-            return response.content
+            headers = {"User-Agent": USER_AGENT}
 
-    def normalize(self, raw: bytes, **kwargs) -> list[Observation]:
-        """Transform BASt CSV bytes into Observations.
+            if explicit_url:
+                response = await client.get(explicit_url, headers=headers)
+                response.raise_for_status()
+                configured_year = self.config.config.get("data_year")
+                if configured_year is None:
+                    match = re.search(r"Jawe(\d{4})", explicit_url)
+                    configured_year = int(match.group(1)) if match else None
+                self._data_year = int(configured_year) if configured_year is not None else None
+                return response.content
 
-        Decodes using windows-1252 encoding, parses CSV with semicolon delimiter,
-        filters to Aalen bbox+20km, computes congestion level, returns Observations.
-
-        Args:
-            raw: CSV bytes returned by fetch().
-
-        Returns:
-            List of Observation objects with domain='traffic'.
-        """
-        rows = _parse_bast_csv(raw)
-        observations: list[Observation] = []
-
-        for row in rows:
-            station_id = row.get("Zst", "").strip()
-            if not station_id:
-                continue
-
-            try:
-                vehicle_count_total = int(row.get("KFZ", "0") or "0")
-                vehicle_count_hgv = int(row.get("SV", "0") or "0")
-                speed_avg_pkw = float(row.get("V_PKW", "0").replace(",", ".") or "0")
-                speed_avg_lkw = float(row.get("V_LKW", "0").replace(",", ".") or "0")
-                lanes = int(row.get("Fahrstreifen", "1") or "1")
-            except (ValueError, KeyError):
-                continue
-
-            # Average speed weighted roughly between PKW and HGV
-            speed_avg_kmh: float | None = None
-            if speed_avg_pkw > 0 or speed_avg_lkw > 0:
-                speed_avg_kmh = (speed_avg_pkw + speed_avg_lkw) / 2.0
-
-            congestion_level = _compute_congestion(vehicle_count_total, lanes)
-
-            # Parse timestamp from Dat + Stunde columns
-            ts: datetime | None = None
-            dat = row.get("Dat", "")
-            stunde = row.get("Stunde", "")
-            if dat and stunde:
-                try:
-                    # BASt format: DD.MM.YYYY, hour as integer 1-24
-                    hour = int(stunde) % 24
-                    ts = datetime.strptime(dat, "%d.%m.%Y").replace(
-                        hour=hour, tzinfo=timezone.utc
-                    )
-                except (ValueError, TypeError):
-                    ts = None
-
-            feature_id = self._feature_ids.get(station_id, "")
-
-            observations.append(
-                Observation(
-                    feature_id=feature_id,
-                    domain="traffic",
-                    values={
-                        "vehicle_count_total": vehicle_count_total,
-                        "vehicle_count_hgv": vehicle_count_hgv,
-                        "speed_avg_kmh": speed_avg_kmh,
-                        "congestion_level": congestion_level,
-                    },
-                    timestamp=ts,
-                    source_id=f"bast:{station_id}",
+            tried: list[int] = []
+            for year, url in candidate_csv_urls(_current_year()):
+                tried.append(year)
+                response = await client.get(url, headers=headers)
+                first_line = response.content.decode("iso-8859-15", errors="replace").split("\n", 1)[0]
+                if response.status_code == 200 and first_line.startswith("TK_Nr"):
+                    self._data_year = year
+                    logger.info("BastConnector: using annual results of %d", year)
+                    return response.content
+                logger.info(
+                    "BastConnector: year %d not published (HTTP %s)", year, response.status_code
                 )
-            )
 
-        return observations
-
-    async def run(self) -> None:
-        """Full pipeline: fetch CSV, upsert features, normalize, persist, update staleness.
-
-        Overrides BaseConnector.run() to:
-        1. Fetch raw CSV bytes
-        2. Parse CSV to get station list
-        3. Upsert each station as a spatial feature
-        4. Normalize into Observations (using cached _feature_ids)
-        5. Persist to traffic_readings
-        6. Update staleness timestamp
-        """
-        attribution = self.config.config.get(
-            "attribution",
-            "Bundesanstalt fuer Strassenwesen (BASt), Datenlizenz Deutschland – Namensnennung – Version 2.0",
+        raise ValueError(
+            "BASt annual results CSV not found for years " + ", ".join(str(y) for y in tried)
         )
 
-        # Step 1: fetch raw CSV
+    def normalize(self, raw: bytes, **kwargs) -> list[Observation]:
+        """Annual averages are stored as feature properties — no observations."""
+        return []
+
+    async def run(self) -> None:
+        """Full pipeline: fetch CSV, parse stations, upsert features, update staleness.
+
+        Overrides BaseConnector.run(). No traffic_readings rows are written: the file
+        holds one annual average per station, and re-running every poll would only
+        duplicate rows.
+        """
+        attribution = self.config.config.get("attribution", DEFAULT_ATTRIBUTION)
+        buffer_deg = float(self.config.config.get("buffer_deg", DEFAULT_BUFFER_DEG))
+
         raw = await self.fetch()
+        stations = _parse_stations(raw, self.town.bbox, buffer_deg, self._data_year)
 
-        # Step 2: parse stations (already bbox-filtered)
-        rows = _parse_bast_csv(raw)
+        for station in stations:
+            lat = station["lat"]
+            lon = station["lon"]
+            properties = {k: v for k, v in station.items() if k not in ("lat", "lon")}
+            properties["attribution"] = attribution
+            properties["data_source"] = "BASt"
 
-        # Step 3: upsert features
-        for row in rows:
-            station_id = row.get("Zst", "").strip()
-            if not station_id:
-                continue
-            try:
-                lat = float(row.get("PLat", "").replace(",", "."))
-                lon = float(row.get("PLon", "").replace(",", "."))
-            except (ValueError, KeyError):
-                continue
-
-            road = row.get("Strasse", "")
-            direction = row.get("Richtung", "")
-
-            feature_id = await self.upsert_feature(
-                source_id=f"bast:{station_id}",
+            await self.upsert_feature(
+                source_id=f"bast:{station['station_id']}",
                 domain="traffic",
                 geometry_wkt=f"POINT({lon} {lat})",
-                properties={
-                    "station_id": station_id,
-                    "road": road,
-                    "direction": direction,
-                    "attribution": attribution,
-                    "data_source": "BASt",
-                },
+                properties=properties,
             )
-            self._feature_ids[station_id] = feature_id
 
-        # Step 4-6: normalize -> persist -> update staleness
-        observations = self.normalize(raw)
-        await self.persist(observations)
+        logger.info(
+            "BastConnector: upserted %d stations for %s (data year %s)",
+            len(stations),
+            self.town.id,
+            self._data_year,
+        )
         await self._update_staleness()

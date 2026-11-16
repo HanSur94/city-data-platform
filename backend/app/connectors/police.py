@@ -242,11 +242,11 @@ class PoliceConnector(BaseConnector):
                         "DELETE FROM features "
                         "WHERE town_id = :town_id "
                         "AND domain = 'police' "
-                        "AND (properties->>'pub_date')::timestamptz < NOW() - :interval::interval"
+                        "AND (properties->>'pub_date')::timestamptz < NOW() - make_interval(days => :days)"
                     ),
                     {
                         "town_id": self.town.id,
-                        "interval": f"{max_age_days} days",
+                        "days": int(max_age_days),
                     },
                 )
                 await session.commit()
