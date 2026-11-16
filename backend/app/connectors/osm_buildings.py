@@ -4,6 +4,9 @@ Fetches all buildings within the town bbox that have address tags (addr:street,
 addr:housenumber). Stores as features in the "buildings" domain with properties
 including address, building type, height, levels, roof shape, year.
 
+Requests go through the shared helper in app.connectors.overpass_client
+(descriptive User-Agent, mirror fall-through, config key overpass_urls).
+
 Poll interval: 86400s (daily) — building data is semi-static.
 """
 from __future__ import annotations
@@ -11,13 +14,10 @@ from __future__ import annotations
 import logging
 from typing import Any
 
-import httpx
-
 from app.connectors.base import BaseConnector, Observation
+from app.connectors.overpass_client import overpass_query, overpass_urls_from_config
 
 logger = logging.getLogger(__name__)
-
-OVERPASS_URL = "https://overpass-api.de/api/interpreter"
 
 
 class OsmBuildingsConnector(BaseConnector):
@@ -42,10 +42,11 @@ class OsmBuildingsConnector(BaseConnector):
         out center tags;
         """
 
-        async with httpx.AsyncClient(timeout=300) as client:
-            resp = await client.post(OVERPASS_URL, data={"data": query})
-            resp.raise_for_status()
-            return resp.json()
+        return await overpass_query(
+            query,
+            urls=overpass_urls_from_config(self.config.config),
+            timeout=300.0,
+        )
 
     def normalize(self, raw: Any) -> list[Observation]:
         # This is a features-only connector — no time-series observations
