@@ -181,3 +181,5 @@ Open after this task:
 - `register_sources` never marks rows of disabled connectors as disabled, so MobiDataBW still appears in the admin health list.
 - Parking: four garages without a verified position, no capacities, so no occupancy colouring.
 - The two fallback Overpass mirrors did not answer from this network in any probe (planner, executor, orchestrator).
+
+Also fixed by the orchestrator: `GET /api/layers/infrastructure?source=cycling` (what the frontend cycling layer requests) returned 0 features although 1,405 cycling features were stored, because the filter only compared `properties.source` and cycling features carry `feature_type: cycling` without a `source`. The filter now matches either; live result 1,405 LineStrings, and `source=ocpdb` still returns the 83 chargers.
