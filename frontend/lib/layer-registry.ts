@@ -76,6 +76,7 @@ const REGISTRY = [
   { key: 'hillshade', urlKey: 'hillshade', label: 'Gelaenderelief (DGM)', group: 'mapOverlays' },
   { key: 'buildings3d', urlKey: 'buildings3d', label: '3D-Gebaeude', group: 'threeD' },
   { key: 'terrain3d', urlKey: 'terrain3d', label: '3D-Gelaende', group: 'threeD' },
+  { key: 'data3d', urlKey: 'data3d', label: '3D-Daten', group: 'threeD' },
 ] as const satisfies readonly LayerEntryShape[]
 
 export type LayerKey = (typeof REGISTRY)[number]['key']

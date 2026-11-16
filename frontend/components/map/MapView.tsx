@@ -34,7 +34,7 @@ import EnergyPopup from './EnergyPopup';
 import CommunityPopup from './CommunityPopup';
 import SolarPopup from './SolarPopup';
 import EvChargingPopup from './EvChargingPopup';
-import EvChargingLiveLayer from './EvChargingLiveLayer';
+import EvChargingLiveLayer, { EV_CHARGING_COLUMNS_LAYER_ID } from './EvChargingLiveLayer';
 import RoadworksPopup from './RoadworksPopup';
 import KocherPopup from './KocherPopup';
 import ParkingLayer from './ParkingLayer';
@@ -139,6 +139,8 @@ interface MapViewProps {
   hillshadeVisible?: boolean;
   buildings3dVisible?: boolean;
   terrain3dVisible?: boolean;
+  /** 3D-Daten switch: draw data layers as extruded columns / cells instead of flat. */
+  data3dVisible?: boolean;
   onFlyTo?: (lng: number, lat: number, zoom?: number) => void;
   /** Called when the map is ready, passing the flyTo function */
   onMapReady?: (flyTo: (lng: number, lat: number, zoom?: number) => void) => void;
@@ -195,6 +197,7 @@ export default function MapView({
   hillshadeVisible = false,
   buildings3dVisible = true,
   terrain3dVisible = true,
+  data3dVisible = false,
   hiddenBusLines,
   onBusLinesDiscovered,
   onMapReady,
@@ -331,7 +334,7 @@ export default function MapView({
           'transit-stops', 'aqi-points', 'water-gauges', 'traffic-circles', 'traffic-flow-lines', 'autobahn-markers', 'energy-points', 'kocher-gauge', 'kocher-river-line',
           'community-schools-points', 'community-healthcare-points', 'community-parks-points', 'community-waste-points',
           'infrastructure-ev-points', 'infrastructure-roadworks-points', 'parking-points', 'bus-position-3d', 'bus-stop-points',
-          'solar-glow-points', 'ev-charging-live-points',
+          'solar-glow-points', 'ev-charging-live-points', EV_CHARGING_COLUMNS_LAYER_ID,
           'heat-demand-points', 'cycling-infra-lines', 'police-reports-bg',
           'buildings-3d',
         ]}
@@ -348,7 +351,12 @@ export default function MapView({
             ];
             features = map.queryRenderedFeatures(bbox) as any[];
           }
-          const feature = features[0];
+          // Extruded columns are drawn beneath the labels next to buildings-3d, so a column
+          // click must not open the building popup: prefer the first non-building hit among
+          // the interactive results. The bbox fallback keeps its first-feature behaviour.
+          const feature = e.features && e.features.length > 0
+            ? (features.find((f) => f.layer?.id !== 'buildings-3d') ?? features[0])
+            : features[0];
           if (!feature || !e.lngLat) return;
           const layerId = feature.layer?.id ?? '';
           const domain: PopupInfo['domain'] = layerId === 'heat-demand-points'
@@ -357,7 +365,7 @@ export default function MapView({
             ? 'cycling'
             : layerId === 'solar-glow-points'
             ? 'solarGlow'
-            : layerId === 'ev-charging-live-points'
+            : layerId === 'ev-charging-live-points' || layerId === EV_CHARGING_COLUMNS_LAYER_ID
             ? 'evCharging'
             : layerId.startsWith('kocher')
             ? 'kocher'
@@ -390,9 +398,14 @@ export default function MapView({
             : layerId === 'buildings-3d'
             ? 'building'
             : 'transit';
+          // Columns are tall: a click high on one hits the terrain far behind it, so anchor
+          // the popup at the column centre when the feature carries it.
+          const centerLng = feature.properties?._center_lng;
+          const centerLat = feature.properties?._center_lat;
+          const hasCenter = typeof centerLng === 'number' && typeof centerLat === 'number';
           setPopupInfo({
-            longitude: e.lngLat.lng,
-            latitude: e.lngLat.lat,
+            longitude: hasCenter ? centerLng : e.lngLat.lng,
+            latitude: hasCenter ? centerLat : e.lngLat.lat,
             feature: feature as GeoJSON.Feature,
             domain,
           });
@@ -448,12 +461,17 @@ export default function MapView({
         />
         <InfrastructureLayer
           town={town}
-          evChargingVisible={evChargingVisible}
+          evChargingVisible={evChargingVisible && !data3dVisible}
           roadworksVisible={roadworksVisible}
           solarPotentialVisible={solarPotentialVisible}
         />
         {evChargingVisible && (
-          <EvChargingLiveLayer town={town} visible={true} />
+          <EvChargingLiveLayer
+            town={town}
+            visible={true}
+            extruded={data3dVisible}
+            beforeId={labelBeforeId}
+          />
         )}
         {parkingVisible && (
           <ParkingLayer town={town} visible={true} />

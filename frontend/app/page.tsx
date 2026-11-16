@@ -263,6 +263,7 @@ function HomeInner() {
             hillshadeVisible={layerVisibility.hillshade}
             buildings3dVisible={layerVisibility.buildings3d}
             terrain3dVisible={layerVisibility.terrain3d}
+            data3dVisible={layerVisibility.data3d}
             hiddenBusLines={hiddenBusLines}
             onBusLinesDiscovered={setBusLines}
             onMapReady={handleMapReady}
