@@ -6,6 +6,7 @@ Uses PostGIS ST_AsGeoJSON() for geometry serialization.
 """
 import json
 from datetime import datetime, timezone
+from collections.abc import Mapping, Sequence
 from typing import Any
 from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -13,7 +14,7 @@ from sqlalchemy import text
 
 from app.db import get_db
 from app.dependencies import get_current_town
-from app.config import Town
+from app.config import Town, TownBbox
 from app.schemas.geojson import (
     Attribution,
     LayerResponse,
@@ -23,6 +24,111 @@ from app.schemas.geojson import (
 )
 
 router = APIRouter(tags=["layers"])
+
+# Transit line geometries (GTFS shapes) are clipped to the town bbox and
+# simplified before they leave the database. ~0.00005 deg is about 4-5 m at
+# 49 deg N, below what a map line can show at city zoom levels.
+SHAPE_SIMPLIFY_TOLERANCE_DEG = 0.00005
+# Decimal places of line coordinates in the GeoJSON output (~1 m).
+SHAPE_COORD_PRECISION = 5
+
+
+def build_transit_layer_query(
+    town_id: str, bbox: TownBbox, feature_type: str | None
+) -> tuple[str, dict[str, Any]]:
+    """Build the SQL + bind parameters for the transit layer.
+
+    Line geometries (dimension 1) are clipped to the town bbox, reduced to
+    LineString/MultiLineString parts, simplified and serialised at reduced
+    coordinate precision; lines that lie outside the bbox are dropped. All
+    other geometries (stops, bus positions) are returned exactly as stored.
+    Every request-derived value is a bind parameter; the only formatted value
+    is the module constant SHAPE_COORD_PRECISION.
+    """
+    params: dict[str, Any] = {
+        "town_id": town_id,
+        "lon_min": float(bbox.lon_min),
+        "lat_min": float(bbox.lat_min),
+        "lon_max": float(bbox.lon_max),
+        "lat_max": float(bbox.lat_max),
+        "tolerance": SHAPE_SIMPLIFY_TOLERANCE_DEG,
+    }
+    ft_filter = ""
+    if feature_type:
+        ft_filter = "AND f.properties->>'feature_type' = :feature_type"
+        params["feature_type"] = feature_type
+    precision = int(SHAPE_COORD_PRECISION)
+    sql = f"""
+        SELECT
+            id,
+            properties,
+            source_id,
+            last_updated,
+            is_line,
+            CASE
+                WHEN is_line THEN ST_AsGeoJSON(geom, {precision})
+                ELSE ST_AsGeoJSON(geom)
+            END::text AS geometry
+        FROM (
+            SELECT
+                f.id::text                                AS id,
+                f.properties                              AS properties,
+                f.source_id                               AS source_id,
+                f.created_at                              AS last_updated,
+                COALESCE(ST_Dimension(f.geometry) = 1, false) AS is_line,
+                CASE
+                    WHEN ST_Dimension(f.geometry) = 1 THEN
+                        ST_SimplifyPreserveTopology(
+                            ST_CollectionExtract(
+                                ST_Intersection(
+                                    f.geometry,
+                                    ST_MakeEnvelope(:lon_min, :lat_min, :lon_max, :lat_max, 4326)
+                                ),
+                                2
+                            ),
+                            :tolerance
+                        )
+                    ELSE f.geometry
+                END                                       AS geom
+            FROM features f
+            WHERE f.town_id = :town_id
+              AND f.domain   = 'transit'
+              {ft_filter}
+        ) t
+        WHERE NOT is_line OR NOT ST_IsEmpty(geom)
+    """
+    return sql, params
+
+
+def dedupe_shape_rows(rows: Sequence[Mapping[str, Any]]) -> list[Mapping[str, Any]]:
+    """Collapse identical line rows (same route, colour and geometry).
+
+    After clipping and simplification many trip-pattern shapes of one line are
+    byte-identical. Each group keeps its smallest id (string comparison) at the
+    position where the group first appeared. Rows without a truthy ``is_line``
+    pass through unchanged and are never merged.
+    """
+    out: list[Mapping[str, Any]] = []
+    group_pos: dict[tuple[Any, Any, Any], int] = {}
+    for row in rows:
+        if not row.get("is_line"):
+            out.append(row)
+            continue
+        props = row.get("properties") or {}
+        if isinstance(props, str):
+            props = json.loads(props)
+        key = (
+            props.get("route_short_name"),
+            props.get("route_type_color"),
+            row.get("geometry"),
+        )
+        pos = group_pos.get(key)
+        if pos is None:
+            group_pos[key] = len(out)
+            out.append(row)
+        elif str(row.get("id")) < str(out[pos].get("id")):
+            out[pos] = row
+    return out
 
 
 async def _fetch_attribution(
@@ -80,34 +186,18 @@ async def get_layer(
         at_aware = at.replace(tzinfo=timezone.utc) if at.tzinfo is None else at
 
     if domain == "transit":
-        ft_filter = ""
-        transit_params: dict[str, Any] = {"town_id": current_town.id}
-        if feature_type:
-            ft_filter = "AND f.properties->>'feature_type' = :feature_type"
-            transit_params["feature_type"] = feature_type
-        result = await db.execute(
-            text(f"""
-                SELECT
-                    f.id::text                     AS id,
-                    ST_AsGeoJSON(f.geometry)::text AS geometry,
-                    f.properties,
-                    f.source_id,
-                    MAX(f.created_at)              AS last_updated
-                FROM features f
-                WHERE f.town_id = :town_id
-                  AND f.domain   = 'transit'
-                  {ft_filter}
-                GROUP BY f.id, f.geometry, f.properties, f.source_id
-            """),
-            transit_params,
+        transit_sql, transit_params = build_transit_layer_query(
+            current_town.id, current_town.bbox, feature_type
         )
+        result = await db.execute(text(transit_sql), transit_params)
         rows = result.mappings().all()
-        # Get last_updated from transit rows (created_at grouped as last_updated)
+        # last_updated is the newest created_at over all rows (before de-duplication)
         for row in rows:
             row_ts = row.get("last_updated")
             if row_ts is not None:
                 if last_updated is None or row_ts > last_updated:
                     last_updated = row_ts
+        rows = dedupe_shape_rows(rows)
 
     elif domain == "air_quality":
         # feature_type filter: "air_grid" returns only grid cells,

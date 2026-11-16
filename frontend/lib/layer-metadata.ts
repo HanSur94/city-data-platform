@@ -267,16 +267,6 @@ export const LAYER_METADATA: Record<string, LayerMetadataEntry> = {
     licenseUrl: 'https://opendatacommons.org/licenses/odbl/',
     sourceAbbrev: 'OSM',
   },
-  mobiData: {
-    layerKey: 'mobiData',
-    sourceName: 'MobiData BW',
-    sourceUrl: 'https://www.mobidata-bw.de/',
-    dataType: 'LIVE',
-    updateIntervalSeconds: 300,
-    license: 'Datenlizenz Deutschland - Namensnennung - Version 2.0',
-    licenseUrl: 'https://www.govdata.de/dl-de/by-2-0',
-    sourceAbbrev: 'MobiData',
-  },
   solarPotential: {
     layerKey: 'solarPotential',
     sourceName: 'LUBW Baden-Wuerttemberg',

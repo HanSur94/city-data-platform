@@ -5,27 +5,86 @@ import type { AdminHealthResponse, AdminMonitorResponse } from '@/types/admin'
 
 const API_BASE = process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:8000'
 
+// In-flight request sharing: identical GETs issued while one is still pending
+// (several hooks/components, React StrictMode double effects) hit the network
+// once. This is NOT a cache - the entry is dropped as soon as the request
+// settles, so the next poll always reaches the network. The shared value is the
+// parsed JSON promise, never a Response (a body can be read only once).
+const inFlight = new Map<string, Promise<unknown>>()
+
+function getJsonShared<T>(url: string, errorLabel: string): Promise<T> {
+  const pending = inFlight.get(url)
+  if (pending) return pending as Promise<T>
+  const request = (async () => {
+    const res = await fetch(url)
+    if (!res.ok) throw new Error(`${errorLabel}: ${res.status}`)
+    return (await res.json()) as T
+  })().finally(() => {
+    inFlight.delete(url)
+  })
+  inFlight.set(url, request)
+  return request
+}
+
 export async function fetchLayer(domain: string, town = 'aalen', at?: Date | null, featureType?: string): Promise<LayerResponse> {
   const params = new URLSearchParams({ town })
   if (at) params.set('at', at.toISOString())
   if (featureType) params.set('feature_type', featureType)
-  const res = await fetch(`${API_BASE}/api/layers/${encodeURIComponent(domain)}?${params}`)
-  if (!res.ok) throw new Error(`Layer fetch failed: ${res.status}`)
-  return res.json() as Promise<LayerResponse>
+  return getJsonShared<LayerResponse>(
+    `${API_BASE}/api/layers/${encodeURIComponent(domain)}?${params}`,
+    'Layer fetch failed',
+  )
 }
 
 export async function fetchGridLayer(domain: string, featureType: string, town = 'aalen', at?: Date | null): Promise<LayerResponse> {
   const params = new URLSearchParams({ town, feature_type: featureType })
   if (at) params.set('at', at.toISOString())
-  const res = await fetch(`${API_BASE}/api/layers/${encodeURIComponent(domain)}?${params}`)
-  if (!res.ok) throw new Error(`Grid layer fetch failed: ${res.status}`)
-  return res.json() as Promise<LayerResponse>
+  return getJsonShared<LayerResponse>(
+    `${API_BASE}/api/layers/${encodeURIComponent(domain)}?${params}`,
+    'Grid layer fetch failed',
+  )
 }
 
 export async function fetchKpi(town: string): Promise<KPIResponse> {
-  const res = await fetch(`${API_BASE}/api/kpi?town=${encodeURIComponent(town)}`)
-  if (!res.ok) throw new Error(`KPI fetch failed: ${res.status}`)
-  return res.json() as Promise<KPIResponse>
+  return getJsonShared<KPIResponse>(
+    `${API_BASE}/api/kpi?town=${encodeURIComponent(town)}`,
+    'KPI fetch failed',
+  )
+}
+
+/** Connector-derived status of a layer, computed by the backend. */
+export type LayerStatus = 'ok' | 'stale' | 'never_fetched' | 'static'
+
+export const LAYER_STATUSES: readonly LayerStatus[] = ['ok', 'stale', 'never_fetched', 'static']
+
+export function isLayerStatus(value: unknown): value is LayerStatus {
+  return typeof value === 'string' && (LAYER_STATUSES as readonly string[]).includes(value)
+}
+
+export interface LayerMetadataApiItem {
+  layer_key: string
+  source_name: string
+  source_url: string
+  data_type: string
+  update_interval_seconds: number | null
+  license: string
+  license_url: string
+  last_updated: string | null
+  status: LayerStatus
+}
+
+export interface LayerMetadataApiResponse {
+  town: string
+  layers: LayerMetadataApiItem[]
+}
+
+export async function fetchLayerMetadata(
+  town: string,
+): Promise<LayerMetadataApiResponse> {
+  return getJsonShared<LayerMetadataApiResponse>(
+    `${API_BASE}/api/metadata/layers?town=${encodeURIComponent(town)}`,
+    'Layer metadata fetch failed',
+  )
 }
 
 export async function fetchAdminHealth(town: string): Promise<AdminHealthResponse> {

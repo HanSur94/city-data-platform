@@ -30,7 +30,9 @@ export default function InfrastructureLayer({
   roadworksVisible,
   solarPotentialVisible,
 }: InfrastructureLayerProps) {
-  const { data } = useLayerData('infrastructure', town);
+  const { data } = useLayerData('infrastructure', town, undefined, undefined, {
+    enabled: evChargingVisible || roadworksVisible,
+  });
 
   const makeClusterLayer = (id: string, source: string, color: string): CircleLayerSpecification => ({
     id,

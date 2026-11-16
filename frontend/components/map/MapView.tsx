@@ -112,7 +112,6 @@ interface MapViewProps {
   town?: string;
   trafficVisible?: boolean;
   autobahnVisible?: boolean;
-  mobiDataVisible?: boolean;
   energyVisible?: boolean;
   schoolsVisible?: boolean;
   healthcareVisible?: boolean;
@@ -169,7 +168,6 @@ export default function MapView({
   town = 'aalen',
   trafficVisible = false,
   autobahnVisible = false,
-  mobiDataVisible: _mobiDataVisible,
   energyVisible = false,
   schoolsVisible = false,
   healthcareVisible = false,

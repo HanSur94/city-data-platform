@@ -13,7 +13,7 @@ from sqlalchemy import text
 from app.db import get_db
 from app.dependencies import get_current_town
 from app.config import Town
-from app.schemas.metadata import LayerMetadataItem, LayerMetadataResponse
+from app.schemas.metadata import LayerMetadataItem, LayerMetadataResponse, LayerStatus
 from app.schemas.geojson import CONNECTOR_ATTRIBUTION
 
 router = APIRouter(tags=["metadata"])
@@ -255,6 +255,73 @@ LAYER_METADATA_REGISTRY: dict[str, dict] = {
 }
 
 
+# A layer is stale when its newest fetch is older than
+# max(STALE_INTERVAL_FACTOR x effective interval, MIN_STALE_SECONDS).
+STALE_INTERVAL_FACTOR = 3
+MIN_STALE_SECONDS = 600
+
+
+def _as_utc(value: datetime) -> datetime:
+    """Treat naive datetimes as UTC."""
+    return value if value.tzinfo is not None else value.replace(tzinfo=timezone.utc)
+
+
+def newest_fetch(entry: dict, last_fetch_map: dict[str, datetime]) -> datetime | None:
+    """Newest last_successful_fetch across the entry's connectors, or None."""
+    newest: datetime | None = None
+    for cc in entry.get("connector_classes", []):
+        fetch_time = last_fetch_map.get(cc)
+        if fetch_time is None:
+            continue
+        fetch_time = _as_utc(fetch_time)
+        if newest is None or fetch_time > newest:
+            newest = fetch_time
+    return newest
+
+
+def compute_layer_status(
+    entry: dict,
+    last_fetch_map: dict[str, datetime],
+    now: datetime,
+    poll_intervals: dict[str, int] | None = None,
+) -> LayerStatus:
+    """Classify a layer as static, never_fetched, stale or ok.
+
+    - no connectors            -> "static"
+    - no connector ever fetched -> "never_fetched"
+    - registry interval None    -> "ok" (never stale)
+    - otherwise "stale" when the newest fetch is strictly older than
+      max(STALE_INTERVAL_FACTOR x effective interval, MIN_STALE_SECONDS).
+
+    The effective interval is the registry interval, raised to the largest
+    poll interval of the layer's connectors when poll_intervals is given. The
+    registry interval describes how fresh the data looks to the user, but a
+    connector that only runs weekly (e.g. GTFSConnector polls every 604800 s
+    while the transit registry interval is 1800 s) would otherwise show as
+    stale for most of every week although it runs exactly on schedule.
+    """
+    connectors = entry.get("connector_classes", [])
+    if not connectors:
+        return "static"
+
+    newest = newest_fetch(entry, last_fetch_map)
+    if newest is None:
+        return "never_fetched"
+
+    interval = entry.get("update_interval_seconds")
+    if interval is None:
+        return "ok"
+
+    if poll_intervals:
+        polls = [poll_intervals[c] for c in connectors if c in poll_intervals]
+        if polls:
+            interval = max(interval, max(polls))
+
+    threshold = max(STALE_INTERVAL_FACTOR * interval, MIN_STALE_SECONDS)
+    age = (_as_utc(now) - newest).total_seconds()
+    return "stale" if age > threshold else "ok"
+
+
 @router.get("/metadata/layers", response_model=LayerMetadataResponse)
 async def get_layer_metadata(
     town: str = Query(...),
@@ -266,6 +333,7 @@ async def get_layer_metadata(
         raise HTTPException(status_code=404, detail=f"Town not found: {town}")
 
     # Build a lookup of connector_class -> last_successful_fetch from the DB
+    now = datetime.now(timezone.utc)
     last_fetch_map: dict[str, datetime] = {}
     try:
         result = await db.execute(
@@ -289,15 +357,18 @@ async def get_layer_metadata(
         # Sources table may not exist in test environment
         pass
 
+    # Poll interval per connector class (largest wins) from the town's enabled connectors
+    poll_intervals: dict[str, int] = {}
+    for conn in current_town.connectors:
+        if not conn.enabled:
+            continue
+        prev = poll_intervals.get(conn.connector_class)
+        if prev is None or conn.poll_interval_seconds > prev:
+            poll_intervals[conn.connector_class] = conn.poll_interval_seconds
+
     layers: list[LayerMetadataItem] = []
     for layer_key, meta in LAYER_METADATA_REGISTRY.items():
-        # Find the most recent last_updated across all connectors for this layer
-        last_updated: datetime | None = None
-        for cc in meta.get("connector_classes", []):
-            fetch_time = last_fetch_map.get(cc)
-            if fetch_time is not None:
-                if last_updated is None or fetch_time > last_updated:
-                    last_updated = fetch_time
+        last_updated = newest_fetch(meta, last_fetch_map)
 
         layers.append(LayerMetadataItem(
             layer_key=layer_key,
@@ -308,6 +379,7 @@ async def get_layer_metadata(
             license=meta["license"],
             license_url=meta["license_url"],
             last_updated=last_updated,
+            status=compute_layer_status(meta, last_fetch_map, now, poll_intervals),
         ))
 
     return LayerMetadataResponse(town=current_town.id, layers=layers)

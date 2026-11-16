@@ -28,7 +28,9 @@ export default function CommunityLayer({
   parksVisible,
   wasteVisible,
 }: CommunityLayerProps) {
-  const { data } = useLayerData('community', town);
+  const { data } = useLayerData('community', town, undefined, undefined, {
+    enabled: schoolsVisible || healthcareVisible || parksVisible || wasteVisible,
+  });
 
   if (!data) return null;
 

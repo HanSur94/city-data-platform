@@ -62,7 +62,7 @@ const stopLabelLayer: SymbolLayerSpecification = {
 };
 
 export default function BusStopLayer({ town, visible }: BusStopLayerProps) {
-  const { data } = useLayerData('transit', town, undefined, 'stop');
+  const { data } = useLayerData('transit', town, undefined, 'stop', { enabled: visible });
 
   const stopsData = useMemo(
     () => (data ? filterStops(data as unknown as FeatureCollection) : emptyFC),

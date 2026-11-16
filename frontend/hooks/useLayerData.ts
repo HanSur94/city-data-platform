@@ -3,12 +3,25 @@ import { useState, useEffect } from 'react';
 import { fetchLayer } from '@/lib/api';
 import type { LayerResponse } from '@/types/geojson';
 
-export function useLayerData(domain: string, town = 'aalen', timestamp?: Date | null, featureType?: string) {
+export interface LayerDataOptions {
+  /** When false nothing is fetched and no polling runs. Defaults to true. */
+  enabled?: boolean;
+}
+
+export function useLayerData(
+  domain: string,
+  town = 'aalen',
+  timestamp?: Date | null,
+  featureType?: string,
+  options: LayerDataOptions = {},
+) {
+  const { enabled = true } = options;
   const [data, setData] = useState<LayerResponse | null>(null);
   const [lastFetched, setLastFetched] = useState<Date | null>(null);
   const [error, setError] = useState(false);
 
   useEffect(() => {
+    if (!enabled) return;
     let cancelled = false;
     const load = async () => {
       try {
@@ -28,7 +41,7 @@ export function useLayerData(domain: string, town = 'aalen', timestamp?: Date | 
     const id = setInterval(load, 60_000);
     return () => { cancelled = true; clearInterval(id); };
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [domain, town, timestamp?.toISOString() ?? null, featureType]);
+  }, [domain, town, timestamp?.toISOString() ?? null, featureType, enabled]);
 
   return { data, lastFetched, error };
 }

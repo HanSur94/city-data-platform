@@ -51,7 +51,7 @@ const routeLineLayer: LineLayerSpecification = {
 };
 
 export default function BusRouteLayer({ town, visible }: BusRouteLayerProps) {
-  const { data } = useLayerData('transit', town, undefined, 'shape');
+  const { data } = useLayerData('transit', town, undefined, 'shape', { enabled: visible });
 
   // Memoize filtered shapes so Source doesn't get a new data object on every
   // parent re-render — avoids unnecessary MapLibre setData() calls and flicker.
