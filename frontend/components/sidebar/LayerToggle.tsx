@@ -13,9 +13,7 @@ interface LayerToggleProps {
   checked: boolean;
   onCheckedChange: (checked: boolean) => void;
   freshnessError?: boolean;
-  layerKey?: string;
   dataType?: DataType;
-  isStale?: boolean;
   metadata?: LayerMetadataEntry;
   lastUpdated?: string | null;
   status?: LayerStatus;
@@ -45,15 +43,13 @@ export default function LayerToggle({
   checked,
   onCheckedChange,
   freshnessError,
-  layerKey,
   dataType,
-  isStale,
   metadata,
   lastUpdated,
   status,
 }: LayerToggleProps) {
   const noData = status === 'never_fetched';
-  const stale = status === 'stale' || (isStale === true && !noData);
+  const stale = status === 'stale';
   return (
     <div className="flex items-center justify-between min-h-[44px] px-4 hover:bg-[#f4f5f7] rounded-md">
       <Label htmlFor={id} className="text-[12px] font-normal leading-[1.4] cursor-pointer flex items-center gap-2">

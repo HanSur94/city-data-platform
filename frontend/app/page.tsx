@@ -200,14 +200,11 @@ function HomeInner() {
         onFeatureSelect={handleFeatureSelect}
         layerVisibility={layerVisibility}
         onToggleLayer={toggleLayer}
+        onSetLayers={setLayers}
         transitError={transit.error}
         airQualityError={airQuality.error}
         baseLayer={state.baseLayer}
         onBaseLayerChange={handleBaseLayerChange}
-        cadastralVisible={layerVisibility.cadastral}
-        hillshadeVisible={layerVisibility.hillshade}
-        buildings3dVisible={layerVisibility.buildings3d}
-        terrain3dVisible={layerVisibility.terrain3d}
         activePollutant={activePollutant}
         onPollutantChange={setActivePollutant}
         noiseMetric={noiseMetric}

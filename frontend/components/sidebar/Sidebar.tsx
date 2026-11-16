@@ -17,7 +17,17 @@ import FeatureSearch from './FeatureSearch';
 import type { SearchResult } from './FeatureSearch';
 import BusLineFilter from './BusLineFilter';
 import { LAYER_METADATA } from '@/lib/layer-metadata';
-import type { LayerKey, LayerVisibility } from '@/lib/layer-registry';
+import {
+  DATA_LAYER_KEYS,
+  LAYER_BY_KEY,
+  LAYER_GROUPS,
+  countActive,
+  groupSwitchState,
+  layerKeysInGroup,
+} from '@/lib/layer-registry';
+import type { LayerGroupId, LayerKey, LayerVisibility } from '@/lib/layer-registry';
+import type { LayerStatus } from '@/lib/api';
+import LayerGroupHeader from './LayerGroupHeader';
 import { useLayerMetadata } from '@/hooks/useLayerMetadata';
 
 import type { DemographicMetric } from '@/components/map/DemographicsGridLayer';
@@ -36,16 +46,13 @@ interface SidebarProps {
   onFeatureSelect: (result: SearchResult) => void;
   layerVisibility: LayerVisibility;
   onToggleLayer: (layer: LayerKey) => void;
+  onSetLayers: (keys: readonly LayerKey[], on: boolean) => void;
   transitError?: boolean;
   airQualityError?: boolean;
   trafficError?: boolean;
   energyError?: boolean;
   baseLayer: BaseLayer;
   onBaseLayerChange: (base: BaseLayer) => void;
-  cadastralVisible?: boolean;
-  hillshadeVisible?: boolean;
-  buildings3dVisible?: boolean;
-  terrain3dVisible?: boolean;
   activePollutant?: Pollutant;
   onPollutantChange?: (pollutant: Pollutant) => void;
   noiseMetric?: 'lden' | 'lnight';
@@ -59,9 +66,51 @@ interface SidebarProps {
   onToggle?: () => void;
 }
 
-export default function Sidebar({ town, onFeatureSelect, layerVisibility, onToggleLayer, transitError, airQualityError, trafficError, energyError, baseLayer, onBaseLayerChange, cadastralVisible, hillshadeVisible, buildings3dVisible, terrain3dVisible, activePollutant, onPollutantChange, noiseMetric, onNoiseMetricChange, demographicMetric, onDemographicMetricChange, busLines, hiddenBusLines, onToggleBusLine, collapsed, onToggle }: SidebarProps) {
+export default function Sidebar({ town, onFeatureSelect, layerVisibility, onToggleLayer, onSetLayers, transitError, airQualityError, trafficError, energyError, baseLayer, onBaseLayerChange, activePollutant, onPollutantChange, noiseMetric, onNoiseMetricChange, demographicMetric, onDemographicMetricChange, busLines, hiddenBusLines, onToggleBusLine, collapsed, onToggle }: SidebarProps) {
   const [drawerOpen, setDrawerOpen] = useState(false);
   const { layerMeta } = useLayerMetadata(town);
+
+  // Connector status of a layer; external WMS layers carry none (the connector does not describe what the map draws).
+  const statusFor = (key: LayerKey): LayerStatus | undefined => {
+    const entry = LAYER_BY_KEY[key];
+    if (entry.externalWms || !entry.metadataKey) return undefined;
+    return layerMeta[entry.metadataKey]?.status;
+  };
+
+  const toggleProps = (key: LayerKey) => {
+    const entry = LAYER_BY_KEY[key];
+    const metadata = entry.metadataKey ? LAYER_METADATA[entry.metadataKey] : undefined;
+    return {
+      id: `layer-${key}`,
+      label: entry.label,
+      checked: layerVisibility[key],
+      onCheckedChange: () => onToggleLayer(key),
+      metadata,
+      dataType: metadata?.dataType,
+      status: statusFor(key),
+      lastUpdated: entry.metadataKey ? layerMeta[entry.metadataKey]?.lastUpdated : undefined,
+    };
+  };
+
+  const onGroupToggle = (keys: readonly LayerKey[]) => {
+    onSetLayers(keys, groupSwitchState(keys, layerVisibility) !== 'on');
+  };
+
+  const renderGroupHeader = (groupId: LayerGroupId) => {
+    const group = LAYER_GROUPS.find((g) => g.id === groupId);
+    const keys = layerKeysInGroup(groupId);
+    return (
+      <LayerGroupHeader
+        id={`layer-group-${groupId}`}
+        title={group?.title ?? groupId}
+        activeCount={countActive(keys, layerVisibility)}
+        total={keys.length}
+        state={groupSwitchState(keys, layerVisibility)}
+        noDataCount={keys.filter((key) => statusFor(key) === 'never_fetched').length}
+        onToggle={() => onGroupToggle(keys)}
+      />
+    );
+  };
 
   const content = (
     <div className="flex flex-col h-full bg-white w-[280px]">
@@ -78,108 +127,34 @@ export default function Sidebar({ town, onFeatureSelect, layerVisibility, onTogg
 
       <Separator />
 
-      {/* Layer toggles */}
-      <div className="pt-6">
-        <p className="px-4 text-[12px] font-normal text-muted-foreground uppercase tracking-wide mb-2">
-          Ebenen
-        </p>
-        <LayerToggle
-          id="transit-toggle"
-          label="OEPNV (Bus & Bahn)"
-          checked={layerVisibility.transit}
-          onCheckedChange={() => onToggleLayer('transit')}
-          freshnessError={transitError}
-          layerKey="transit"
-          dataType={LAYER_METADATA['transit']?.dataType}
-          isStale={layerMeta['transit']?.isStale}
-          metadata={LAYER_METADATA['transit']}
-          lastUpdated={layerMeta['transit']?.lastUpdated}
+      {/* Master switch: all data layers */}
+      <div className="pt-2">
+        <LayerGroupHeader
+          id="layer-group-all"
+          title="Alle Ebenen"
+          variant="master"
+          activeCount={countActive(DATA_LAYER_KEYS, layerVisibility)}
+          total={DATA_LAYER_KEYS.length}
+          state={groupSwitchState(DATA_LAYER_KEYS, layerVisibility)}
+          onToggle={() => onGroupToggle(DATA_LAYER_KEYS)}
         />
-        <LayerToggle
-          id="bus-position-toggle"
-          label="Bus-Positionen (live)"
-          checked={layerVisibility.busPosition ?? false}
-          onCheckedChange={() => onToggleLayer('busPosition')}
-          layerKey="busPosition"
-          dataType={LAYER_METADATA['busPosition']?.dataType}
-          isStale={layerMeta['busPosition']?.isStale}
-          metadata={LAYER_METADATA['busPosition']}
-          lastUpdated={layerMeta['busPosition']?.lastUpdated}
-        />
-        {layerVisibility.busPosition && busLines && busLines.length > 0 && onToggleBusLine && hiddenBusLines && (
-          <BusLineFilter
-            lines={busLines}
-            hiddenLines={hiddenBusLines}
-            onToggle={onToggleBusLine}
-          />
-        )}
-        <LayerToggle
-          id="aqi-toggle"
-          label="Luftqualitaet"
-          checked={layerVisibility.airQuality}
-          onCheckedChange={() => onToggleLayer('airQuality')}
-          freshnessError={airQualityError}
-          layerKey="airQuality"
-          dataType={LAYER_METADATA['airQuality']?.dataType}
-          isStale={layerMeta['airQuality']?.isStale}
-          status={layerMeta['airQuality']?.status}
-          metadata={LAYER_METADATA['airQuality']}
-          lastUpdated={layerMeta['airQuality']?.lastUpdated}
-        />
+      </div>
+
+      <Separator className="mt-2" />
+
+      {/* Umwelt */}
+      {renderGroupHeader('environment')}
+      <div>
+        <LayerToggle {...toggleProps('airQuality')} freshnessError={airQualityError} />
         {layerVisibility.airQuality && activePollutant && onPollutantChange && (
           <PollutantToggle activePollutant={activePollutant} onPollutantChange={onPollutantChange} />
         )}
-        <LayerToggle
-          id="water-toggle"
-          label="Pegel & Gewaesser"
-          checked={layerVisibility.water}
-          onCheckedChange={() => onToggleLayer('water')}
-          layerKey="water"
-          dataType={LAYER_METADATA['water']?.dataType}
-          isStale={layerMeta['water']?.isStale}
-          metadata={LAYER_METADATA['water']}
-          lastUpdated={layerMeta['water']?.lastUpdated}
-        />
-        <LayerToggle
-          id="kocher-toggle"
-          label="Kocher Pegel (LHP)"
-          checked={layerVisibility.kocher ?? false}
-          onCheckedChange={() => onToggleLayer('kocher')}
-          layerKey="kocher"
-          dataType={LAYER_METADATA['kocher']?.dataType}
-          isStale={layerMeta['kocher']?.isStale}
-          metadata={LAYER_METADATA['kocher']}
-          lastUpdated={layerMeta['kocher']?.lastUpdated}
-        />
-        <LayerToggle
-          id="flood-toggle"
-          label="Hochwassergefahr (HQ100)"
-          checked={layerVisibility.floodHazard}
-          onCheckedChange={() => onToggleLayer('floodHazard')}
-        />
-        <LayerToggle
-          id="rail-noise-toggle"
-          label="Bahnlaerm (Lden)"
-          checked={layerVisibility.railNoise}
-          onCheckedChange={() => onToggleLayer('railNoise')}
-        />
-        <LayerToggle
-          id="lubw-env-toggle"
-          label="Schutzgebiete (LUBW)"
-          checked={layerVisibility.lubwEnv}
-          onCheckedChange={() => onToggleLayer('lubwEnv')}
-        />
-        <LayerToggle
-          id="road-noise-toggle"
-          label="Strassenlaerm (LUBW)"
-          checked={layerVisibility.roadNoise ?? false}
-          onCheckedChange={() => onToggleLayer('roadNoise')}
-          layerKey="roadNoise"
-          dataType={LAYER_METADATA['roadNoise']?.dataType}
-          isStale={layerMeta['roadNoise']?.isStale}
-          metadata={LAYER_METADATA['roadNoise']}
-          lastUpdated={layerMeta['roadNoise']?.lastUpdated}
-        />
+        <LayerToggle {...toggleProps('water')} />
+        <LayerToggle {...toggleProps('kocher')} />
+        <LayerToggle {...toggleProps('floodHazard')} />
+        <LayerToggle {...toggleProps('railNoise')} />
+        <LayerToggle {...toggleProps('lubwEnv')} />
+        <LayerToggle {...toggleProps('roadNoise')} />
         {layerVisibility.roadNoise && noiseMetric && onNoiseMetricChange && (
           <div className="px-6 pb-1 flex gap-2">
             {(['lden', 'lnight'] as const).map((m) => (
@@ -197,176 +172,46 @@ export default function Sidebar({ town, onFeatureSelect, layerVisibility, onTogg
 
       <Separator className="mt-6" />
 
-      {/* Verkehr group */}
-      <div className="pt-2">
-        <p className="px-4 text-[12px] font-normal text-muted-foreground uppercase tracking-wide mb-2 mt-6">Verkehr</p>
-        <LayerToggle
-          id="traffic-toggle"
-          label="Verkehrszaehlstellen (BASt)"
-          checked={layerVisibility.traffic}
-          onCheckedChange={() => onToggleLayer('traffic')}
-          freshnessError={trafficError}
-          layerKey="traffic"
-          dataType={LAYER_METADATA['traffic']?.dataType}
-          isStale={layerMeta['traffic']?.isStale}
-          metadata={LAYER_METADATA['traffic']}
-          lastUpdated={layerMeta['traffic']?.lastUpdated}
-        />
-        <LayerToggle
-          id="traffic-flow-toggle"
-          label="Verkehrsfluss (TomTom)"
-          checked={layerVisibility.trafficFlow ?? false}
-          onCheckedChange={() => onToggleLayer('trafficFlow')}
-          layerKey="trafficFlow"
-          dataType={LAYER_METADATA['trafficFlow']?.dataType}
-          isStale={layerMeta['trafficFlow']?.isStale}
-          metadata={LAYER_METADATA['trafficFlow']}
-          lastUpdated={layerMeta['trafficFlow']?.lastUpdated}
-        />
-        <LayerToggle
-          id="autobahn-toggle"
-          label="Autobahn-Stoerungen (A7/A6)"
-          checked={layerVisibility.autobahn}
-          onCheckedChange={() => onToggleLayer('autobahn')}
-          layerKey="autobahn"
-          dataType={LAYER_METADATA['autobahn']?.dataType}
-          isStale={layerMeta['autobahn']?.isStale}
-          metadata={LAYER_METADATA['autobahn']}
-          lastUpdated={layerMeta['autobahn']?.lastUpdated}
-        />
-        <LayerToggle
-          id="cycling-toggle"
-          label="Radinfrastruktur (OSM)"
-          checked={layerVisibility.cycling ?? false}
-          onCheckedChange={() => onToggleLayer('cycling')}
-          layerKey="cycling"
-          dataType={LAYER_METADATA['cycling']?.dataType}
-          isStale={layerMeta['cycling']?.isStale}
-          metadata={LAYER_METADATA['cycling']}
-          lastUpdated={layerMeta['cycling']?.lastUpdated}
-        />
+      {/* Verkehr */}
+      {renderGroupHeader('transport')}
+      <div>
+        <LayerToggle {...toggleProps('transit')} freshnessError={transitError} />
+        <LayerToggle {...toggleProps('busPosition')} />
+        {layerVisibility.busPosition && busLines && busLines.length > 0 && onToggleBusLine && hiddenBusLines && (
+          <BusLineFilter
+            lines={busLines}
+            hiddenLines={hiddenBusLines}
+            onToggle={onToggleBusLine}
+          />
+        )}
+        <LayerToggle {...toggleProps('traffic')} freshnessError={trafficError} />
+        <LayerToggle {...toggleProps('trafficFlow')} />
+        <LayerToggle {...toggleProps('autobahn')} />
+        <LayerToggle {...toggleProps('cycling')} />
       </div>
 
       <Separator className="mt-6" />
 
-      {/* Energie group */}
-      <div className="pt-2">
-        <p className="px-4 text-[12px] font-normal text-muted-foreground uppercase tracking-wide mb-2 mt-6">Energie</p>
-        <LayerToggle
-          id="energy-toggle"
-          label="Erneuerbare Anlagen (MaStR)"
-          checked={layerVisibility.energy}
-          onCheckedChange={() => onToggleLayer('energy')}
-          freshnessError={energyError}
-          layerKey="energy"
-          dataType={LAYER_METADATA['energy']?.dataType}
-          isStale={layerMeta['energy']?.isStale}
-          metadata={LAYER_METADATA['energy']}
-          lastUpdated={layerMeta['energy']?.lastUpdated}
-        />
-        <LayerToggle
-          id="solar-glow-toggle"
-          label="Solar-Erzeugung (live)"
-          checked={layerVisibility.solarGlow ?? false}
-          onCheckedChange={() => onToggleLayer('solarGlow')}
-          layerKey="solarGlow"
-          dataType={LAYER_METADATA['solarGlow']?.dataType}
-          isStale={layerMeta['solarGlow']?.isStale}
-          metadata={LAYER_METADATA['solarGlow']}
-          lastUpdated={layerMeta['solarGlow']?.lastUpdated}
-        />
-        <LayerToggle
-          id="fernwaerme-toggle"
-          label="Fernwaerme-Netz"
-          checked={layerVisibility.fernwaerme ?? false}
-          onCheckedChange={() => onToggleLayer('fernwaerme')}
-          layerKey="fernwaerme"
-          dataType={LAYER_METADATA['fernwaerme']?.dataType}
-          isStale={layerMeta['fernwaerme']?.isStale}
-          metadata={LAYER_METADATA['fernwaerme']}
-          lastUpdated={layerMeta['fernwaerme']?.lastUpdated}
-        />
-        <LayerToggle
-          id="heat-demand-toggle"
-          label="Waermebedarf (KEA-BW)"
-          checked={layerVisibility.heatDemand ?? false}
-          onCheckedChange={() => onToggleLayer('heatDemand')}
-          layerKey="heatDemand"
-          dataType={LAYER_METADATA['heatDemand']?.dataType}
-          isStale={layerMeta['heatDemand']?.isStale}
-          metadata={LAYER_METADATA['heatDemand']}
-          lastUpdated={layerMeta['heatDemand']?.lastUpdated}
-        />
+      {/* Energie */}
+      {renderGroupHeader('energy')}
+      <div>
+        <LayerToggle {...toggleProps('energy')} freshnessError={energyError} />
+        <LayerToggle {...toggleProps('solarGlow')} />
+        <LayerToggle {...toggleProps('fernwaerme')} />
+        <LayerToggle {...toggleProps('heatDemand')} />
       </div>
 
       <Separator className="mt-6" />
 
-      {/* Gemeinwesen group */}
-      <div className="pt-2">
-        <p className="px-4 text-[12px] font-normal text-muted-foreground uppercase tracking-wide mb-2 mt-6">Gemeinwesen</p>
-        <LayerToggle
-          id="schools-toggle"
-          label="Schulen & Kitas"
-          checked={layerVisibility.schools ?? false}
-          onCheckedChange={() => onToggleLayer('schools')}
-          layerKey="schools"
-          dataType={LAYER_METADATA['schools']?.dataType}
-          isStale={layerMeta['schools']?.isStale}
-          metadata={LAYER_METADATA['schools']}
-          lastUpdated={layerMeta['schools']?.lastUpdated}
-        />
-        <LayerToggle
-          id="healthcare-toggle"
-          label="Gesundheit"
-          checked={layerVisibility.healthcare ?? false}
-          onCheckedChange={() => onToggleLayer('healthcare')}
-          layerKey="healthcare"
-          dataType={LAYER_METADATA['healthcare']?.dataType}
-          isStale={layerMeta['healthcare']?.isStale}
-          metadata={LAYER_METADATA['healthcare']}
-          lastUpdated={layerMeta['healthcare']?.lastUpdated}
-        />
-        <LayerToggle
-          id="parks-toggle"
-          label="Parks & Spielplaetze"
-          checked={layerVisibility.parks ?? false}
-          onCheckedChange={() => onToggleLayer('parks')}
-          layerKey="parks"
-          dataType={LAYER_METADATA['parks']?.dataType}
-          isStale={layerMeta['parks']?.isStale}
-          metadata={LAYER_METADATA['parks']}
-          lastUpdated={layerMeta['parks']?.lastUpdated}
-        />
-        <LayerToggle
-          id="waste-toggle"
-          label="Wertstoffhoefe"
-          checked={layerVisibility.waste ?? false}
-          onCheckedChange={() => onToggleLayer('waste')}
-          layerKey="waste"
-          dataType={LAYER_METADATA['waste']?.dataType}
-          isStale={layerMeta['waste']?.isStale}
-          metadata={LAYER_METADATA['waste']}
-          lastUpdated={layerMeta['waste']?.lastUpdated}
-        />
-        <LayerToggle
-          id="police-toggle"
-          label="Polizeimeldungen"
-          checked={layerVisibility.police ?? false}
-          onCheckedChange={() => onToggleLayer('police')}
-          layerKey="police"
-          dataType="SCRAPED"
-        />
-        <LayerToggle
-          id="demographics-toggle"
-          label="Demografie (Zensus)"
-          checked={layerVisibility.demographics ?? false}
-          onCheckedChange={() => onToggleLayer('demographics')}
-          layerKey="demographics"
-          dataType={LAYER_METADATA['demographics']?.dataType}
-          isStale={layerMeta['demographics']?.isStale}
-          metadata={LAYER_METADATA['demographics']}
-          lastUpdated={layerMeta['demographics']?.lastUpdated}
-        />
+      {/* Gemeinwesen */}
+      {renderGroupHeader('community')}
+      <div>
+        <LayerToggle {...toggleProps('schools')} />
+        <LayerToggle {...toggleProps('healthcare')} />
+        <LayerToggle {...toggleProps('parks')} />
+        <LayerToggle {...toggleProps('waste')} />
+        <LayerToggle {...toggleProps('police')} dataType="SCRAPED" />
+        <LayerToggle {...toggleProps('demographics')} />
         {layerVisibility.demographics && demographicMetric && onDemographicMetricChange && (
           <div className="px-6 pb-1 flex flex-wrap gap-1">
             {([
@@ -389,60 +234,20 @@ export default function Sidebar({ town, onFeatureSelect, layerVisibility, onTogg
 
       <Separator className="mt-6" />
 
-      {/* Infrastruktur group */}
-      <div className="pt-2">
-        <p className="px-4 text-[12px] font-normal text-muted-foreground uppercase tracking-wide mb-2 mt-6">Infrastruktur</p>
-        <LayerToggle
-          id="roadworks-toggle"
-          label="Baustellen (OSM)"
-          checked={layerVisibility.roadworks ?? false}
-          onCheckedChange={() => onToggleLayer('roadworks')}
-          layerKey="roadworks"
-          dataType={LAYER_METADATA['roadworks']?.dataType}
-          isStale={layerMeta['roadworks']?.isStale}
-          metadata={LAYER_METADATA['roadworks']}
-          lastUpdated={layerMeta['roadworks']?.lastUpdated}
-        />
-        <LayerToggle
-          id="ev-toggle"
-          label="E-Ladesaeulen (live)"
-          checked={layerVisibility.evCharging ?? false}
-          onCheckedChange={() => onToggleLayer('evCharging')}
-          layerKey="evCharging"
-          dataType={LAYER_METADATA['evCharging']?.dataType}
-          isStale={layerMeta['evCharging']?.isStale}
-          metadata={LAYER_METADATA['evCharging']}
-          lastUpdated={layerMeta['evCharging']?.lastUpdated}
-        />
-        <LayerToggle
-          id="solar-toggle"
-          label="Solarpotenzial Daecher"
-          checked={layerVisibility.solarPotential ?? false}
-          onCheckedChange={() => onToggleLayer('solarPotential')}
-          layerKey="solarPotential"
-          dataType={LAYER_METADATA['solarPotential']?.dataType}
-          isStale={layerMeta['solarPotential']?.isStale}
-          metadata={LAYER_METADATA['solarPotential']}
-          lastUpdated={layerMeta['solarPotential']?.lastUpdated}
-        />
-        <LayerToggle
-          id="parking-toggle"
-          label="Parkhaeuser"
-          checked={layerVisibility.parking ?? false}
-          onCheckedChange={() => onToggleLayer('parking')}
-          layerKey="parking"
-          dataType={LAYER_METADATA['parking']?.dataType}
-          isStale={layerMeta['parking']?.isStale}
-          metadata={LAYER_METADATA['parking']}
-          lastUpdated={layerMeta['parking']?.lastUpdated}
-        />
+      {/* Infrastruktur */}
+      {renderGroupHeader('infrastructure')}
+      <div>
+        <LayerToggle {...toggleProps('roadworks')} />
+        <LayerToggle {...toggleProps('evCharging')} />
+        <LayerToggle {...toggleProps('solarPotential')} />
+        <LayerToggle {...toggleProps('parking')} />
       </div>
 
       <Separator className="mt-6" />
 
-      {/* Geospatial group */}
-      <div className="pt-2">
-        <p className="px-4 text-[12px] font-normal text-muted-foreground uppercase tracking-wide mb-2 mt-6">Geospatial</p>
+      {/* Karte & Overlays */}
+      {renderGroupHeader('mapOverlays')}
+      <div>
         <p className="px-4 text-[11px] text-muted-foreground mb-1">Basiskarte</p>
         {BASE_LAYERS.map((base) => (
           <label key={base} className="flex items-center gap-2 px-4 py-1.5 cursor-pointer hover:bg-slate-50">
@@ -460,31 +265,17 @@ export default function Sidebar({ town, onFeatureSelect, layerVisibility, onTogg
           </label>
         ))}
         <p className="px-4 text-[11px] text-muted-foreground mb-1 mt-3">Overlays</p>
-        <LayerToggle
-          id="cadastral-toggle"
-          label="Kataster (ALKIS)"
-          checked={cadastralVisible ?? false}
-          onCheckedChange={() => onToggleLayer('cadastral')}
-        />
-        <LayerToggle
-          id="hillshade-toggle"
-          label="Gelaenderelief (DGM)"
-          checked={hillshadeVisible ?? false}
-          onCheckedChange={() => onToggleLayer('hillshade')}
-        />
-        <p className="px-4 text-[11px] text-muted-foreground mb-1 mt-3">3D</p>
-        <LayerToggle
-          id="buildings3d-toggle"
-          label="3D-Gebaeude"
-          checked={buildings3dVisible ?? false}
-          onCheckedChange={() => onToggleLayer('buildings3d')}
-        />
-        <LayerToggle
-          id="terrain3d-toggle"
-          label="3D-Gelaende"
-          checked={terrain3dVisible ?? false}
-          onCheckedChange={() => onToggleLayer('terrain3d')}
-        />
+        <LayerToggle {...toggleProps('cadastral')} />
+        <LayerToggle {...toggleProps('hillshade')} />
+      </div>
+
+      <Separator className="mt-6" />
+
+      {/* 3D */}
+      {renderGroupHeader('threeD')}
+      <div>
+        <LayerToggle {...toggleProps('buildings3d')} />
+        <LayerToggle {...toggleProps('terrain3d')} />
       </div>
 
       <Separator className="mt-6" />
