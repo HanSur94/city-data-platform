@@ -5,10 +5,10 @@ milestone_name: AalenPulse Feature Parity
 current_phase: 20
 status: verifying
 stopped_at: "Completed quick task 260408-dbq: Ensure all real bus stops (Haltestellen) appear on map"
-last_updated: "2026-11-15T22:54:52.022Z"
+last_updated: "2026-11-16T07:41:43.862Z"
 last_activity: 2026-11-15
 last_activity_desc: "Completed quick task 260408-fm8: Make buses rectangular shaped on map, bus stops get colored dots"
-state_head: 2d25d18ff1ea3fa79da377c694f6d23659086684
+state_head: 3628eebe493cdffcab79d91f60ecd5b531123317
 progress:
   total_phases: 19
   completed_phases: 10
@@ -31,7 +31,7 @@ See: .planning/PROJECT.md (updated 2026-04-06)
 Phase: 20
 Plan: Not started
 Status: Phase complete — ready for verification
-Last activity: 2026-11-15 - Completed quick task 261115-wav: 3D visual foundation: self-hosted vector basemap (dark/light) from the local PMTiles, real terrain from open DEM tiles, working sky and sun lighting, shaded 3D buildings on every base style
+Last activity: 2026-11-16 - Completed quick task 261116-be8: Fast layer loading: fetch only switched-on layers, stop the 31 MB transit shapes downloads, clip and simplify shapes server-side, fix the layer metadata URL
 
 Progress: [█░░░░░░░░░] 14%
 
@@ -119,6 +119,7 @@ None yet.
 | 11 | Resolve soupsieve Dependabot alerts: soupsieve 4.1.1, requires-python >=3.11.5 | 2026-11-15 | 58f2b75 | — |
 | 261115-ved | Cache the town-reduced GTFS feed in BusInterpolationConnector so the statewide feed is parsed once per zip instead of every 30 s, and move per-run pandas work off the event loop | 2026-11-15 | 5fe724a | [261115-ved-cache-the-town-reduced-gtfs-feed-in-busi](./quick/261115-ved-cache-the-town-reduced-gtfs-feed-in-busi/) |
 | 261115-wav | 3D visual foundation: self-hosted vector basemap (dark/light) from the local PMTiles, real terrain from open DEM tiles, working sky and sun lighting, shaded 3D buildings on every base style | 2026-11-15 | 2d25d18 | [261115-wav-3d-visual-foundation-self-hosted-vector-](./quick/261115-wav-3d-visual-foundation-self-hosted-vector-/) |
+| 261116-be8 | Fast layer loading: fetch only switched-on layers, stop the 31 MB transit shapes downloads, clip and simplify shapes server-side, fix the layer metadata URL | 2026-11-16 | 3628eeb | [261116-be8-fast-layer-loading-fetch-only-switched-o](./quick/261116-be8-fast-layer-loading-fetch-only-switched-o/) |
 
 ## Session Continuity
 
