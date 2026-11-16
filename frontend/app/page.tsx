@@ -195,12 +195,22 @@ function HomeInner() {
   const { data: kpiData } = useKpi(town)
 
   // Data hooks — pass historicalTimestamp for time slider historical support
-  const transit = useLayerData('transit', town, historicalTimestamp)
-  const airQuality = useLayerData('air_quality', town, historicalTimestamp)
-  const airQualityGrid = useGridLayerData('air_quality', 'air_grid', town, historicalTimestamp)
-  const water = useLayerData('water', town, historicalTimestamp)
-  const traffic = useLayerData('traffic', town, historicalTimestamp)
-  const energy = useLayerData('energy', town)
+  // Each hook fetches only while a layer that consumes its data is switched on.
+  // Transit: only stops are needed page-wide (clusters); shapes and bus
+  // positions are fetched by their own layer components.
+  const transit = useLayerData('transit', town, historicalTimestamp, 'stop', {
+    enabled: layerVisibility.transit,
+  })
+  const airQuality = useLayerData('air_quality', town, historicalTimestamp, undefined, {
+    enabled: layerVisibility.airQuality,
+  })
+  const airQualityGrid = useGridLayerData('air_quality', 'air_grid', town, historicalTimestamp, {
+    enabled: layerVisibility.airQuality,
+  })
+  // Water data feeds the water layer and the Kocher layer.
+  const water = useLayerData('water', town, historicalTimestamp, undefined, {
+    enabled: layerVisibility.water || layerVisibility.kocher,
+  })
 
   // Default chart data (shown when no activeDomain detail panel open)
   const aqiTs = useTimeseries('air_quality', dateRange.from, dateRange.to, town)
@@ -257,8 +267,6 @@ function HomeInner() {
         onToggleLayer={toggleLayer}
         transitError={transit.error}
         airQualityError={airQuality.error}
-        trafficError={traffic.error}
-        energyError={energy.error}
         baseLayer={state.baseLayer}
         onBaseLayerChange={handleBaseLayerChange}
         cadastralVisible={layerVisibility.cadastral}

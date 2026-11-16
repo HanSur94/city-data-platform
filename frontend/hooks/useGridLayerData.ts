@@ -2,16 +2,25 @@
 import { useState, useEffect } from 'react';
 import { fetchGridLayer } from '@/lib/api';
 import type { LayerResponse } from '@/types/geojson';
+import type { LayerDataOptions } from '@/hooks/useLayerData';
 
 /**
  * Fetches grid layer data with a feature_type filter.
  * Polls every 60s for live data; stops polling when a historical timestamp is set.
  */
-export function useGridLayerData(domain: string, featureType: string, town = 'aalen', timestamp?: Date | null) {
+export function useGridLayerData(
+  domain: string,
+  featureType: string,
+  town = 'aalen',
+  timestamp?: Date | null,
+  options: LayerDataOptions = {},
+) {
+  const { enabled = true } = options;
   const [data, setData] = useState<LayerResponse | null>(null);
   const [error, setError] = useState(false);
 
   useEffect(() => {
+    if (!enabled) return;
     let cancelled = false;
     const load = async () => {
       try {
@@ -29,7 +38,7 @@ export function useGridLayerData(domain: string, featureType: string, town = 'aa
     const id = setInterval(load, 60_000);
     return () => { cancelled = true; clearInterval(id); };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [domain, featureType, town, timestamp?.toISOString() ?? null]);
+  }, [domain, featureType, town, timestamp?.toISOString() ?? null, enabled]);
 
   return { data, error };
 }
