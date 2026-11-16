@@ -17,7 +17,7 @@ import SensorPopupChart from './SensorPopupChart';
 import WaterLayer from './WaterLayer';
 import WmsOverlayLayer from './WmsOverlayLayer';
 import TrafficLayer from './TrafficLayer';
-import TrafficFlowLayer from './TrafficFlowLayer';
+import TrafficFlowLayer, { TRAFFIC_FLOW_GLOW_LAYER_ID, TRAFFIC_FLOW_DASH_LAYER_ID } from './TrafficFlowLayer';
 import AutobahnLayer from './AutobahnLayer';
 import EnergyLayer from './EnergyLayer';
 import SolarGlowLayer from './SolarGlowLayer';
@@ -331,7 +331,7 @@ export default function MapView({
         styleDiffing={false}
         attributionControl={{ compact: false }}
         interactiveLayerIds={[
-          'transit-stops', 'aqi-points', 'water-gauges', 'traffic-circles', 'traffic-flow-lines', 'autobahn-markers', 'energy-points', 'kocher-gauge', 'kocher-river-line',
+          'transit-stops', 'aqi-points', 'water-gauges', 'traffic-circles', 'traffic-flow-lines', TRAFFIC_FLOW_GLOW_LAYER_ID, TRAFFIC_FLOW_DASH_LAYER_ID, 'autobahn-markers', 'energy-points', 'kocher-gauge', 'kocher-river-line',
           'community-schools-points', 'community-healthcare-points', 'community-parks-points', 'community-waste-points',
           'infrastructure-ev-points', 'infrastructure-roadworks-points', 'parking-points', 'bus-position-3d', 'bus-stop-points',
           'solar-glow-points', 'ev-charging-live-points', EV_CHARGING_COLUMNS_LAYER_ID,
@@ -381,7 +381,7 @@ export default function MapView({
             ? 'airQuality'
             : layerId.startsWith('water')
             ? 'water'
-            : layerId === 'traffic-flow-lines'
+            : layerId.startsWith('traffic-flow')
             ? 'trafficFlow'
             : layerId.startsWith('traffic')
             ? 'traffic'
@@ -455,7 +455,7 @@ export default function MapView({
           />
         )}
         {trafficFlowVisible && (
-          <TrafficFlowLayer town={town} visible={true} timestamp={historicalTimestamp} />
+          <TrafficFlowLayer town={town} visible={true} timestamp={historicalTimestamp} extruded={data3dVisible} />
         )}
         {(autobahnVisible ?? layerVisibility.autobahn) && (
           <AutobahnLayer town={town} visible={true} />
@@ -619,6 +619,14 @@ export default function MapView({
       <LegendOverlay
         layerVisibility={layerVisibility}
         trafficFlowVisible={trafficFlowVisible}
+        activePollutant={activePollutant}
+        data3dLayers={{
+          airQuality: data3dVisible && layerVisibility.airQuality,
+          evCharging: data3dVisible && evChargingVisible,
+          parking: data3dVisible && parkingVisible,
+          heatDemand: data3dVisible && heatDemandVisible,
+          trafficFlow: data3dVisible && trafficFlowVisible,
+        }}
       />
     </div>
   );
