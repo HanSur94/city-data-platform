@@ -17,6 +17,7 @@ import FeatureSearch from './FeatureSearch';
 import type { SearchResult } from './FeatureSearch';
 import BusLineFilter from './BusLineFilter';
 import { LAYER_METADATA } from '@/lib/layer-metadata';
+import type { LayerKey, LayerVisibility } from '@/lib/layer-registry';
 import { useLayerMetadata } from '@/hooks/useLayerMetadata';
 
 import type { DemographicMetric } from '@/components/map/DemographicsGridLayer';
@@ -33,37 +34,8 @@ const BASE_LAYER_LABELS: Record<BaseLayer, string> = {
 interface SidebarProps {
   town: string;
   onFeatureSelect: (result: SearchResult) => void;
-  layerVisibility: {
-    transit: boolean;
-    airQuality: boolean;
-    water: boolean;
-    floodHazard: boolean;
-    railNoise: boolean;
-    lubwEnv: boolean;
-    traffic: boolean;
-    autobahn: boolean;
-    mobiData: boolean;
-    energy: boolean;
-    schools?: boolean;
-    healthcare?: boolean;
-    parks?: boolean;
-    waste?: boolean;
-    police?: boolean;
-    evCharging?: boolean;
-    roadworks?: boolean;
-    solarPotential?: boolean;
-    trafficFlow?: boolean;
-    kocher?: boolean;
-    parking?: boolean;
-    busPosition?: boolean;
-    solarGlow?: boolean;
-    roadNoise?: boolean;
-    fernwaerme?: boolean;
-    demographics?: boolean;
-    heatDemand?: boolean;
-    cycling?: boolean;
-  };
-  onToggleLayer: (layer: 'transit' | 'airQuality' | 'water' | 'floodHazard' | 'railNoise' | 'lubwEnv' | 'traffic' | 'autobahn' | 'mobiData' | 'energy' | 'schools' | 'healthcare' | 'parks' | 'waste' | 'police' | 'evCharging' | 'roadworks' | 'solarPotential' | 'trafficFlow' | 'cadastral' | 'hillshade' | 'buildings3d' | 'terrain3d' | 'kocher' | 'parking' | 'busPosition' | 'solarGlow' | 'roadNoise' | 'fernwaerme' | 'demographics' | 'heatDemand' | 'cycling') => void;
+  layerVisibility: LayerVisibility;
+  onToggleLayer: (layer: LayerKey) => void;
   transitError?: boolean;
   airQualityError?: boolean;
   trafficError?: boolean;
@@ -261,17 +233,6 @@ export default function Sidebar({ town, onFeatureSelect, layerVisibility, onTogg
           isStale={layerMeta['autobahn']?.isStale}
           metadata={LAYER_METADATA['autobahn']}
           lastUpdated={layerMeta['autobahn']?.lastUpdated}
-        />
-        <LayerToggle
-          id="mobidata-toggle"
-          label="MobiData BW"
-          checked={layerVisibility.mobiData}
-          onCheckedChange={() => onToggleLayer('mobiData')}
-          layerKey="mobiData"
-          dataType={LAYER_METADATA['mobiData']?.dataType}
-          isStale={layerMeta['mobiData']?.isStale}
-          metadata={LAYER_METADATA['mobiData']}
-          lastUpdated={layerMeta['mobiData']?.lastUpdated}
         />
         <LayerToggle
           id="cycling-toggle"

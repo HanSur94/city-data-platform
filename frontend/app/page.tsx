@@ -1,5 +1,5 @@
 'use client'
-import { Suspense, useCallback, useRef, useState, useMemo } from 'react'
+import { Suspense, useCallback, useRef, useState } from 'react'
 import dynamic from 'next/dynamic'
 import Sidebar from '@/components/sidebar/Sidebar'
 import { DashboardPanel } from '@/components/dashboard/DashboardPanel'
@@ -15,6 +15,8 @@ import { useTimeseries } from '@/hooks/useTimeseries'
 import type { Pollutant } from '@/components/map/AirQualityHeatmapLayer'
 import type { DemographicMetric } from '@/components/map/DemographicsGridLayer'
 import type { PopupInfo } from '@/components/map/MapView'
+import { nextUrlLayers, visibilityFromUrl } from '@/lib/layer-registry'
+import type { LayerKey } from '@/lib/layer-registry'
 import { DEFAULT_BASE_LAYER } from '@/lib/map-styles'
 import type { BaseLayer } from '@/lib/map-styles'
 import type { SearchResult } from '@/components/sidebar/FeatureSearch'
@@ -32,84 +34,17 @@ function HomeInner() {
   const dateRange = { from: state.from, to: state.to }
   const historicalTimestamp = state.ts  // Date | null
 
-  // Layer visibility driven by URL params
-  const layerVisibility = {
-    transit: state.layers.includes('transit'),
-    airQuality: state.layers.includes('aqi'),
-    water: state.layers.includes('water'),
-    floodHazard: state.layers.includes('flood'),
-    railNoise: state.layers.includes('rail_noise'),
-    lubwEnv: state.layers.includes('lubw_env'),
-    traffic: state.layers.includes('traffic'),
-    autobahn: state.layers.includes('autobahn'),
-    mobiData: state.layers.includes('mobidata'),
-    energy: state.layers.includes('energy'),
-    schools: state.layers.includes('schools'),
-    healthcare: state.layers.includes('healthcare'),
-    parks: state.layers.includes('parks'),
-    waste: state.layers.includes('waste'),
-    police: state.layers.includes('police'),
-    evCharging: state.layers.includes('ev_charging'),
-    roadworks: state.layers.includes('roadworks'),
-    solarPotential: state.layers.includes('solar_potential'),
-    trafficFlow: state.layers.includes('traffic_flow'),
-    kocher: state.layers.includes('kocher'),
-    parking: state.layers.includes('parking'),
-    busPosition: state.layers.includes('bus_position'),
-    solarGlow: state.layers.includes('solar_glow'),
-    roadNoise: state.layers.includes('road_noise'),
-    fernwaerme: state.layers.includes('fernwaerme'),
-    demographics: state.layers.includes('demographics'),
-    heatDemand: state.layers.includes('heat_demand'),
-    cycling: state.layers.includes('cycling'),
-    cadastral: state.layers.includes('cadastral'),
-    hillshade: state.layers.includes('hillshade'),
-    buildings3d: state.layers.includes('buildings3d'),
-    terrain3d: state.layers.includes('terrain3d'),
+  // Layer visibility driven by URL params; the registry is the single source of layers
+  const layerVisibility = visibilityFromUrl(state.layers)
+
+  // One URL update per call. An empty list is written as an empty string (not null):
+  // a missing `layers` parameter would bring the default layer set back.
+  const setLayers = (keys: readonly LayerKey[], on: boolean) => {
+    update({ layers: nextUrlLayers(state.layers, keys, on).join(',') })
   }
 
-  const LAYER_KEYS: Record<string, string> = {
-    transit: 'transit',
-    airQuality: 'aqi',
-    water: 'water',
-    floodHazard: 'flood',
-    railNoise: 'rail_noise',
-    lubwEnv: 'lubw_env',
-    traffic: 'traffic',
-    autobahn: 'autobahn',
-    mobiData: 'mobidata',
-    energy: 'energy',
-    schools: 'schools',
-    healthcare: 'healthcare',
-    parks: 'parks',
-    waste: 'waste',
-    police: 'police',
-    evCharging: 'ev_charging',
-    roadworks: 'roadworks',
-    solarPotential: 'solar_potential',
-    trafficFlow: 'traffic_flow',
-    kocher: 'kocher',
-    parking: 'parking',
-    busPosition: 'bus_position',
-    solarGlow: 'solar_glow',
-    roadNoise: 'road_noise',
-    fernwaerme: 'fernwaerme',
-    demographics: 'demographics',
-    heatDemand: 'heat_demand',
-    cycling: 'cycling',
-    cadastral: 'cadastral',
-    hillshade: 'hillshade',
-    buildings3d: 'buildings3d',
-    terrain3d: 'terrain3d',
-  }
-
-  const toggleLayer = (layer: keyof typeof LAYER_KEYS) => {
-    const key = LAYER_KEYS[layer]
-    const current = state.layers
-    const next = current.includes(key)
-      ? current.filter(l => l !== key)
-      : [...current, key]
-    update({ layers: next.join(',') || null })
+  const toggleLayer = (layer: LayerKey) => {
+    setLayers([layer], !layerVisibility[layer])
   }
 
   // Map flyTo function ref, set by MapView's onMapReady callback
