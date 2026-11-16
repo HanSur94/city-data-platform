@@ -150,6 +150,7 @@ export default function Sidebar({ town, onFeatureSelect, layerVisibility, onTogg
           layerKey="airQuality"
           dataType={LAYER_METADATA['airQuality']?.dataType}
           isStale={layerMeta['airQuality']?.isStale}
+          status={layerMeta['airQuality']?.status}
           metadata={LAYER_METADATA['airQuality']}
           lastUpdated={layerMeta['airQuality']?.lastUpdated}
         />

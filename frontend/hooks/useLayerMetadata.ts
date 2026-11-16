@@ -1,13 +1,15 @@
 'use client';
 
 import { useState, useEffect, useCallback } from 'react';
-import { LAYER_METADATA } from '@/lib/layer-metadata';
-import { fetchLayerMetadata } from '@/lib/api';
+import { fetchLayerMetadata, isLayerStatus } from '@/lib/api';
+import type { LayerStatus } from '@/lib/api';
 
-interface LayerMetaEntry {
+export type LayerMetaEntry = {
   lastUpdated: string | null;
+  /** undefined when the backend sent no (or an unknown) status. */
+  status: LayerStatus | undefined;
   isStale: boolean;
-}
+};
 
 interface UseLayerMetadataResult {
   layerMeta: Record<string, LayerMetaEntry>;
@@ -21,23 +23,19 @@ export function useLayerMetadata(town = 'aalen'): UseLayerMetadataResult {
   const fetchMeta = useCallback(async () => {
     try {
       const data = await fetchLayerMetadata(town);
-
-      const now = Date.now();
       const result: Record<string, LayerMetaEntry> = {};
 
-      for (const [key, entry] of Object.entries(data)) {
-        const lastUpdated = entry.last_updated ?? null;
-        let isStale = false;
-
-        if (lastUpdated) {
-          const staticMeta = LAYER_METADATA[key];
-          if (staticMeta?.updateIntervalSeconds) {
-            const elapsed = now - new Date(lastUpdated).getTime();
-            isStale = elapsed > 2 * staticMeta.updateIntervalSeconds * 1000;
-          }
+      if (Array.isArray(data?.layers)) {
+        for (const item of data.layers) {
+          if (typeof item?.layer_key !== 'string') continue;
+          // An older backend without the field must never produce a false "Keine Daten".
+          const status = isLayerStatus(item.status) ? item.status : undefined;
+          result[item.layer_key] = {
+            lastUpdated: item.last_updated ?? null,
+            status,
+            isStale: status === 'stale',
+          };
         }
-
-        result[key] = { lastUpdated, isStale };
       }
 
       setLayerMeta(result);

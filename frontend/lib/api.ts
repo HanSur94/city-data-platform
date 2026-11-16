@@ -52,10 +52,36 @@ export async function fetchKpi(town: string): Promise<KPIResponse> {
   )
 }
 
+/** Connector-derived status of a layer, computed by the backend. */
+export type LayerStatus = 'ok' | 'stale' | 'never_fetched' | 'static'
+
+export const LAYER_STATUSES: readonly LayerStatus[] = ['ok', 'stale', 'never_fetched', 'static']
+
+export function isLayerStatus(value: unknown): value is LayerStatus {
+  return typeof value === 'string' && (LAYER_STATUSES as readonly string[]).includes(value)
+}
+
+export interface LayerMetadataApiItem {
+  layer_key: string
+  source_name: string
+  source_url: string
+  data_type: string
+  update_interval_seconds: number | null
+  license: string
+  license_url: string
+  last_updated: string | null
+  status: LayerStatus
+}
+
+export interface LayerMetadataApiResponse {
+  town: string
+  layers: LayerMetadataApiItem[]
+}
+
 export async function fetchLayerMetadata(
   town: string,
-): Promise<Record<string, { last_updated: string | null }>> {
-  return getJsonShared<Record<string, { last_updated: string | null }>>(
+): Promise<LayerMetadataApiResponse> {
+  return getJsonShared<LayerMetadataApiResponse>(
     `${API_BASE}/api/metadata/layers?town=${encodeURIComponent(town)}`,
     'Layer metadata fetch failed',
   )

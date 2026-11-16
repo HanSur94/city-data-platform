@@ -5,6 +5,7 @@ import { Popover, PopoverTrigger, PopoverContent } from '@/components/ui/popover
 import { DataTypeBadge } from '@/components/ui/DataTypeBadge';
 import { Info, AlertTriangle } from 'lucide-react';
 import type { DataType, LayerMetadataEntry } from '@/lib/layer-metadata';
+import type { LayerStatus } from '@/lib/api';
 
 interface LayerToggleProps {
   id: string;
@@ -17,6 +18,7 @@ interface LayerToggleProps {
   isStale?: boolean;
   metadata?: LayerMetadataEntry;
   lastUpdated?: string | null;
+  status?: LayerStatus;
 }
 
 function formatInterval(seconds: number | null): string {
@@ -48,13 +50,16 @@ export default function LayerToggle({
   isStale,
   metadata,
   lastUpdated,
+  status,
 }: LayerToggleProps) {
+  const noData = status === 'never_fetched';
+  const stale = status === 'stale' || (isStale === true && !noData);
   return (
     <div className="flex items-center justify-between min-h-[44px] px-4 hover:bg-[#f4f5f7] rounded-md">
       <Label htmlFor={id} className="text-[12px] font-normal leading-[1.4] cursor-pointer flex items-center gap-2">
         {freshnessError && <span className="inline-block w-2 h-2 rounded-full bg-red-500 flex-shrink-0" />}
-        {isStale && (
-          <span title="Daten moeglicherweise veraltet">
+        {stale && (
+          <span title={`Veraltet – letztes Update ${formatTimestamp(lastUpdated)}`}>
             <AlertTriangle
               size={12}
               className="text-orange-500 flex-shrink-0"
@@ -62,7 +67,16 @@ export default function LayerToggle({
           </span>
         )}
         {label}
-        {dataType && <DataTypeBadge dataType={dataType} size="sm" />}
+        {noData ? (
+          <span
+            className="inline-flex items-center rounded-full px-2 py-0.5 text-[10px] font-medium bg-slate-200 text-slate-600"
+            title="Die Datenquelle hat noch keine Daten geliefert"
+          >
+            Keine Daten
+          </span>
+        ) : (
+          dataType && <DataTypeBadge dataType={dataType} size="sm" />
+        )}
       </Label>
       <div className="flex items-center gap-1.5">
         {metadata && (
@@ -109,6 +123,18 @@ export default function LayerToggle({
                 <span className="text-muted-foreground">Letztes Update: </span>
                 <span>{formatTimestamp(lastUpdated)}</span>
               </div>
+              {noData && (
+                <div>
+                  <span className="text-muted-foreground">Status: </span>
+                  <span>Keine Daten – die Datenquelle hat noch keine Daten geliefert.</span>
+                </div>
+              )}
+              {stale && (
+                <div>
+                  <span className="text-muted-foreground">Status: </span>
+                  <span className="text-amber-600">Veraltet</span>
+                </div>
+              )}
             </PopoverContent>
           </Popover>
         )}
