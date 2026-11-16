@@ -2,7 +2,11 @@
 import { useMemo } from 'react';
 import { Source, Layer } from 'react-map-gl/maplibre';
 import type { HeatmapLayerSpecification } from 'react-map-gl/maplibre';
+import type { Feature, FeatureCollection, Point } from 'geojson';
 import type { LayerResponse } from '@/types/geojson';
+import { EAQI_BREAKPOINTS, eaqiColorExpression } from '@/lib/map-styles';
+import { cellFromPoint, columnsFromPoints, gridSpacing } from '@/lib/extrude';
+import ColumnLayer from './ColumnLayer';
 
 export type Pollutant = 'pm25' | 'pm10' | 'no2' | 'o3';
 
@@ -10,6 +14,48 @@ interface AirQualityHeatmapLayerProps {
   data: LayerResponse | null;
   visible: boolean;
   activePollutant: Pollutant;
+  /** 3D mode: draw the grid as extruded EAQI cells instead of the heatmap. */
+  extruded?: boolean;
+  /** Insert the cells beneath this layer (the first label layer). */
+  beforeId?: string;
+}
+
+// Cells are not clickable (the sensor popup does not fit a grid cell, see MapView), so this
+// id is deliberately absent from MapView's interactiveLayerIds.
+export const AIR_QUALITY_CELLS_LAYER_ID = 'air-quality-cells-3d';
+
+// 3D tuning: cell size is the measured grid spacing times the inset (leaves a small gap).
+const AIR_CELL_INSET = 0.92;
+const AIR_CELL_BASE_M = 20;
+// Height at the top of the EAQI 'moderate' band of the pollutant.
+const AIR_CELL_MODERATE_TOP_M = 500;
+const AIR_CELL_MAX_M = 1500;
+const AIR_CELL_OPACITY = 0.6;
+
+const POLLUTANTS: readonly Pollutant[] = ['pm25', 'pm10', 'no2', 'o3'];
+
+function airCellHeight(pollutant: Pollutant, value: unknown): number {
+  if (typeof value !== 'number' || !Number.isFinite(value) || value < 0) return AIR_CELL_BASE_M;
+  const moderateTop = EAQI_BREAKPOINTS[pollutant][2];
+  return Math.min(
+    AIR_CELL_MAX_M,
+    AIR_CELL_BASE_M + (value * (AIR_CELL_MODERATE_TOP_M - AIR_CELL_BASE_M)) / moderateTop,
+  );
+}
+
+function buildAirCells(data: LayerResponse): FeatureCollection | null {
+  const points = data.features.filter(
+    (f): f is Feature<Point, Record<string, unknown>> => f.geometry?.type === 'Point',
+  );
+  const spacing = gridSpacing(points);
+  if (!spacing) return null;
+  return columnsFromPoints(points, {
+    footprint: (lng, lat) =>
+      cellFromPoint(lng, lat, spacing.dLng * AIR_CELL_INSET, spacing.dLat * AIR_CELL_INSET),
+    height: (p) => airCellHeight('pm25', p.pm25),
+    extra: (p) =>
+      Object.fromEntries(POLLUTANTS.map((pol) => [`height_${pol}`, airCellHeight(pol, p[pol])])),
+  });
 }
 
 const visibility = (v: boolean): 'visible' | 'none' => v ? 'visible' : 'none';
@@ -63,14 +109,36 @@ function buildHeatmapLayer(pollutant: Pollutant): HeatmapLayerSpecification {
   };
 }
 
-export default function AirQualityHeatmapLayer({ data, visible, activePollutant }: AirQualityHeatmapLayerProps) {
+export default function AirQualityHeatmapLayer({
+  data,
+  visible,
+  activePollutant,
+  extruded = false,
+  beforeId,
+}: AirQualityHeatmapLayerProps) {
   const layerSpec = useMemo(() => buildHeatmapLayer(activePollutant), [activePollutant]);
+  // Geometry depends on the data only: switching the pollutant must not rebuild it.
+  const cells = useMemo(() => (extruded && data ? buildAirCells(data) : null), [extruded, data]);
+  const cellColor = useMemo(() => eaqiColorExpression(activePollutant), [activePollutant]);
 
   if (!data) return null;
 
   return (
-    <Source id="air-quality-grid" type="geojson" data={data}>
-      <Layer {...layerSpec} layout={{ ...layerSpec.layout, visibility: visibility(visible) }} />
-    </Source>
+    <>
+      <Source id="air-quality-grid" type="geojson" data={data}>
+        <Layer {...layerSpec} layout={{ ...layerSpec.layout, visibility: visibility(visible && !extruded) }} />
+      </Source>
+      {extruded && (
+        <ColumnLayer
+          id={AIR_QUALITY_CELLS_LAYER_ID}
+          data={cells}
+          heightProperty={`height_${activePollutant}`}
+          colorExpression={cellColor}
+          opacity={AIR_CELL_OPACITY}
+          beforeId={beforeId}
+          visible={visible}
+        />
+      )}
+    </>
   );
 }
