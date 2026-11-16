@@ -78,8 +78,9 @@ connectors:
     poll_interval_seconds: 900
     enabled: true
     config:
-      ident: "BW_13490006"
-      lat: 48.8035
+      # HVZ station 00142 Huettlingen / Kocher (verified 2026-11-16)
+      ident: "BW_00142"
+      lat: 48.8804
       lon: 10.0972
       attribution: "Hochwasserportal (LHP), Datenlizenz Deutschland"
 

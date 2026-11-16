@@ -1,10 +1,10 @@
 """LhpConnector: fetches water level data from LHP (Hochwasserportal).
 
-Polls the Huttlingen gauge on the Kocher river via the lhpapi library.
+Polls the Huettlingen / Kocher gauge (HVZ station 00142) via the lhpapi library.
 Writes readings to the water_readings hypertable with domain='water'.
 
 LHP API (via lhpapi PyPI package):
-    HochwasserPortalAPI("BW_13490006")  # Huttlingen/Kocher gauge
+    HochwasserPortalAPI("BW_00142")  # Huettlingen / Kocher, HVZ station 00142
     Attributes: level, flow, stage, last_update, name, url, hint
 
 License: Datenlizenz Deutschland
@@ -27,7 +27,7 @@ class LhpConnector(BaseConnector):
     """Fetches Kocher water level data from the Hochwasserportal (LHP).
 
     Config keys (from ConnectorConfig.config dict):
-        ident: str        -- LHP gauge identifier (e.g. "BW_13490006")
+        ident: str        -- LHP gauge identifier (default "BW_00142", Huettlingen / Kocher)
         lat: float        -- Gauge latitude
         lon: float        -- Gauge longitude
         attribution: str  -- Attribution string for data provenance
@@ -35,7 +35,7 @@ class LhpConnector(BaseConnector):
 
     def __init__(self, config: ConnectorConfig, town: Town) -> None:
         super().__init__(config, town)
-        self._ident: str = self.config.config.get("ident", "BW_13490006")
+        self._ident: str = self.config.config.get("ident", "BW_00142")
         self._feature_id: str | None = None
 
     async def fetch(self) -> LhpGaugeReading:
@@ -175,7 +175,7 @@ class LhpConnector(BaseConnector):
         4. Normalize and persist to water_readings
         5. Update staleness timestamp
         """
-        lat = self.config.config.get("lat", 48.8035)
+        lat = self.config.config.get("lat", 48.8804)
         lon = self.config.config.get("lon", 10.0972)
 
         # Step 1: fetch

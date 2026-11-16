@@ -1,7 +1,8 @@
-"""Integration tests for SensorCommunityConnector — WAIR-04.
+"""Tests for SensorCommunityConnector — WAIR-04.
 
-These tests call the live Sensor.community API (data.sensor.community).
-They require network access and verify real data shapes/values.
+The two tests marked slow call the live Sensor.community API (data.sensor.community);
+they need network access. All other tests run offline against fixtures cut from a
+real API answer.
 """
 from __future__ import annotations
 
@@ -45,6 +46,7 @@ def connector(sc_config, aalen_town) -> SensorCommunityConnector:
     return SensorCommunityConnector(config=sc_config, town=aalen_town)
 
 
+@pytest.mark.slow
 @pytest.mark.asyncio
 async def test_sensor_community_fetch_returns_sensors(connector: SensorCommunityConnector) -> None:
     """fetch() hits live Sensor.community API and returns non-empty list.
@@ -62,6 +64,7 @@ async def test_sensor_community_fetch_returns_sensors(connector: SensorCommunity
     assert len(raw) > 0, "must return at least one sensor within 25km of Aalen"
 
 
+@pytest.mark.slow
 @pytest.mark.asyncio
 async def test_sensor_community_normalize_returns_observations(connector: SensorCommunityConnector) -> None:
     """normalize() returns list[Observation] with domain='air_quality'.
@@ -189,3 +192,121 @@ async def test_sensor_community_handles_missing_pollutants(connector: SensorComm
     for obs in observations:
         assert obs.values.get("pm10") is None or isinstance(obs.values.get("pm10"), float)
         assert obs.values.get("pm25") is None or isinstance(obs.values.get("pm25"), float)
+
+
+# ---------------------------------------------------------------------------
+# Offline tests: path-style URL and real-response fixtures
+# ---------------------------------------------------------------------------
+
+# Two entries cut from a real answer of the filter/area endpoint.
+REAL_SDS011_ENTRY = {
+    "sensor": {
+        "sensor_type": {"manufacturer": "Nova Fitness", "name": "SDS011", "id": 14},
+        "pin": "1",
+        "id": 95858,
+    },
+    "sensordatavalues": [
+        {"value": "0.20", "value_type": "P1", "id": 73503089642},
+        {"value": "0.20", "value_type": "P2", "id": 73503089643},
+    ],
+    "location": {
+        "indoor": 0,
+        "country": "DE",
+        "latitude": "48.764",
+        "exact_location": 0,
+        "altitude": "392.4",
+        "longitude": "9.814",
+        "id": 88056,
+    },
+    "sampling_rate": None,
+    "timestamp": "2026-11-16 08:29:58",
+    "id": 31385407559,
+}
+REAL_DHT22_ENTRY = {
+    "sensor": {
+        "sensor_type": {"manufacturer": "various", "name": "DHT22", "id": 9},
+        "pin": "7",
+        "id": 30304,
+    },
+    "sensordatavalues": [
+        {"value": "11.70", "value_type": "temperature", "id": 73503090085},
+        {"value": "69.30", "value_type": "humidity", "id": 73503090087},
+    ],
+    "location": {
+        "indoor": 0,
+        "country": "DE",
+        "latitude": "48.636",
+        "exact_location": 0,
+        "altitude": "479.3",
+        "longitude": "10.152",
+        "id": 17112,
+    },
+    "sampling_rate": None,
+    "timestamp": "2026-11-16 08:29:59",
+    "id": 31385407721,
+}
+
+
+def _patched_client(captured: dict, payload: list[dict]):
+    class MockResponse:
+        def json(self):
+            return payload
+
+        def raise_for_status(self):
+            pass
+
+    async def mock_get(url, **kwargs):
+        captured["url"] = url
+        captured["kwargs"] = kwargs
+        return MockResponse()
+
+    mock_client = AsyncMock()
+    mock_client.__aenter__ = AsyncMock(return_value=mock_client)
+    mock_client.__aexit__ = AsyncMock(return_value=False)
+    mock_client.get = AsyncMock(side_effect=mock_get)
+    return mock_client
+
+
+@pytest.mark.asyncio
+async def test_fetch_requests_path_style_area_url(connector: SensorCommunityConnector) -> None:
+    """fetch() requests the path-style URL; no area query parameter."""
+    captured: dict = {}
+    with patch("httpx.AsyncClient") as mock_client_cls:
+        mock_client_cls.return_value = _patched_client(captured, [REAL_SDS011_ENTRY])
+        await connector.fetch()
+
+    assert captured["url"] == "https://data.sensor.community/airrohr/v1/filter/area=48.83,10.095,25"
+    assert "params" not in captured["kwargs"]
+    assert "city-data-platform" in captured["kwargs"]["headers"]["User-Agent"]
+
+
+@pytest.mark.asyncio
+async def test_fetch_uses_configured_radius(aalen_town: Town) -> None:
+    config = ConnectorConfig(
+        connector_class="SensorCommunityConnector",
+        poll_interval_seconds=300,
+        enabled=True,
+        config={"radius_km": 10},
+    )
+    connector = SensorCommunityConnector(config=config, town=aalen_town)
+    captured: dict = {}
+    with patch("httpx.AsyncClient") as mock_client_cls:
+        mock_client_cls.return_value = _patched_client(captured, [REAL_SDS011_ENTRY])
+        await connector.fetch()
+
+    assert captured["url"].endswith("area=48.83,10.095,10")
+
+
+def test_normalize_real_entries_keeps_only_particulate_sensor(
+    connector: SensorCommunityConnector,
+) -> None:
+    """One SDS011 entry and one DHT22 entry -> exactly one air_quality Observation."""
+    connector._feature_ids = {95858: "feat-95858", 30304: "feat-30304"}
+
+    observations = connector.normalize([REAL_SDS011_ENTRY, REAL_DHT22_ENTRY])
+
+    assert len(observations) == 1
+    obs = observations[0]
+    assert obs.domain == "air_quality"
+    assert obs.feature_id == "feat-95858"
+    assert obs.values == {"pm10": 0.2, "pm25": 0.2}

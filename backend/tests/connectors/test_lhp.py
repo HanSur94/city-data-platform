@@ -26,8 +26,8 @@ def _make_connector() -> LhpConnector:
         poll_interval_seconds=900,
         enabled=True,
         config={
-            "ident": "BW_13490006",
-            "lat": 48.8035,
+            "ident": "BW_00142",
+            "lat": 48.8804,
             "lon": 10.0972,
             "attribution": "Hochwasserportal (LHP), Datenlizenz Deutschland",
         },
@@ -99,7 +99,7 @@ class TestNormalize:
         observations = connector.normalize(reading)
 
         obs = observations[0]
-        assert obs.source_id == "lhp:BW_13490006"
+        assert obs.source_id == "lhp:BW_00142"
 
     def test_timestamp_from_reading(self):
         """Observation timestamp comes from reading.last_update."""
@@ -181,3 +181,60 @@ class TestComputeTrend:
         with patch.object(connector, "_query_recent_levels", return_value=[]):
             result = await connector._compute_trend("test-feature-id")
         assert result == "stable"
+
+
+def _connector_without_gauge_config() -> LhpConnector:
+    town = Town(
+        id="aalen",
+        display_name="Aalen",
+        country="DE",
+        timezone="Europe/Berlin",
+        bbox={"lon_min": 9.97, "lat_min": 48.76, "lon_max": 10.22, "lat_max": 48.90},
+        connectors=[],
+    )
+    config = ConnectorConfig(
+        connector_class="LhpConnector", poll_interval_seconds=900, enabled=True, config={}
+    )
+    return LhpConnector(config=config, town=town)
+
+
+class TestKocherGaugeDefaults:
+    """The code default is the Huettlingen / Kocher gauge (HVZ station 00142)."""
+
+    def test_default_ident(self):
+        connector = _connector_without_gauge_config()
+        assert connector._ident == "BW_00142"
+
+    @pytest.mark.asyncio
+    async def test_run_uses_default_position(self):
+        connector = _connector_without_gauge_config()
+        connector.fetch = AsyncMock(return_value=_sample_reading())
+        connector.upsert_feature = AsyncMock(return_value="feature-uuid")
+        connector._compute_trend = AsyncMock(return_value="stable")
+        connector.persist = AsyncMock()
+        connector._update_staleness = AsyncMock()
+
+        await connector.run()
+
+        for call in connector.upsert_feature.call_args_list:
+            assert call.kwargs["source_id"] == "lhp:BW_00142"
+            assert call.kwargs["geometry_wkt"] == "POINT(10.0972 48.8804)"
+
+    @pytest.mark.asyncio
+    async def test_fetch_passes_configured_ident_to_lhpapi(self):
+        connector = _make_connector()
+        fake_api = MagicMock()
+        fake_api.name = "Hüttlingen / Kocher"
+        fake_api.level = 30.0
+        fake_api.flow = 0.43
+        fake_api.stage = None
+        fake_api.last_update = datetime(2026, 11, 16, 8, 15, tzinfo=timezone.utc)
+        fake_api.url = "https://www.hvz.baden-wuerttemberg.de/"
+        fake_api.hint = ""
+
+        with patch("lhpapi.HochwasserPortalAPI", return_value=fake_api) as api_cls:
+            reading = await connector.fetch()
+
+        api_cls.assert_called_once_with("BW_00142")
+        assert reading.name == "Hüttlingen / Kocher"
+        assert reading.level == 30.0

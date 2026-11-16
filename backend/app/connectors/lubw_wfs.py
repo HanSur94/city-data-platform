@@ -21,18 +21,47 @@ from app.models.lubw_wfs import LubwWfsFeatureCollection
 
 logger = logging.getLogger(__name__)
 
+USER_AGENT = "city-data-platform/0.1 (open-source city dashboard)"
+
 # LUBW WFS endpoints keyed by feature type prefix
-# Maps: prefix -> (base_url, WFS typeNames value)
+# Maps: prefix -> (base_url, qualified WFS typeNames value "<Service>:<Layer>")
 LUBW_WFS_ENDPOINTS: dict[str, tuple[str, str]] = {
     "naturschutz": (
         "https://rips-gdi.lubw.baden-wuerttemberg.de/arcgis/services/wfs/Naturschutzgebiet/MapServer/WFSServer",
-        "Naturschutzgebiet",
+        "Naturschutzgebiet:Naturschutzgebiet",
     ),
     "wasserschutz": (
         "https://rips-gdi.lubw.baden-wuerttemberg.de/arcgis/services/wfs/Wasserschutzgebiet/MapServer/WFSServer",
-        "Wasserschutzgebiet",
+        "Wasserschutzgebiet:Wasserschutzgebiet",
     ),
 }
+
+
+def _zone_name(ft_type: str, properties: dict[str, Any]) -> str | None:
+    """Display name of a protected zone from its raw WFS properties.
+
+    Nature reserves carry the name in OBJEKT. Water protection zones carry a
+    short name in KURZNAME (often null) and a long name in LANGNAME.
+    """
+    if ft_type == "naturschutz":
+        candidates = [properties.get("OBJEKT")]
+    else:
+        candidates = [properties.get("KURZNAME"), properties.get("LANGNAME")]
+    for value in candidates:
+        if isinstance(value, str) and value.strip():
+            return value.strip()
+    return None
+
+
+def _zone_source_key(feature_id: str | None, properties: dict[str, Any]) -> str | None:
+    """Unique key of a zone: feature id, else GmlID, else OBJECTID. None when absent."""
+    if feature_id:
+        return str(feature_id)
+    for key in ("GmlID", "OBJECTID"):
+        value = properties.get(key)
+        if value not in (None, ""):
+            return str(value)
+    return None
 
 
 def _compute_centroid_wkt(geometry: Any) -> str:
@@ -109,12 +138,20 @@ class LubwWfsConnector(BaseConnector):
                     "version": "2.0.0",
                     "request": "GetFeature",
                     "typeNames": type_name,
-                    "outputFormat": "application/json",
-                    "srsName": "urn:ogc:def:crs:EPSG::4326",
+                    "outputFormat": "GEOJSON",
+                    "srsName": "EPSG:4326",
                     "BBOX": bbox_param,
                 }
-                response = await client.get(url, params=params)
+                response = await client.get(
+                    url, params=params, headers={"User-Agent": USER_AGENT}
+                )
                 response.raise_for_status()
+                body = response.text
+                content_type = str(response.headers.get("content-type", "")).lower()
+                if body.lstrip().startswith("<") or "xml" in content_type:
+                    raise ValueError(
+                        f"LUBW WFS {ft_type} returned an XML exception: {body.strip()[:300]}"
+                    )
                 data = response.json()
                 results[ft_type] = data
                 logger.info(
@@ -140,7 +177,7 @@ class LubwWfsConnector(BaseConnector):
         Overrides BaseConnector.run(). For each feature type and each feature:
         1. Validate via Pydantic models
         2. Compute centroid WKT from polygon geometry
-        3. Call upsert_feature() with domain="water"
+        3. Call upsert_feature() with domain="water", a unique source_id and a name
         4. Update staleness timestamp
 
         WFS returning 0 features (no zones in bbox) is valid — run() completes
@@ -167,20 +204,24 @@ class LubwWfsConnector(BaseConnector):
                     )
                     continue
 
-                # Build source_id: prefer feature .id, fall back to NSG_NR/WSG_NR or "?"
-                feat_id = feat.id
-                if not feat_id:
-                    feat_id = feat.properties.get(
-                        "NSG_NR", feat.properties.get("WSG_NR", "?")
+                # source_id = "<prefix>:<unique key>"; the map filter relies on the
+                # naturschutz / wasserschutz prefix. No shared fallback id.
+                key = _zone_source_key(feat.id, feat.properties)
+                if key is None:
+                    logger.warning(
+                        "Skipping %s feature — no id, GmlID or OBJECTID", ft_type
                     )
+                    continue
 
-                source_id = f"{ft_type}:{feat_id}"
+                properties = dict(feat.properties)
+                properties["name"] = _zone_name(ft_type, feat.properties)
+                properties["zone_type"] = ft_type
 
                 await self.upsert_feature(
-                    source_id=source_id,
+                    source_id=f"{ft_type}:{key}",
                     domain="water",
                     geometry_wkt=wkt,
-                    properties=feat.properties,
+                    properties=properties,
                 )
 
         await self._update_staleness()

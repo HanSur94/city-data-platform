@@ -4,8 +4,8 @@ Implements WAIR-04: retrieves SDS011/SPS30 sensors within 25km of the
 configured town's bounding box center and writes PM10/PM2.5 readings
 to air_quality_readings.
 
-Sensor.community API:
-    GET https://data.sensor.community/airrohr/v1/filter/?area=48.84,10.09,25
+Sensor.community API (path-style filter, query-string form is no longer served):
+    GET https://data.sensor.community/airrohr/v1/filter/area=48.83,10.095,25
     Headers: User-Agent: city-data-platform/0.1 (open-source city dashboard)
     Response: [{sensor, location, sensordatavalues: [{value_type, value}]}]
     P1 = PM10, P2 = PM2.5
@@ -21,16 +21,28 @@ from app.config import ConnectorConfig, Town
 from app.models.sensor_community import SensorReading
 
 
-SENSOR_COMMUNITY_URL = "https://data.sensor.community/airrohr/v1/filter/"
+SENSOR_COMMUNITY_FILTER_BASE = "https://data.sensor.community/airrohr/v1/filter/"
 USER_AGENT = "city-data-platform/0.1 (open-source city dashboard)"
 RADIUS_KM = 25
 SUPPORTED_SENSOR_TYPES = {"SDS011", "SPS30"}
 
 
+def _format_number(value: float) -> str:
+    """Format a number for the URL path: whole numbers without trailing '.0'."""
+    number = float(value)
+    return str(int(number)) if number == int(number) else str(number)
+
+
+def build_area_url(lat: float, lon: float, radius_km: float) -> str:
+    """Build the path-style area filter URL for a centre point and radius in km."""
+    area = f"area={round(lat, 4)},{round(lon, 4)},{_format_number(radius_km)}"
+    return f"{SENSOR_COMMUNITY_FILTER_BASE}{area}"
+
+
 class SensorCommunityConnector(BaseConnector):
     """Fetches citizen-science PM10/PM2.5 data from Sensor.community.
 
-    Queries sensors within 25km of the town's bounding box center.
+    Queries sensors within radius_km (config, default 25) of the town's bounding box center.
     Only SDS011 and SPS30 sensor types are processed — other types are skipped.
 
     The User-Agent header is mandatory (Sensor.community policy) and identifies
@@ -63,20 +75,17 @@ class SensorCommunityConnector(BaseConnector):
             httpx.HTTPError: On network/HTTP failure.
         """
         lat, lon = self._bbox_center()
-        area_param = f"{lat},{lon},{RADIUS_KM}"
+        radius_km = self.config.config.get("radius_km", RADIUS_KM)
+        url = build_area_url(lat, lon, radius_km)
 
         async with httpx.AsyncClient(timeout=30.0) as client:
-            response = await client.get(
-                SENSOR_COMMUNITY_URL,
-                params={"area": area_param},
-                headers={"User-Agent": USER_AGENT},
-            )
+            response = await client.get(url, headers={"User-Agent": USER_AGENT})
             response.raise_for_status()
             data = response.json()
 
         if not data:
             raise ValueError(
-                f"Sensor.community returned empty list for area {area_param}"
+                f"Sensor.community returned empty list for {url}"
             )
         return data
 
