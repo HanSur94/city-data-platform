@@ -144,6 +144,114 @@ async def test_all_mirrors_failing_raises_last_error() -> None:
     assert len(seen) == 2
 
 
+async def test_second_round_succeeds_after_pause(monkeypatch: pytest.MonkeyPatch) -> None:
+    """All mirrors busy in round 1, the first one answers in round 2."""
+    seen: list[httpx.Request] = []
+    sleeps: list[float] = []
+
+    def handler(request: httpx.Request) -> httpx.Response:
+        seen.append(request)
+        if len(seen) <= 2:  # round 1: both mirrors busy
+            return httpx.Response(429, text="rate limited")
+        return httpx.Response(200, json=OK_BODY)
+
+    async def fake_sleep(seconds: float) -> None:
+        sleeps.append(seconds)
+
+    monkeypatch.setattr(overpass_client.asyncio, "sleep", fake_sleep)
+
+    result = await overpass_query(
+        "q",
+        urls=[MIRROR_A, MIRROR_B],
+        transport=httpx.MockTransport(handler),
+        rounds=3,
+        round_delay=7.0,
+    )
+
+    assert result == OK_BODY
+    assert [r.url.host for r in seen] == ["mirror-a.example", "mirror-b.example", "mirror-a.example"]
+    assert sleeps == [7.0]
+
+
+async def test_all_rounds_fail_raises_last_error(monkeypatch: pytest.MonkeyPatch) -> None:
+    seen: list[httpx.Request] = []
+    sleeps: list[float] = []
+    transport = _transport(
+        {"mirror-a.example": httpx.ConnectError("refused"), "mirror-b.example": (502, "busy")},
+        seen,
+    )
+
+    async def fake_sleep(seconds: float) -> None:
+        sleeps.append(seconds)
+
+    monkeypatch.setattr(overpass_client.asyncio, "sleep", fake_sleep)
+
+    with pytest.raises(httpx.HTTPStatusError) as excinfo:
+        await overpass_query(
+            "q", urls=[MIRROR_A, MIRROR_B], transport=transport, rounds=3, round_delay=5.0
+        )
+
+    assert excinfo.value.response.status_code == 502
+    assert len(seen) == 6  # 3 rounds x 2 mirrors
+    assert sleeps == [5.0, 5.0]  # no pause after the last round
+
+
+async def test_rejected_query_is_not_retried_in_further_rounds(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    seen: list[httpx.Request] = []
+    sleeps: list[float] = []
+    transport = _transport({"mirror-a.example": (400, "bad query")}, seen)
+
+    async def fake_sleep(seconds: float) -> None:
+        sleeps.append(seconds)
+
+    monkeypatch.setattr(overpass_client.asyncio, "sleep", fake_sleep)
+
+    with pytest.raises(httpx.HTTPStatusError) as excinfo:
+        await overpass_query("q", urls=[MIRROR_A], transport=transport, rounds=3, round_delay=5.0)
+
+    assert excinfo.value.response.status_code == 400
+    assert len(seen) == 1
+    assert sleeps == []
+
+
+async def test_fallback_mirrors_get_a_capped_timeout() -> None:
+    seen: list[httpx.Request] = []
+    transport = _transport(
+        {"mirror-a.example": (502, "busy"), "mirror-b.example": (200, OK_BODY)}, seen
+    )
+
+    await overpass_query("q", urls=[MIRROR_A, MIRROR_B], transport=transport, timeout=300.0)
+
+    first, second = (r.extensions["timeout"] for r in seen)
+    assert first["read"] == 300.0
+    assert second["read"] == overpass_client.OVERPASS_FALLBACK_TIMEOUT_S
+
+
+async def test_calls_are_serialised() -> None:
+    """Two concurrent calls never have requests in flight at the same time."""
+    in_flight = 0
+    max_in_flight = 0
+
+    async def handler(request: httpx.Request) -> httpx.Response:
+        nonlocal in_flight, max_in_flight
+        in_flight += 1
+        max_in_flight = max(max_in_flight, in_flight)
+        await overpass_client.asyncio.sleep(0.01)
+        in_flight -= 1
+        return httpx.Response(200, json=OK_BODY)
+
+    transport = httpx.MockTransport(handler)
+    await overpass_client.asyncio.gather(
+        overpass_query("a", urls=[MIRROR_A], transport=transport),
+        overpass_query("b", urls=[MIRROR_A], transport=transport),
+        overpass_query("c", urls=[MIRROR_A], transport=transport),
+    )
+
+    assert max_in_flight == 1
+
+
 async def test_all_mirrors_unusable_body_raises_value_error() -> None:
     seen: list[httpx.Request] = []
     transport = _transport(

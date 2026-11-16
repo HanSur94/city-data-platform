@@ -12,14 +12,22 @@ connectors goes through overpass_query():
 - the mirror list comes from the connector config key ``overpass_urls`` when
   present, otherwise from DEFAULT_OVERPASS_URLS.
 
-One attempt per mirror per call: no retry loop and no sleeping. The scheduler
-polls again on its own interval.
+Two things keep a busy public server from meaning "no data until the next
+daily poll":
+
+- calls are serialised through one process-wide lock. Several connectors start
+  together, and the public instances answer simultaneous requests from one
+  address with HTTP 429;
+- when every mirror failed, the whole list is tried again after a pause
+  (OVERPASS_ROUNDS rounds, OVERPASS_ROUND_DELAY_S seconds apart). The pause is an
+  ``asyncio.sleep``, so the event loop stays free.
 
 License: OpenStreetMap data (c) OpenStreetMap contributors, ODbL 1.0
 Attribution: https://www.openstreetmap.org/copyright
 """
 from __future__ import annotations
 
+import asyncio
 import logging
 from collections.abc import Mapping, Sequence
 from typing import Any
@@ -41,6 +49,19 @@ DEFAULT_OVERPASS_URLS: tuple[str, ...] = (
 
 # Statuses that say "this mirror is busy / refuses this client", not "your query is wrong".
 _MIRROR_PROBLEM_STATUSES = frozenset({406, 429})
+
+# How often the whole mirror list is tried, and the pause between two rounds.
+OVERPASS_ROUNDS = 3
+OVERPASS_ROUND_DELAY_S = 60.0
+
+# Fallback mirrors get a shorter time limit than the first endpoint. Observed on
+# 2026-11-16: two public mirrors accepted the connection and then sent nothing, and
+# with the full limit (up to 300 s for the buildings query) every round would hang
+# for minutes while the process-wide lock is held.
+OVERPASS_FALLBACK_TIMEOUT_S = 60.0
+
+# One Overpass request at a time for the whole process (see module docstring).
+_OVERPASS_LOCK = asyncio.Lock()
 
 
 def overpass_urls_from_config(config: Mapping[str, Any]) -> list[str]:
@@ -76,6 +97,8 @@ async def overpass_query(
     urls: Sequence[str] | None = None,
     timeout: float = 90.0,
     transport: httpx.AsyncBaseTransport | None = None,
+    rounds: int | None = None,
+    round_delay: float | None = None,
 ) -> dict[str, Any]:
     """POST an Overpass QL query and return the parsed JSON document.
 
@@ -84,6 +107,8 @@ async def overpass_query(
         urls: Endpoints to try in order (default: DEFAULT_OVERPASS_URLS).
         timeout: Per-request timeout in seconds.
         transport: Optional httpx transport (tests inject a MockTransport).
+        rounds: How often the whole endpoint list is tried (default: OVERPASS_ROUNDS).
+        round_delay: Seconds to wait between two rounds (default: OVERPASS_ROUND_DELAY_S).
 
     Returns:
         Parsed response dict containing an ``elements`` key.
@@ -99,15 +124,49 @@ async def overpass_query(
     if not endpoints:
         raise ValueError("No Overpass endpoints configured")
 
+    n_rounds = max(1, OVERPASS_ROUNDS if rounds is None else rounds)
+    delay = OVERPASS_ROUND_DELAY_S if round_delay is None else round_delay
+
+    async with _OVERPASS_LOCK:
+        last_error: Exception | None = None
+        for round_no in range(1, n_rounds + 1):
+            try:
+                return await _query_mirrors_once(query, endpoints, timeout, transport)
+            except httpx.HTTPStatusError as exc:
+                status = exc.response.status_code
+                if status not in _MIRROR_PROBLEM_STATUSES and status < 500:
+                    raise  # the query itself was rejected; retrying cannot help
+                last_error = exc
+            except (httpx.TransportError, ValueError) as exc:
+                last_error = exc
+            if round_no < n_rounds:
+                logger.warning(
+                    "All Overpass mirrors failed (round %d of %d); retrying in %.0f s",
+                    round_no, n_rounds, delay,
+                )
+                await asyncio.sleep(delay)
+
+    assert last_error is not None  # n_rounds >= 1, so at least one round ran
+    raise last_error
+
+
+async def _query_mirrors_once(
+    query: str,
+    endpoints: Sequence[str],
+    timeout: float,
+    transport: httpx.AsyncBaseTransport | None,
+) -> dict[str, Any]:
+    """Try every endpoint once, in order. Raises the last error when all failed."""
     last_error: Exception | None = None
     async with httpx.AsyncClient(
         timeout=timeout,
         headers={"User-Agent": OVERPASS_USER_AGENT},
         transport=transport,
     ) as client:
-        for url in endpoints:
+        for index, url in enumerate(endpoints):
+            limit = timeout if index == 0 else min(timeout, OVERPASS_FALLBACK_TIMEOUT_S)
             try:
-                response = await client.post(url, data={"data": query})
+                response = await client.post(url, data={"data": query}, timeout=limit)
             except httpx.TransportError as exc:
                 logger.warning("Overpass mirror %s unreachable: %s", url, exc)
                 last_error = exc
