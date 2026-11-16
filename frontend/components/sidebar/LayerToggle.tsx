@@ -65,7 +65,7 @@ export default function LayerToggle({
         {label}
         {noData ? (
           <span
-            className="inline-flex items-center rounded-full px-2 py-0.5 text-[10px] font-medium bg-slate-200 text-slate-600"
+            className="inline-flex items-center whitespace-nowrap rounded-full px-2 py-0.5 text-[10px] font-medium bg-slate-200 text-slate-600"
             title="Die Datenquelle hat noch keine Daten geliefert"
           >
             Keine Daten
