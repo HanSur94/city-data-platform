@@ -89,7 +89,7 @@ interface SidebarProps {
 
 export default function Sidebar({ town, onFeatureSelect, layerVisibility, onToggleLayer, transitError, airQualityError, trafficError, energyError, baseLayer, onBaseLayerChange, cadastralVisible, hillshadeVisible, buildings3dVisible, terrain3dVisible, activePollutant, onPollutantChange, noiseMetric, onNoiseMetricChange, demographicMetric, onDemographicMetricChange, busLines, hiddenBusLines, onToggleBusLine, collapsed, onToggle }: SidebarProps) {
   const [drawerOpen, setDrawerOpen] = useState(false);
-  const { layerMeta } = useLayerMetadata();
+  const { layerMeta } = useLayerMetadata(town);
 
   const content = (
     <div className="flex flex-col h-full bg-white w-[280px]">

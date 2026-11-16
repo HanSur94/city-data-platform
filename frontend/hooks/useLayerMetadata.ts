@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import { LAYER_METADATA } from '@/lib/layer-metadata';
+import { fetchLayerMetadata } from '@/lib/api';
 
 interface LayerMetaEntry {
   lastUpdated: string | null;
@@ -19,9 +20,7 @@ export function useLayerMetadata(town = 'aalen'): UseLayerMetadataResult {
 
   const fetchMeta = useCallback(async () => {
     try {
-      const res = await fetch(`/api/metadata/layers?town=${encodeURIComponent(town)}`);
-      if (!res.ok) return;
-      const data: Record<string, { last_updated: string | null }> = await res.json();
+      const data = await fetchLayerMetadata(town);
 
       const now = Date.now();
       const result: Record<string, LayerMetaEntry> = {};
