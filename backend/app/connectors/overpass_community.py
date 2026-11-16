@@ -5,7 +5,9 @@ parks/leisure areas, and waste/recycling points from the Overpass API and stores
 them as 'community' domain features.
 
 A single consolidated Overpass query retrieves all community POI types at once
-(schools, healthcare, parks, waste), minimizing API requests.
+(schools, healthcare, parks, waste), minimizing API requests. Requests go through the shared helper in
+app.connectors.overpass_client (descriptive User-Agent, mirror fall-through, config
+key overpass_urls).
 
 License: OpenStreetMap data © OpenStreetMap contributors, ODbL 1.0
 Attribution: https://www.openstreetmap.org/copyright
@@ -15,15 +17,11 @@ from __future__ import annotations
 import logging
 from typing import Any
 
-import httpx
-
 from app.connectors.base import BaseConnector, Observation
+from app.connectors.overpass_client import overpass_query, overpass_urls_from_config
 from app.config import ConnectorConfig, Town
 
 logger = logging.getLogger(__name__)
-
-# Overpass API endpoint
-OVERPASS_URL = "https://overpass-api.de/api/interpreter"
 
 # Consolidated Overpass query template for all community POI types.
 # {bbox} is replaced with lat_min,lon_min,lat_max,lon_max.
@@ -86,10 +84,11 @@ class OverpassCommunityConnector(BaseConnector):
         bbox_str = f"{bbox.lat_min},{bbox.lon_min},{bbox.lat_max},{bbox.lon_max}"
         query = COMMUNITY_QUERY_TEMPLATE.format(bbox=bbox_str)
 
-        async with httpx.AsyncClient(timeout=90.0) as client:
-            response = await client.post(OVERPASS_URL, data={"data": query})
-            response.raise_for_status()
-            data = response.json()
+        data = await overpass_query(
+            query,
+            urls=overpass_urls_from_config(self.config.config),
+            timeout=90.0,
+        )
 
         if "elements" not in data:
             raise ValueError(f"Unexpected Overpass response structure: {list(data.keys())}")

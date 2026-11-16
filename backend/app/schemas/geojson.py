@@ -162,7 +162,7 @@ CONNECTOR_ATTRIBUTION: dict[str, dict[str, str]] = {
         "source_name": "MobiData BW OCPDB",
         "license": "Open data",
         "license_url": "https://www.mobidata-bw.de/",
-        "url": "https://ocpdb.2hat.de/",
+        "url": "https://www.mobidata-bw.de/",
     },
     "HeatDemandConnector": {
         "source_name": "KEA-BW Waermeatlas (simulated)",

@@ -109,13 +109,14 @@ LAYER_METADATA_REGISTRY: dict[str, dict] = {
         "license_url": _attr("AutobahnConnector", "license_url"),
     },
     "energy": {
-        "connector_classes": ["SmardConnector"],
-        "source_name": _attr("SmardConnector", "source_name"),
-        "source_url": _attr("SmardConnector", "url"),
-        "data_type": "LIVE",
-        "update_interval_seconds": 900,
-        "license": _attr("SmardConnector", "license"),
-        "license_url": _attr("SmardConnector", "license_url"),
+        # The energy layer draws the MaStR plants; SMARD's single national point is not shown.
+        "connector_classes": ["MastrConnector"],
+        "source_name": _attr("MastrConnector", "source_name"),
+        "source_url": _attr("MastrConnector", "url"),
+        "data_type": "STATIC",
+        "update_interval_seconds": 86400,
+        "license": _attr("MastrConnector", "license"),
+        "license_url": _attr("MastrConnector", "license_url"),
     },
     "solarGlow": {
         "connector_classes": ["SolarProductionConnector"],
@@ -181,10 +182,21 @@ LAYER_METADATA_REGISTRY: dict[str, dict] = {
         "license_url": _attr("ZensusConnector", "license_url"),
     },
     "roadNoise": {
-        "connector_classes": ["LubwWfsConnector"],
+        # External LUBW noise WMS rendered by the map; no connector feeds it.
+        "connector_classes": [],
         "source_name": "LUBW Baden-Wuerttemberg",
         "source_url": _attr("LubwWfsConnector", "url"),
         "data_type": "MODELED",
+        "update_interval_seconds": None,
+        "license": _attr("LubwWfsConnector", "license"),
+        "license_url": _attr("LubwWfsConnector", "license_url"),
+    },
+    "lubwEnv": {
+        # Nature and water protection zones from the LUBW WFS.
+        "connector_classes": ["LubwWfsConnector"],
+        "source_name": _attr("LubwWfsConnector", "source_name"),
+        "source_url": _attr("LubwWfsConnector", "url"),
+        "data_type": "STATIC",
         "update_interval_seconds": None,
         "license": _attr("LubwWfsConnector", "license"),
         "license_url": _attr("LubwWfsConnector", "license_url"),
@@ -233,15 +245,6 @@ LAYER_METADATA_REGISTRY: dict[str, dict] = {
         "update_interval_seconds": 86400,
         "license": _attr("OverpassCommunityConnector", "license"),
         "license_url": _attr("OverpassCommunityConnector", "license_url"),
-    },
-    "mobiData": {
-        "connector_classes": ["MobiDataBWConnector"],
-        "source_name": _attr("MobiDataBWConnector", "source_name"),
-        "source_url": _attr("MobiDataBWConnector", "url"),
-        "data_type": "LIVE",
-        "update_interval_seconds": 300,
-        "license": _attr("MobiDataBWConnector", "license"),
-        "license_url": _attr("MobiDataBWConnector", "license_url"),
     },
     "solarPotential": {
         "connector_classes": ["SolarPotentialConnector"],

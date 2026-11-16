@@ -9,6 +9,7 @@ Tests:
 """
 from __future__ import annotations
 
+import json
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
@@ -238,3 +239,185 @@ def test_normalize_returns_empty_list(connector) -> None:
     """normalize() is not used by run() and returns empty list."""
     result = connector.normalize(None)
     assert result == []
+
+
+# ---------------------------------------------------------------------------
+# Real-response cuts: GeoJSON features without a feature-level id
+# ---------------------------------------------------------------------------
+
+def _trimmed_polygon(first_points: list[list[float]]) -> dict:
+    """MultiPolygon with one short closed ring cut from a real LUBW geometry."""
+    ring = first_points + [first_points[0]]
+    return {"type": "MultiPolygon", "coordinates": [[ring]]}
+
+
+REAL_NSG_FEATURE = {
+    "type": "Feature",
+    "geometry": _trimmed_polygon([
+        [10.10117441, 48.88238868],
+        [10.09879585, 48.8818789],
+        [10.09881205, 48.88166617],
+        [10.09887825, 48.8813881],
+    ]),
+    "properties": {
+        "GmlID": "Naturschutzgebiet.922386",
+        "OBJECTID": 922386,
+        "OBJECT_ID": 929001000029.0,
+        "OBJEKT_NR": 929001000029.0,
+        "OBJEKT_KENNUNG": "1.245",
+        "OBJEKT": "Goldshöfer Sande",
+        "FLAECHE": 466343,
+        "STATUS": "verordnet",
+        "SCHUTZSTATUS": "Naturschutzgebiet",
+        "DIENSTSTELLE_NR": 92,
+        "VO_DATUM": "19.12.2000",
+    },
+}
+
+REAL_WSG_FEATURE = {
+    "type": "Feature",
+    "geometry": _trimmed_polygon([
+        [9.92076818, 48.6421296],
+        [9.92111298, 48.64222634],
+        [9.92153629, 48.64236231],
+        [9.9232264, 48.64291959],
+    ]),
+    "properties": {
+        "GmlID": "Wasserschutzgebiet.2687282",
+        "OBJECTID": 2687282,
+        "WSG_NR": 1350000000001.0,
+        "DIENSTSTELLE": "Landratsamt Heidenheim",
+        "STATUS": "festgesetzt",
+        "KURZNAME": "Brenztal",
+        "LANGNAME": "WSG Fassungen im Brenztal, mehrere Kommunen        135/001/1",
+        "GEMEINDE": "Dischingen",
+    },
+}
+
+
+def _response(body: str, content_type: str = "application/json") -> MagicMock:
+    resp = MagicMock()
+    resp.status_code = 200
+    resp.text = body
+    resp.headers = {"content-type": content_type}
+    resp.json = lambda: json.loads(body)
+    resp.raise_for_status = MagicMock()
+    return resp
+
+
+def _patched_client(responses: list[MagicMock], calls: list[dict]) -> AsyncMock:
+    queue = list(responses)
+
+    async def mock_get(url, **kwargs):
+        calls.append({"url": url, **kwargs})
+        return queue.pop(0)
+
+    client = AsyncMock()
+    client.__aenter__ = AsyncMock(return_value=client)
+    client.__aexit__ = AsyncMock(return_value=False)
+    client.get = AsyncMock(side_effect=mock_get)
+    return client
+
+
+@pytest.mark.asyncio
+async def test_fetch_sends_qualified_type_names_and_geojson_format(connector) -> None:
+    """fetch() asks each endpoint for <T>:<T> as GEOJSON in EPSG:4326 with the town bbox."""
+    empty = json.dumps({"type": "FeatureCollection", "features": []})
+    calls: list[dict] = []
+    with patch("httpx.AsyncClient") as cls:
+        cls.return_value = _patched_client([_response(empty), _response(empty)], calls)
+        result = await connector.fetch()
+
+    assert set(result) == {"naturschutz", "wasserschutz"}
+    assert [c["params"]["typeNames"] for c in calls] == [
+        "Naturschutzgebiet:Naturschutzgebiet",
+        "Wasserschutzgebiet:Wasserschutzgebiet",
+    ]
+    for call in calls:
+        assert call["params"]["outputFormat"] == "GEOJSON"
+        assert call["params"]["srsName"] == "EPSG:4326"
+        assert call["params"]["BBOX"] == "48.76,9.97,48.9,10.22,urn:ogc:def:crs:EPSG::4326"
+        assert "city-data-platform" in call["headers"]["User-Agent"]
+
+
+@pytest.mark.asyncio
+async def test_fetch_raises_on_xml_exception_report(connector) -> None:
+    """An ExceptionReport answer (XML) raises a clear ValueError."""
+    report = '<?xml version="1.0"?><ows:ExceptionReport><ows:Exception exceptionCode="InvalidParameterValue"/></ows:ExceptionReport>'
+    calls: list[dict] = []
+    with patch("httpx.AsyncClient") as cls:
+        cls.return_value = _patched_client([_response(report, "text/xml")], calls)
+        with pytest.raises(ValueError) as excinfo:
+            await connector.fetch()
+
+    message = str(excinfo.value)
+    assert "naturschutz" in message
+    assert "<?xml" in message
+
+
+@pytest.mark.asyncio
+async def test_run_builds_unique_ids_from_gmlid_and_names(connector) -> None:
+    """Real features without a feature-level id get GmlID based source_ids and a name."""
+    connector.fetch = AsyncMock(return_value={
+        "naturschutz": _make_fc([REAL_NSG_FEATURE]),
+        "wasserschutz": _make_fc([REAL_WSG_FEATURE]),
+    })
+    connector.upsert_feature = AsyncMock(return_value="uuid")
+    connector._update_staleness = AsyncMock()
+
+    await connector.run()
+
+    calls = {c.kwargs["source_id"]: c.kwargs for c in connector.upsert_feature.call_args_list}
+    assert set(calls) == {
+        "naturschutz:Naturschutzgebiet.922386",
+        "wasserschutz:Wasserschutzgebiet.2687282",
+    }
+    nsg = calls["naturschutz:Naturschutzgebiet.922386"]
+    assert nsg["domain"] == "water"
+    assert nsg["geometry_wkt"].startswith("POINT(")
+    assert nsg["properties"]["name"] == "Goldshöfer Sande"
+    assert nsg["properties"]["zone_type"] == "naturschutz"
+    assert nsg["properties"]["OBJEKT"] == "Goldshöfer Sande"  # raw keys are kept
+    wsg = calls["wasserschutz:Wasserschutzgebiet.2687282"]
+    assert wsg["properties"]["name"] == "Brenztal"
+    assert wsg["properties"]["zone_type"] == "wasserschutz"
+    connector._update_staleness.assert_awaited_once()
+
+
+@pytest.mark.asyncio
+async def test_run_wsg_name_falls_back_to_langname(connector) -> None:
+    feature = json.loads(json.dumps(REAL_WSG_FEATURE))
+    feature["properties"]["KURZNAME"] = None
+    feature["properties"]["LANGNAME"] = "  WSG Waschhaldenquelle, Stadtwerke Aalen  "
+    connector.fetch = AsyncMock(return_value={
+        "naturschutz": _make_fc([]),
+        "wasserschutz": _make_fc([feature]),
+    })
+    connector.upsert_feature = AsyncMock(return_value="uuid")
+    connector._update_staleness = AsyncMock()
+
+    await connector.run()
+
+    props = connector.upsert_feature.call_args_list[0].kwargs["properties"]
+    assert props["name"] == "WSG Waschhaldenquelle, Stadtwerke Aalen"
+
+
+@pytest.mark.asyncio
+async def test_run_skips_features_without_any_id(connector) -> None:
+    """No feature id, GmlID or OBJECTID -> skipped, never a shared fallback id."""
+    anonymous = {
+        "type": "Feature",
+        "geometry": _trimmed_polygon([[10.0, 48.8], [10.01, 48.8], [10.01, 48.81]]),
+        "properties": {"OBJEKT": "ohne Kennung"},
+    }
+    connector.fetch = AsyncMock(return_value={
+        "naturschutz": _make_fc([anonymous, dict(anonymous)]),
+        "wasserschutz": _make_fc([]),
+    })
+    connector.upsert_feature = AsyncMock(return_value="uuid")
+    connector._update_staleness = AsyncMock()
+
+    await connector.run()
+
+    connector.upsert_feature.assert_not_called()
+    connector._update_staleness.assert_awaited_once()

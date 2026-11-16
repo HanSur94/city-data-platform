@@ -69,7 +69,8 @@ connectors:
       attribution: "Landesanstalt für Umwelt Baden-Württemberg (LUBW), DL-DE-BY-2.0"
 
   - connector_class: BastConnector
-    poll_interval_seconds: 3600
+    # Annual results (one CSV per year): polling once a day is plenty.
+    poll_interval_seconds: 86400
     enabled: true
     config:
       attribution: "BASt (Bundesanstalt fuer Strassenwesen), DL-DE-Zero-2.0"
@@ -78,8 +79,9 @@ connectors:
     poll_interval_seconds: 900
     enabled: true
     config:
-      ident: "BW_13490006"
-      lat: 48.8035
+      # HVZ station 00142 Huettlingen / Kocher (verified 2026-11-16)
+      ident: "BW_00142"
+      lat: 48.8804
       lon: 10.0972
       attribution: "Hochwasserportal (LHP), Datenlizenz Deutschland"
 
@@ -99,7 +101,9 @@ connectors:
 
   - connector_class: MobiDataBWConnector
     poll_interval_seconds: 3600
-    enabled: true
+    # Disabled 2026-11-16 (quick 261116-cx5): the MobiData BW traffic-count CSV redirects
+    # to a 404 and no machine-readable replacement was found. Connector code is kept.
+    enabled: false
     config:
       attribution: "MobiData BW, DL-DE-BY-2.0"
 

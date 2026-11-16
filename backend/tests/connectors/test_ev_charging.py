@@ -3,8 +3,9 @@
 Tests OCPDB status mapping, power classification, and response normalization.
 No database required -- tests pure functions and normalize with mock data.
 """
+import httpx
 import pytest
-from unittest.mock import MagicMock
+from unittest.mock import AsyncMock, MagicMock, patch
 
 
 # -- Pure function tests --
@@ -219,3 +220,188 @@ def test_normalize_handles_missing_evses():
     raw = [_make_ocpdb_location(evses=[])]
     locations = connector._parse_locations(raw)
     assert len(locations) == 0
+
+
+# -- MobiData BW OCPDB: fetch with pagination, real item, honest failure --
+
+OCPDB_URL = "https://api.mobidata-bw.de/ocpdb/api/public/v1/locations"
+
+# Location 187777 cut from a real answer, trimmed to two EVSEs (50 kW DC, 22 kW AC).
+REAL_OCPDB_ITEM = {
+    "address": "Daimlerstr. 9",
+    "postal_code": "73431",
+    "city": "Aalen",
+    "state": "Baden-Württemberg",
+    "country": "DEU",
+    "id": "187777",
+    "source": "bnetza_api",
+    "coordinates": {
+        "latitude": 48.825694,
+        "longitude": 10.065097,
+        "lat": 48.825694,
+        "lon": 10.065097,
+    },
+    "operator": {"name": "E-Merge Mobility GmbH"},
+    "evses": [
+        {
+            "uid": "260004386",
+            "evse_id": "BNETZA*1011615*1",
+            "status": "STATIC",
+            "connectors": [
+                {
+                    "standard": "IEC_62196_T2_COMBO",
+                    "format": "CABLE",
+                    "power_type": "DC",
+                    "max_voltage": 400,
+                    "max_amperage": 375,
+                    "max_electric_power": 50000,
+                }
+            ],
+        },
+        {
+            "uid": "260004387",
+            "evse_id": "BNETZA*1011615*2",
+            "status": "STATIC",
+            "connectors": [
+                {
+                    "standard": "IEC_62196_T2",
+                    "format": "SOCKET",
+                    "power_type": "AC_3_PHASE",
+                    "max_voltage": 400,
+                    "max_amperage": 32,
+                    "max_electric_power": 22000,
+                }
+            ],
+        },
+    ],
+}
+
+
+def _page(items, next_offset=None, status_code=200):
+    resp = MagicMock()
+    resp.status_code = status_code
+    body = {"items": items, "total_count": 161}
+    if next_offset is not None:
+        body["next_offset"] = next_offset
+    resp.json = MagicMock(return_value=body)
+    resp.raise_for_status = MagicMock()
+    return resp
+
+
+def _patched_client(responses):
+    queue = list(responses)
+    calls = []
+
+    async def mock_get(url, **kwargs):
+        calls.append({"url": url, **kwargs})
+        return queue.pop(0)
+
+    client = AsyncMock()
+    client.__aenter__ = AsyncMock(return_value=client)
+    client.__aexit__ = AsyncMock(return_value=False)
+    client.get = AsyncMock(side_effect=mock_get)
+    return client, calls
+
+
+def test_map_ocpdb_status_static_is_unknown():
+    """BNetzA registered points report STATIC (no live status) -> UNKNOWN."""
+    from app.connectors.ev_charging import map_ocpdb_status
+    assert map_ocpdb_status("STATIC") == "UNKNOWN"
+
+
+@pytest.mark.asyncio
+async def test_fetch_reads_every_page():
+    connector = _make_connector()
+    client, calls = _patched_client([
+        _page([{"id": "1"}, {"id": "2"}], next_offset=2),
+        _page([{"id": "3"}]),
+    ])
+    with patch("httpx.AsyncClient") as cls:
+        cls.return_value = client
+        items = await connector.fetch()
+
+    assert [i["id"] for i in items] == ["1", "2", "3"]
+    assert len(calls) == 2
+    for call in calls:
+        assert call["url"] == OCPDB_URL
+        assert call["params"]["radius"] == 15000
+        assert call["params"]["limit"] == 100
+        assert "lat" in call["params"] and "lon" in call["params"]
+        assert "city-data-platform" in call["headers"]["User-Agent"]
+    assert [c["params"]["offset"] for c in calls] == [0, 2]
+    assert calls[0]["params"]["lat"] == pytest.approx(48.83)
+    assert calls[0]["params"]["lon"] == pytest.approx(10.095)
+
+
+@pytest.mark.asyncio
+async def test_fetch_raises_without_items_list():
+    connector = _make_connector()
+    resp = MagicMock()
+    resp.status_code = 200
+    resp.json = MagicMock(return_value={"detail": "maintenance"})
+    resp.raise_for_status = MagicMock()
+    client, _ = _patched_client([resp])
+    with patch("httpx.AsyncClient") as cls:
+        cls.return_value = client
+        with pytest.raises(ValueError, match="items"):
+            await connector.fetch()
+
+
+@pytest.mark.asyncio
+async def test_fetch_stops_after_max_pages():
+    from app.connectors.ev_charging import MAX_PAGES
+
+    connector = _make_connector()
+    client, calls = _patched_client([
+        _page([{"id": str(n)}], next_offset=n + 1) for n in range(MAX_PAGES + 5)
+    ])
+    with patch("httpx.AsyncClient") as cls:
+        cls.return_value = client
+        items = await connector.fetch()
+
+    assert len(calls) == MAX_PAGES
+    assert len(items) == MAX_PAGES
+
+
+def test_parse_real_ocpdb_item():
+    connector = _make_connector()
+    parsed = connector._parse_locations([REAL_OCPDB_ITEM])
+
+    assert len(parsed) == 1
+    loc = parsed[0]
+    assert loc["location_id"] == "187777"
+    assert loc["status"] == "UNKNOWN"
+    assert loc["power_kw"] == 50.0
+    assert loc["power_class"] == "dc_fast"
+    assert loc["operator"] == "E-Merge Mobility GmbH"
+    assert loc["address"] == "Daimlerstr. 9, 73431 Aalen"
+    assert loc["connector_types"] == ["IEC_62196_T2", "IEC_62196_T2_COMBO"]
+    assert loc["evse_count"] == 2
+    assert loc["num_connectors"] == 2
+    assert loc["lat"] == pytest.approx(48.825694)
+
+
+@pytest.mark.asyncio
+async def test_run_does_not_advance_staleness_when_fetch_fails():
+    connector = _make_connector()
+    connector.fetch = AsyncMock(side_effect=httpx.ConnectError("refused"))
+    connector.upsert_feature = AsyncMock()
+    connector._update_staleness = AsyncMock()
+
+    with pytest.raises(httpx.ConnectError):
+        await connector.run()
+
+    connector._update_staleness.assert_not_awaited()
+    connector.upsert_feature.assert_not_awaited()
+
+
+@pytest.mark.asyncio
+async def test_run_empty_answer_is_a_successful_fetch():
+    connector = _make_connector()
+    connector.fetch = AsyncMock(return_value=[])
+    connector.upsert_feature = AsyncMock()
+    connector._update_staleness = AsyncMock()
+
+    await connector.run()
+
+    connector._update_staleness.assert_awaited_once()

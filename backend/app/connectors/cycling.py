@@ -4,6 +4,9 @@ Queries OSM for roads and cycleways within the town bbox and classifies each
 way's cycling infrastructure into one of 5 types: separated, lane, advisory,
 shared, or none.
 
+Requests go through the shared helper in app.connectors.overpass_client
+(descriptive User-Agent, mirror fall-through, config key overpass_urls).
+
 License: OpenStreetMap data (c) OpenStreetMap contributors, ODbL 1.0
 Attribution: https://www.openstreetmap.org/copyright
 """
@@ -12,14 +15,11 @@ from __future__ import annotations
 import logging
 from typing import Any
 
-import httpx
-
 from app.connectors.base import BaseConnector, Observation
+from app.connectors.overpass_client import overpass_query, overpass_urls_from_config
 from app.config import ConnectorConfig, Town
 
 logger = logging.getLogger(__name__)
-
-OVERPASS_URL = "https://overpass-api.de/api/interpreter"
 
 # Overpass query: roads + cycleways with bicycle not explicitly banned
 CYCLING_QUERY_TEMPLATE = """[out:json][timeout:60];
@@ -97,10 +97,11 @@ class CyclingInfraConnector(BaseConnector):
         bbox_str = f"{bbox.lat_min},{bbox.lon_min},{bbox.lat_max},{bbox.lon_max}"
         query = CYCLING_QUERY_TEMPLATE.format(bbox=bbox_str)
 
-        async with httpx.AsyncClient(timeout=90.0) as client:
-            response = await client.post(OVERPASS_URL, data={"data": query})
-            response.raise_for_status()
-            data = response.json()
+        data = await overpass_query(
+            query,
+            urls=overpass_urls_from_config(self.config.config),
+            timeout=90.0,
+        )
 
         if "elements" not in data:
             raise ValueError(f"Unexpected Overpass response: {list(data.keys())}")

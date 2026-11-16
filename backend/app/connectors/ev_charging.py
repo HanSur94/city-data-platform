@@ -1,12 +1,16 @@
-"""EvChargingConnector: fetches live EV charger status from MobiData BW OCPDB.
+"""EvChargingConnector: fetches EV charging locations from MobiData BW OCPDB.
 
-Replaces static BNetzA Ladesaeulenregister data with live charger status
-from the Open Charge Point Database (OCPDB) API.
+Replaces static BNetzA Ladesaeulenregister data with the Open Charge Point
+Database (OCPDB) published by MobiData BW.
 
-Each location is upserted as an infrastructure feature with live status
-(AVAILABLE/OCCUPIED/INOPERATIVE), power classification, and connector details.
+Each location is upserted as an infrastructure feature with its status
+(AVAILABLE/OCCUPIED/INOPERATIVE where the operator reports live status,
+UNKNOWN for registry-only points), power classification, and connector details.
 
-API: https://api.ocpdb.2hat.de/api/ocpi/2.2/location
+API: https://api.mobidata-bw.de/ocpdb/api/public/v1/locations
+Parameters: lat, lon, radius (metres), limit, offset. The answer is
+{"items": [...], "total_count": n, "next_offset": m}; pages are read until
+next_offset is missing (at most MAX_PAGES pages per run).
 No authentication required (public API).
 
 License: MobiData BW, open data
@@ -23,7 +27,10 @@ from app.config import ConnectorConfig, Town
 
 logger = logging.getLogger(__name__)
 
-OCPDB_API_URL = "https://api.ocpdb.2hat.de/api/ocpi/2.2/location"
+OCPDB_API_URL = "https://api.mobidata-bw.de/ocpdb/api/public/v1/locations"
+USER_AGENT = "city-data-platform/0.1 (open-source city dashboard)"
+PAGE_SIZE = 100
+MAX_PAGES = 20
 
 
 def classify_power(max_kw: float) -> str:
@@ -52,6 +59,8 @@ def map_ocpdb_status(status: str) -> str:
         Simplified status: AVAILABLE, OCCUPIED, INOPERATIVE, or UNKNOWN.
     """
     mapping = {
+        # STATIC: points registered by the Bundesnetzagentur without live status.
+        "STATIC": "UNKNOWN",
         "AVAILABLE": "AVAILABLE",
         "CHARGING": "OCCUPIED",
         "INOPERATIVE": "INOPERATIVE",
@@ -62,7 +71,7 @@ def map_ocpdb_status(status: str) -> str:
 
 
 class EvChargingConnector(BaseConnector):
-    """Fetches live EV charger status from OCPDB and upserts as features.
+    """Fetches EV charging locations from OCPDB and upserts them as features.
 
     Features-only connector (like LadesaeulenConnector) -- no time-series data.
     Each OCPDB location is upserted with live status, power, and connector info.
@@ -73,33 +82,57 @@ class EvChargingConnector(BaseConnector):
     """
 
     async def fetch(self) -> list[dict]:
-        """Fetch OCPDB locations near the town center.
+        """Fetch all OCPDB locations within radius_km of the town center.
+
+        Reads page after page (limit/offset) until next_offset is missing, a page
+        is empty or MAX_PAGES is reached.
 
         Returns:
-            List of OCPI 2.2 location dicts.
+            List of OCPDB location dicts.
+
+        Raises:
+            httpx.HTTPError: On network/HTTP failure.
+            ValueError: If an answer has no "items" list.
         """
         lat = self.config.config.get("lat", (self.town.bbox.lat_min + self.town.bbox.lat_max) / 2)
         lon = self.config.config.get("lon", (self.town.bbox.lon_min + self.town.bbox.lon_max) / 2)
-        radius = self.config.config.get("radius_km", 15)
+        radius_m = int(self.config.config.get("radius_km", 15) * 1000)
 
+        items: list[dict] = []
+        offset = 0
         async with httpx.AsyncClient(timeout=30.0) as client:
-            r = await client.get(
-                OCPDB_API_URL,
-                params={
-                    "latitude": lat,
-                    "longitude": lon,
-                    "radius": radius,
-                },
-            )
-            r.raise_for_status()
-            data = r.json()
+            for page_number in range(1, MAX_PAGES + 1):
+                r = await client.get(
+                    OCPDB_API_URL,
+                    params={
+                        "lat": lat,
+                        "lon": lon,
+                        "radius": radius_m,
+                        "limit": PAGE_SIZE,
+                        "offset": offset,
+                    },
+                    headers={"User-Agent": USER_AGENT},
+                )
+                r.raise_for_status()
+                data = r.json()
 
-        # OCPDB may return {"data": [...]} or a plain list
-        if isinstance(data, dict):
-            return data.get("data", data.get("locations", []))
-        if isinstance(data, list):
-            return data
-        return []
+                page = data.get("items") if isinstance(data, dict) else None
+                if not isinstance(page, list):
+                    raise ValueError("OCPDB answer has no 'items' list")
+                items.extend(page)
+
+                next_offset = data.get("next_offset")
+                if next_offset is None or not page:
+                    break
+                if page_number == MAX_PAGES:
+                    logger.warning(
+                        "EvChargingConnector: stopped after %d pages, more locations available",
+                        MAX_PAGES,
+                    )
+                    break
+                offset = next_offset
+
+        return items
 
     def normalize(self, raw: Any) -> list[Observation]:
         """Return empty list -- features-only connector.
@@ -184,6 +217,10 @@ class EvChargingConnector(BaseConnector):
             address = location.get("address", "")
             if isinstance(address, dict):
                 address = address.get("address", "")
+            city_line = " ".join(
+                part for part in (location.get("postal_code"), location.get("city")) if part
+            )
+            address = ", ".join(part for part in (address, city_line) if part)
 
             parsed.append({
                 "location_id": location_id,
@@ -204,17 +241,13 @@ class EvChargingConnector(BaseConnector):
     async def run(self) -> None:
         """Full pipeline: fetch OCPDB data, parse, upsert features.
 
-        1. Fetch OCPDB locations
+        1. Fetch OCPDB locations (a failure propagates to the scheduler and does
+           NOT advance the staleness timestamp)
         2. Parse and filter by bbox
         3. Upsert each valid location as infrastructure feature
-        4. Update staleness
+        4. Update staleness (an empty answer is a successful fetch)
         """
-        try:
-            raw = await self.fetch()
-        except Exception as exc:
-            logger.error("EvChargingConnector: fetch failed: %s", exc)
-            await self._update_staleness()
-            return
+        raw = await self.fetch()
 
         locations = self._parse_locations(raw)
         logger.info(

@@ -238,3 +238,26 @@ async def test_endpoint_unknown_town_404():
     finally:
         _teardown()
     assert resp.status_code == 404
+
+
+# ── registry links ───────────────────────────────────────────────────────────
+
+
+def test_registry_has_no_mobidata_layer():
+    assert "mobiData" not in LAYER_METADATA_REGISTRY
+
+
+def test_registry_energy_is_fed_by_mastr_only():
+    assert LAYER_METADATA_REGISTRY["energy"]["connector_classes"] == ["MastrConnector"]
+
+
+def test_registry_road_noise_has_no_connector():
+    assert LAYER_METADATA_REGISTRY["roadNoise"]["connector_classes"] == []
+
+
+def test_registry_lubw_environment_is_fed_by_lubw_wfs():
+    entry = LAYER_METADATA_REGISTRY["lubwEnv"]
+    assert entry["connector_classes"] == ["LubwWfsConnector"]
+    assert entry["data_type"] == "STATIC"
+    assert entry["update_interval_seconds"] is None
+    assert entry["source_name"]

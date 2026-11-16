@@ -29,3 +29,15 @@ def stub_connector_config() -> ConnectorConfig:
         enabled=True,
         config={},
     )
+
+
+@pytest.fixture(autouse=True)
+def overpass_single_round(monkeypatch):
+    """Overpass client: one round and no pause, so failure-path tests stay fast.
+
+    Tests of the retry rounds pass ``rounds`` / ``round_delay`` explicitly.
+    """
+    from app.connectors import overpass_client
+
+    monkeypatch.setattr(overpass_client, "OVERPASS_ROUNDS", 1)
+    monkeypatch.setattr(overpass_client, "OVERPASS_ROUND_DELAY_S", 0.0)
