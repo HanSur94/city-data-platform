@@ -15,6 +15,8 @@ import { useTimeseries } from '@/hooks/useTimeseries'
 import type { Pollutant } from '@/components/map/AirQualityHeatmapLayer'
 import type { DemographicMetric } from '@/components/map/DemographicsGridLayer'
 import type { PopupInfo } from '@/components/map/MapView'
+import { DEFAULT_BASE_LAYER } from '@/lib/map-styles'
+import type { BaseLayer } from '@/lib/map-styles'
 import type { SearchResult } from '@/components/sidebar/FeatureSearch'
 
 const MapView = dynamic(() => import('@/components/map/MapView'), {
@@ -63,6 +65,7 @@ function HomeInner() {
     cadastral: state.layers.includes('cadastral'),
     hillshade: state.layers.includes('hillshade'),
     buildings3d: state.layers.includes('buildings3d'),
+    terrain3d: state.layers.includes('terrain3d'),
   }
 
   const LAYER_KEYS: Record<string, string> = {
@@ -97,6 +100,7 @@ function HomeInner() {
     cadastral: 'cadastral',
     hillshade: 'hillshade',
     buildings3d: 'buildings3d',
+    terrain3d: 'terrain3d',
   }
 
   const toggleLayer = (layer: keyof typeof LAYER_KEYS) => {
@@ -225,8 +229,8 @@ function HomeInner() {
     update({ ts: ts ? ts.toISOString() : null })
   }
 
-  const handleBaseLayerChange = (base: 'osm' | 'orthophoto' | 'satellite') => {
-    update({ base: base === 'osm' ? null : base })
+  const handleBaseLayerChange = (base: BaseLayer) => {
+    update({ base: base === DEFAULT_BASE_LAYER ? null : base })
   }
 
   // Dashboard panel chart slot: always show default AQI chart with date range picker
@@ -260,6 +264,7 @@ function HomeInner() {
         cadastralVisible={layerVisibility.cadastral}
         hillshadeVisible={layerVisibility.hillshade}
         buildings3dVisible={layerVisibility.buildings3d}
+        terrain3dVisible={layerVisibility.terrain3d}
         activePollutant={activePollutant}
         onPollutantChange={setActivePollutant}
         noiseMetric={noiseMetric}
@@ -317,6 +322,7 @@ function HomeInner() {
             cadastralVisible={layerVisibility.cadastral}
             hillshadeVisible={layerVisibility.hillshade}
             buildings3dVisible={layerVisibility.buildings3d}
+            terrain3dVisible={layerVisibility.terrain3d}
             hiddenBusLines={hiddenBusLines}
             onBusLinesDiscovered={setBusLines}
             onMapReady={handleMapReady}

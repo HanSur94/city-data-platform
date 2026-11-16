@@ -20,6 +20,15 @@ import { LAYER_METADATA } from '@/lib/layer-metadata';
 import { useLayerMetadata } from '@/hooks/useLayerMetadata';
 
 import type { DemographicMetric } from '@/components/map/DemographicsGridLayer';
+import { BASE_LAYERS } from '@/lib/map-styles';
+import type { BaseLayer } from '@/lib/map-styles';
+
+const BASE_LAYER_LABELS: Record<BaseLayer, string> = {
+  dark: 'Dunkel',
+  light: 'Hell',
+  orthophoto: 'Luftbild (LGL)',
+  satellite: 'Satellit (Sentinel-2)',
+};
 
 interface SidebarProps {
   town: string;
@@ -54,16 +63,17 @@ interface SidebarProps {
     heatDemand?: boolean;
     cycling?: boolean;
   };
-  onToggleLayer: (layer: 'transit' | 'airQuality' | 'water' | 'floodHazard' | 'railNoise' | 'lubwEnv' | 'traffic' | 'autobahn' | 'mobiData' | 'energy' | 'schools' | 'healthcare' | 'parks' | 'waste' | 'police' | 'evCharging' | 'roadworks' | 'solarPotential' | 'trafficFlow' | 'cadastral' | 'hillshade' | 'buildings3d' | 'kocher' | 'parking' | 'busPosition' | 'solarGlow' | 'roadNoise' | 'fernwaerme' | 'demographics' | 'heatDemand' | 'cycling') => void;
+  onToggleLayer: (layer: 'transit' | 'airQuality' | 'water' | 'floodHazard' | 'railNoise' | 'lubwEnv' | 'traffic' | 'autobahn' | 'mobiData' | 'energy' | 'schools' | 'healthcare' | 'parks' | 'waste' | 'police' | 'evCharging' | 'roadworks' | 'solarPotential' | 'trafficFlow' | 'cadastral' | 'hillshade' | 'buildings3d' | 'terrain3d' | 'kocher' | 'parking' | 'busPosition' | 'solarGlow' | 'roadNoise' | 'fernwaerme' | 'demographics' | 'heatDemand' | 'cycling') => void;
   transitError?: boolean;
   airQualityError?: boolean;
   trafficError?: boolean;
   energyError?: boolean;
-  baseLayer: 'osm' | 'orthophoto' | 'satellite';
-  onBaseLayerChange: (base: 'osm' | 'orthophoto' | 'satellite') => void;
+  baseLayer: BaseLayer;
+  onBaseLayerChange: (base: BaseLayer) => void;
   cadastralVisible?: boolean;
   hillshadeVisible?: boolean;
   buildings3dVisible?: boolean;
+  terrain3dVisible?: boolean;
   activePollutant?: Pollutant;
   onPollutantChange?: (pollutant: Pollutant) => void;
   noiseMetric?: 'lden' | 'lnight';
@@ -77,7 +87,7 @@ interface SidebarProps {
   onToggle?: () => void;
 }
 
-export default function Sidebar({ town, onFeatureSelect, layerVisibility, onToggleLayer, transitError, airQualityError, trafficError, energyError, baseLayer, onBaseLayerChange, cadastralVisible, hillshadeVisible, buildings3dVisible, activePollutant, onPollutantChange, noiseMetric, onNoiseMetricChange, demographicMetric, onDemographicMetricChange, busLines, hiddenBusLines, onToggleBusLine, collapsed, onToggle }: SidebarProps) {
+export default function Sidebar({ town, onFeatureSelect, layerVisibility, onToggleLayer, transitError, airQualityError, trafficError, energyError, baseLayer, onBaseLayerChange, cadastralVisible, hillshadeVisible, buildings3dVisible, terrain3dVisible, activePollutant, onPollutantChange, noiseMetric, onNoiseMetricChange, demographicMetric, onDemographicMetricChange, busLines, hiddenBusLines, onToggleBusLine, collapsed, onToggle }: SidebarProps) {
   const [drawerOpen, setDrawerOpen] = useState(false);
   const { layerMeta } = useLayerMetadata();
 
@@ -472,7 +482,7 @@ export default function Sidebar({ town, onFeatureSelect, layerVisibility, onTogg
       <div className="pt-2">
         <p className="px-4 text-[12px] font-normal text-muted-foreground uppercase tracking-wide mb-2 mt-6">Geospatial</p>
         <p className="px-4 text-[11px] text-muted-foreground mb-1">Basiskarte</p>
-        {(['osm', 'orthophoto', 'satellite'] as const).map((base) => (
+        {BASE_LAYERS.map((base) => (
           <label key={base} className="flex items-center gap-2 px-4 py-1.5 cursor-pointer hover:bg-slate-50">
             <input
               type="radio"
@@ -483,7 +493,7 @@ export default function Sidebar({ town, onFeatureSelect, layerVisibility, onTogg
               className="accent-primary"
             />
             <span className="text-[13px]">
-              {base === 'osm' ? 'OpenStreetMap' : base === 'orthophoto' ? 'Luftbild (LGL)' : 'Satellit (Sentinel-2)'}
+              {BASE_LAYER_LABELS[base]}
             </span>
           </label>
         ))}
@@ -503,9 +513,15 @@ export default function Sidebar({ town, onFeatureSelect, layerVisibility, onTogg
         <p className="px-4 text-[11px] text-muted-foreground mb-1 mt-3">3D</p>
         <LayerToggle
           id="buildings3d-toggle"
-          label="3D Gebaeude (LoD1)"
+          label="3D-Gebaeude"
           checked={buildings3dVisible ?? false}
           onCheckedChange={() => onToggleLayer('buildings3d')}
+        />
+        <LayerToggle
+          id="terrain3d-toggle"
+          label="3D-Gelaende"
+          checked={terrain3dVisible ?? false}
+          onCheckedChange={() => onToggleLayer('terrain3d')}
         />
       </div>
 

@@ -2,6 +2,8 @@
 import { useSearchParams, useRouter } from 'next/navigation'
 import { useCallback, useMemo } from 'react'
 import { subDays, endOfDay } from 'date-fns'
+import { parseBaseLayer } from '@/lib/map-styles'
+import type { BaseLayer } from '@/lib/map-styles'
 
 export interface UrlState {
   town: string
@@ -13,7 +15,7 @@ export interface UrlState {
   to: Date
   ts: Date | null // null = live (time slider at rightmost)
   domain: string | null // active detail panel
-  baseLayer: 'osm' | 'orthophoto' | 'satellite'
+  baseLayer: BaseLayer
 }
 
 // NOTE: useUrlState uses useSearchParams internally.
@@ -35,7 +37,7 @@ export function useUrlState(defaultTown = 'aalen'): {
 
   const state: UrlState = {
     town: searchParams.get('town') ?? defaultTown,
-    layers: (searchParams.get('layers') ?? 'transit,aqi,buildings3d').split(',').filter(Boolean),
+    layers: (searchParams.get('layers') ?? 'transit,aqi,buildings3d,terrain3d').split(',').filter(Boolean),
     zoom: searchParams.get('zoom') ? Number(searchParams.get('zoom')) : null,
     lat: searchParams.get('lat') ? Number(searchParams.get('lat')) : null,
     lng: searchParams.get('lng') ? Number(searchParams.get('lng')) : null,
@@ -43,7 +45,7 @@ export function useUrlState(defaultTown = 'aalen'): {
     to: toParam ? new Date(toParam) : defaultTo,
     ts: searchParams.get('ts') ? new Date(searchParams.get('ts')!) : null,
     domain: searchParams.get('domain') ?? null,
-    baseLayer: (searchParams.get('base') as UrlState['baseLayer']) ?? 'osm',
+    baseLayer: parseBaseLayer(searchParams.get('base')),
   }
 
   const update = useCallback(
