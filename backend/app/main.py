@@ -11,6 +11,7 @@ from pathlib import Path
 
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.middleware.gzip import GZipMiddleware
 
 from sqlalchemy import text
 
@@ -82,6 +83,10 @@ app.add_middleware(
     allow_methods=["GET"],
     allow_headers=["*"],
 )
+
+# GeoJSON layer responses are large and repetitive (transit shapes: 2.3 MB raw,
+# about 0.2 MB gzipped), so compress anything over 1 kB.
+app.add_middleware(GZipMiddleware, minimum_size=1000)
 
 app.include_router(layers.router, prefix="/api")
 app.include_router(timeseries.router, prefix="/api")
