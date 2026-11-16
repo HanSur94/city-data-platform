@@ -1,5 +1,5 @@
 import { layers, namedFlavor } from '@protomaps/basemaps';
-import type { HillshadeLayerSpecification, LayerSpecification, LightSpecification, SkySpecification, SourceSpecification, StyleSpecification } from 'maplibre-gl';
+import type { ExpressionSpecification, HillshadeLayerSpecification, LayerSpecification, LightSpecification, SkySpecification, SourceSpecification, StyleSpecification } from 'maplibre-gl';
 
 export const BASE_LAYERS = ['dark', 'light', 'orthophoto', 'satellite'] as const;
 export type BaseLayer = (typeof BASE_LAYERS)[number];
@@ -53,6 +53,42 @@ export const AQI_TIER_COLORS: Record<string, string> = {
   extremely_poor:  '#7D2181',
   unknown:         '#9e9e9e',
 };
+
+// EAQI tier order, best to worst (matches the six colours of AQI_TIER_COLORS).
+export const EAQI_TIER_ORDER = [
+  'good',
+  'fair',
+  'moderate',
+  'poor',
+  'very_poor',
+  'extremely_poor',
+] as const;
+
+// Upper bounds (ug/m3) of good, fair, moderate, poor, very_poor per pollutant. Mirrors
+// EAQI_BREAKPOINTS in backend/app/schemas/geojson.py (EEA EAQI, airindex.eea.europa.eu) so
+// 3D cells and sensor badges agree. The backend bands are inclusive upper bounds while a
+// MapLibre `step` switches at the bound itself; the difference only shows at exact equality.
+export const EAQI_BREAKPOINTS: Record<'pm25' | 'pm10' | 'no2' | 'o3', readonly number[]> = {
+  pm25: [5, 15, 25, 50, 75],
+  pm10: [10, 20, 50, 100, 150],
+  no2:  [10, 20, 50, 100, 200],
+  o3:   [50, 100, 130, 240, 380],
+};
+
+/** Colour of a feature by the EAQI tier of its `pollutant` property (grey when not a number). */
+export function eaqiColorExpression(pollutant: keyof typeof EAQI_BREAKPOINTS): ExpressionSpecification {
+  const bounds = EAQI_BREAKPOINTS[pollutant];
+  const steps: (number | string)[] = [];
+  bounds.forEach((bound, i) => {
+    steps.push(bound, AQI_TIER_COLORS[EAQI_TIER_ORDER[i + 1]]);
+  });
+  return [
+    'case',
+    ['==', ['typeof', ['get', pollutant]], 'number'],
+    ['step', ['get', pollutant], AQI_TIER_COLORS[EAQI_TIER_ORDER[0]], ...steps],
+    AQI_TIER_COLORS.unknown,
+  ] as ExpressionSpecification;
+}
 
 // Transit route type colors (per CONTEXT.md: bus=blue, train=red, tram=green)
 export const TRANSIT_COLORS: Record<string, string> = {

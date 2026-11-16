@@ -11,13 +11,13 @@ import type { BaseLayer } from '@/lib/map-styles';
 import type { StyleSpecification } from 'maplibre-gl';
 import TransitLayer from './TransitLayer';
 import AQILayer from './AQILayer';
-import AirQualityHeatmapLayer from './AirQualityHeatmapLayer';
+import AirQualityHeatmapLayer, { AIR_QUALITY_CELLS_LAYER_ID } from './AirQualityHeatmapLayer';
 import type { Pollutant } from './AirQualityHeatmapLayer';
 import SensorPopupChart from './SensorPopupChart';
 import WaterLayer from './WaterLayer';
 import WmsOverlayLayer from './WmsOverlayLayer';
 import TrafficLayer from './TrafficLayer';
-import TrafficFlowLayer from './TrafficFlowLayer';
+import TrafficFlowLayer, { TRAFFIC_FLOW_GLOW_LAYER_ID, TRAFFIC_FLOW_DASH_LAYER_ID } from './TrafficFlowLayer';
 import AutobahnLayer from './AutobahnLayer';
 import EnergyLayer from './EnergyLayer';
 import SolarGlowLayer from './SolarGlowLayer';
@@ -34,10 +34,10 @@ import EnergyPopup from './EnergyPopup';
 import CommunityPopup from './CommunityPopup';
 import SolarPopup from './SolarPopup';
 import EvChargingPopup from './EvChargingPopup';
-import EvChargingLiveLayer from './EvChargingLiveLayer';
+import EvChargingLiveLayer, { EV_CHARGING_COLUMNS_LAYER_ID } from './EvChargingLiveLayer';
 import RoadworksPopup from './RoadworksPopup';
 import KocherPopup from './KocherPopup';
-import ParkingLayer from './ParkingLayer';
+import ParkingLayer, { PARKING_COLUMNS_LAYER_ID } from './ParkingLayer';
 import ParkingPopup from './ParkingPopup';
 import BusPositionLayer from './BusPositionLayer';
 import BusRouteLayer from './BusRouteLayer';
@@ -50,7 +50,7 @@ import NoiseWmsLayer from './NoiseWmsLayer';
 import FernwaermeLayer from './FernwaermeLayer';
 import DemographicsGridLayer from './DemographicsGridLayer';
 import DemographicsPopup from './DemographicsPopup';
-import HeatDemandLayer from './HeatDemandLayer';
+import HeatDemandLayer, { HEAT_DEMAND_COLUMNS_LAYER_ID } from './HeatDemandLayer';
 import HeatDemandPopup from './HeatDemandPopup';
 import UnifiedBuildingPopup from './UnifiedBuildingPopup';
 import CyclingLayer from './CyclingLayer';
@@ -139,6 +139,8 @@ interface MapViewProps {
   hillshadeVisible?: boolean;
   buildings3dVisible?: boolean;
   terrain3dVisible?: boolean;
+  /** 3D-Daten switch: draw data layers as extruded columns / cells instead of flat. */
+  data3dVisible?: boolean;
   onFlyTo?: (lng: number, lat: number, zoom?: number) => void;
   /** Called when the map is ready, passing the flyTo function */
   onMapReady?: (flyTo: (lng: number, lat: number, zoom?: number) => void) => void;
@@ -195,6 +197,7 @@ export default function MapView({
   hillshadeVisible = false,
   buildings3dVisible = true,
   terrain3dVisible = true,
+  data3dVisible = false,
   hiddenBusLines,
   onBusLinesDiscovered,
   onMapReady,
@@ -328,11 +331,11 @@ export default function MapView({
         styleDiffing={false}
         attributionControl={{ compact: false }}
         interactiveLayerIds={[
-          'transit-stops', 'aqi-points', 'water-gauges', 'traffic-circles', 'traffic-flow-lines', 'autobahn-markers', 'energy-points', 'kocher-gauge', 'kocher-river-line',
+          'transit-stops', 'aqi-points', 'water-gauges', 'traffic-circles', 'traffic-flow-lines', TRAFFIC_FLOW_GLOW_LAYER_ID, TRAFFIC_FLOW_DASH_LAYER_ID, 'autobahn-markers', 'energy-points', 'kocher-gauge', 'kocher-river-line',
           'community-schools-points', 'community-healthcare-points', 'community-parks-points', 'community-waste-points',
           'infrastructure-ev-points', 'infrastructure-roadworks-points', 'parking-points', 'bus-position-3d', 'bus-stop-points',
-          'solar-glow-points', 'ev-charging-live-points',
-          'heat-demand-points', 'cycling-infra-lines', 'police-reports-bg',
+          'solar-glow-points', 'ev-charging-live-points', EV_CHARGING_COLUMNS_LAYER_ID,
+          'heat-demand-points', HEAT_DEMAND_COLUMNS_LAYER_ID, PARKING_COLUMNS_LAYER_ID, 'cycling-infra-lines', 'police-reports-bg',
           'buildings-3d',
         ]}
         onClick={(e) => {
@@ -348,16 +351,36 @@ export default function MapView({
             ];
             features = map.queryRenderedFeatures(bbox) as any[];
           }
-          const feature = features[0];
+          // Extruded columns are drawn beneath the labels next to buildings-3d, so a column
+          // click must not open the building popup: prefer the first non-building hit among
+          // the interactive results. The bbox fallback keeps its first-feature behaviour.
+          //
+          // Air-quality grid cells are deliberately not clickable: the sensor popup does not fit
+          // a cell (it would say "Kein aktueller Messwert", show unrounded values and look up a
+          // sensor chart without a feature_id). The cell layer is therefore left out of
+          // interactiveLayerIds and its hits are dropped from the bbox fallback, so a click on a
+          // cell falls through to the columns, buildings or other features beneath it.
+          const interactiveHits = (e.features ?? []).filter((f) => f.layer?.id !== AIR_QUALITY_CELLS_LAYER_ID);
+          features = features.filter((f) => f.layer?.id !== AIR_QUALITY_CELLS_LAYER_ID);
+          // A column often stands on a road: its extrusion and the traffic-flow lines (drawn
+          // above everything) are then both under the cursor. The column is what the user
+          // aimed at, so 3D objects win over flat features, and both win over a building.
+          const isColumn = (f: (typeof features)[number]) =>
+            (f.layer?.id ?? '').endsWith('-columns-3d') || f.layer?.id === 'bus-position-3d';
+          const feature = interactiveHits.length > 0
+            ? (features.find(isColumn)
+                ?? features.find((f) => f.layer?.id !== 'buildings-3d')
+                ?? features[0])
+            : features[0];
           if (!feature || !e.lngLat) return;
           const layerId = feature.layer?.id ?? '';
-          const domain: PopupInfo['domain'] = layerId === 'heat-demand-points'
+          const domain: PopupInfo['domain'] = layerId === 'heat-demand-points' || layerId === HEAT_DEMAND_COLUMNS_LAYER_ID
             ? 'heatDemand'
             : layerId === 'cycling-infra-lines'
             ? 'cycling'
             : layerId === 'solar-glow-points'
             ? 'solarGlow'
-            : layerId === 'ev-charging-live-points'
+            : layerId === 'ev-charging-live-points' || layerId === EV_CHARGING_COLUMNS_LAYER_ID
             ? 'evCharging'
             : layerId.startsWith('kocher')
             ? 'kocher'
@@ -365,7 +388,7 @@ export default function MapView({
             ? 'airQuality'
             : layerId.startsWith('water')
             ? 'water'
-            : layerId === 'traffic-flow-lines'
+            : layerId.startsWith('traffic-flow')
             ? 'trafficFlow'
             : layerId.startsWith('traffic')
             ? 'traffic'
@@ -379,7 +402,7 @@ export default function MapView({
             ? 'busStop'
             : layerId === 'police-reports-bg'
             ? 'police'
-            : layerId === 'parking-points'
+            : layerId === 'parking-points' || layerId === PARKING_COLUMNS_LAYER_ID
             ? 'parking'
             : layerId === 'infrastructure-ev-points'
             ? 'evCharging'
@@ -390,9 +413,14 @@ export default function MapView({
             : layerId === 'buildings-3d'
             ? 'building'
             : 'transit';
+          // Columns are tall: a click high on one hits the terrain far behind it, so anchor
+          // the popup at the column centre when the feature carries it.
+          const centerLng = feature.properties?._center_lng;
+          const centerLat = feature.properties?._center_lat;
+          const hasCenter = typeof centerLng === 'number' && typeof centerLat === 'number';
           setPopupInfo({
-            longitude: e.lngLat.lng,
-            latitude: e.lngLat.lat,
+            longitude: hasCenter ? centerLng : e.lngLat.lng,
+            latitude: hasCenter ? centerLat : e.lngLat.lat,
             feature: feature as GeoJSON.Feature,
             domain,
           });
@@ -400,7 +428,13 @@ export default function MapView({
       >
         <TransitLayer data={transitData} visible={layerVisibility.transit} />
         <AQILayer data={airQualityData} visible={layerVisibility.airQuality} />
-        <AirQualityHeatmapLayer data={airQualityGridData ?? null} visible={layerVisibility.airQuality} activePollutant={activePollutant} />
+        <AirQualityHeatmapLayer
+          data={airQualityGridData ?? null}
+          visible={layerVisibility.airQuality}
+          activePollutant={activePollutant}
+          extruded={data3dVisible}
+          beforeId={labelBeforeId}
+        />
         <WaterLayer
           data={waterData ?? null}
           visible={layerVisibility.water}
@@ -428,7 +462,7 @@ export default function MapView({
           />
         )}
         {trafficFlowVisible && (
-          <TrafficFlowLayer town={town} visible={true} timestamp={historicalTimestamp} />
+          <TrafficFlowLayer town={town} visible={true} timestamp={historicalTimestamp} extruded={data3dVisible} />
         )}
         {(autobahnVisible ?? layerVisibility.autobahn) && (
           <AutobahnLayer town={town} visible={true} />
@@ -448,15 +482,25 @@ export default function MapView({
         />
         <InfrastructureLayer
           town={town}
-          evChargingVisible={evChargingVisible}
+          evChargingVisible={evChargingVisible && !data3dVisible}
           roadworksVisible={roadworksVisible}
           solarPotentialVisible={solarPotentialVisible}
         />
         {evChargingVisible && (
-          <EvChargingLiveLayer town={town} visible={true} />
+          <EvChargingLiveLayer
+            town={town}
+            visible={true}
+            extruded={data3dVisible}
+            beforeId={labelBeforeId}
+          />
         )}
         {parkingVisible && (
-          <ParkingLayer town={town} visible={true} />
+          <ParkingLayer
+            town={town}
+            visible={true}
+            extruded={data3dVisible}
+            beforeId={labelBeforeId}
+          />
         )}
         {policeVisible && (
           <PoliceLayer town={town} visible={true} />
@@ -472,7 +516,12 @@ export default function MapView({
         <NoiseWmsLayer visible={roadNoiseVisible} noiseMetric={noiseMetric} />
         <FernwaermeLayer visible={fernwaermeVisible} />
         {heatDemandVisible && (
-          <HeatDemandLayer town={town} visible={true} />
+          <HeatDemandLayer
+            town={town}
+            visible={true}
+            extruded={data3dVisible}
+            beforeId={labelBeforeId}
+          />
         )}
         {cyclingVisible && (
           <CyclingLayer town={town} visible={true} />
@@ -577,6 +626,14 @@ export default function MapView({
       <LegendOverlay
         layerVisibility={layerVisibility}
         trafficFlowVisible={trafficFlowVisible}
+        activePollutant={activePollutant}
+        data3dLayers={{
+          airQuality: data3dVisible && layerVisibility.airQuality,
+          evCharging: data3dVisible && evChargingVisible,
+          parking: data3dVisible && parkingVisible,
+          heatDemand: data3dVisible && heatDemandVisible,
+          trafficFlow: data3dVisible && trafficFlowVisible,
+        }}
       />
     </div>
   );

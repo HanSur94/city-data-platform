@@ -5,10 +5,10 @@ milestone_name: AalenPulse Feature Parity
 current_phase: 20
 status: verifying
 stopped_at: "Completed quick task 260408-dbq: Ensure all real bus stops (Haltestellen) appear on map"
-last_updated: "2026-11-16T09:25:42.073Z"
+last_updated: "2026-11-16T10:05:57.256Z"
 last_activity: 2026-11-16
 last_activity_desc: "Completed quick task 260408-fm8: Make buses rectangular shaped on map, bus stops get colored dots"
-state_head: 79c8766d43dfad53887cb9766182212f25b9efdb
+state_head: 24086483a2e5612ddbb5cddfab59b16737328e1c
 progress:
   total_phases: 19
   completed_phases: 10
@@ -31,7 +31,7 @@ See: .planning/PROJECT.md (updated 2026-04-06)
 Phase: 20
 Plan: Not started
 Status: Phase complete — ready for verification
-Last activity: 2026-11-16 - Completed quick task 261116-cx5: Fix broken data sources: Overpass client name, Sensor.Community URL, LUBW WFS parameters, Kocher gauge id, moved BASt and EV-charging APIs, parking page parser, false success on failed fetches
+Last activity: 2026-11-16 - Completed quick task 261116-eoz: 3D data layers: air quality, EV charging, parking and heat demand as extruded columns on the terrain, animated traffic flow, behind a 3D-Daten switch
 
 Progress: [█░░░░░░░░░] 14%
 
@@ -122,6 +122,7 @@ None yet.
 | 261116-be8 | Fast layer loading: fetch only switched-on layers, stop the 31 MB transit shapes downloads, clip and simplify shapes server-side, fix the layer metadata URL | 2026-11-16 | 3628eeb | [261116-be8-fast-layer-loading-fetch-only-switched-o](./quick/261116-be8-fast-layer-loading-fetch-only-switched-o/) |
 | 261116-c38 | Layer panel: single layer registry, group and all-on/off switches, and a visible no-data / stale state per layer from connector status | 2026-11-16 | 7f4733b | [261116-c38-layer-panel-single-layer-registry-group-](./quick/261116-c38-layer-panel-single-layer-registry-group-/) |
 | 261116-cx5 | Fix broken data sources: Overpass client name, Sensor.Community URL, LUBW WFS parameters, Kocher gauge id, moved BASt and EV-charging APIs, parking page parser, false success on failed fetches | 2026-11-16 | 79c8766 | [261116-cx5-fix-broken-data-sources-overpass-client-](./quick/261116-cx5-fix-broken-data-sources-overpass-client-/) |
+| 261116-eoz | 3D data layers: air quality, EV charging, parking and heat demand as extruded columns on the terrain, animated traffic flow, behind a 3D-Daten switch | 2026-11-16 | 2408648 | [261116-eoz-3d-data-layers-air-quality-ev-charging-p](./quick/261116-eoz-3d-data-layers-air-quality-ev-charging-p/) |
 
 ## Session Continuity
 

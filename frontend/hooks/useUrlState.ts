@@ -37,7 +37,7 @@ export function useUrlState(defaultTown = 'aalen'): {
 
   const state: UrlState = {
     town: searchParams.get('town') ?? defaultTown,
-    layers: (searchParams.get('layers') ?? 'transit,aqi,buildings3d,terrain3d').split(',').filter(Boolean),
+    layers: (searchParams.get('layers') ?? 'transit,aqi,buildings3d,terrain3d,data3d').split(',').filter(Boolean),
     zoom: searchParams.get('zoom') ? Number(searchParams.get('zoom')) : null,
     lat: searchParams.get('lat') ? Number(searchParams.get('lat')) : null,
     lng: searchParams.get('lng') ? Number(searchParams.get('lng')) : null,

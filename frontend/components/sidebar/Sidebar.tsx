@@ -276,6 +276,7 @@ export default function Sidebar({ town, onFeatureSelect, layerVisibility, onTogg
       <div>
         <LayerToggle {...toggleProps('buildings3d')} />
         <LayerToggle {...toggleProps('terrain3d')} />
+        <LayerToggle {...toggleProps('data3d')} />
       </div>
 
       <Separator className="mt-6" />
