@@ -362,8 +362,15 @@ export default function MapView({
           // cell falls through to the columns, buildings or other features beneath it.
           const interactiveHits = (e.features ?? []).filter((f) => f.layer?.id !== AIR_QUALITY_CELLS_LAYER_ID);
           features = features.filter((f) => f.layer?.id !== AIR_QUALITY_CELLS_LAYER_ID);
+          // A column often stands on a road: its extrusion and the traffic-flow lines (drawn
+          // above everything) are then both under the cursor. The column is what the user
+          // aimed at, so 3D objects win over flat features, and both win over a building.
+          const isColumn = (f: (typeof features)[number]) =>
+            (f.layer?.id ?? '').endsWith('-columns-3d') || f.layer?.id === 'bus-position-3d';
           const feature = interactiveHits.length > 0
-            ? (features.find((f) => f.layer?.id !== 'buildings-3d') ?? features[0])
+            ? (features.find(isColumn)
+                ?? features.find((f) => f.layer?.id !== 'buildings-3d')
+                ?? features[0])
             : features[0];
           if (!feature || !e.lngLat) return;
           const layerId = feature.layer?.id ?? '';

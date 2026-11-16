@@ -25,9 +25,9 @@ const PARKING_COLUMN_RADIUS_M = 30;
 const PARKING_COLUMN_SIDES = 16;
 // Two radii plus a 15 m gap: garages sharing an approximate position stand on a ring.
 const PARKING_MIN_SEPARATION_M = 75;
-const PARKING_COLUMN_BASE_M = 20;
-const PARKING_COLUMN_M_PER_SPOT = 2;
-const PARKING_COLUMN_MAX_M = 300;
+const PARKING_COLUMN_BASE_M = 15;
+const PARKING_COLUMN_M_PER_SPOT = 1.2;
+const PARKING_COLUMN_MAX_M = 200;
 const PARKING_COLUMN_OPACITY = 0.85;
 
 // Occupancy colours of the flat circles (green < 50 %, yellow 50-79 %, red >= 80 %).

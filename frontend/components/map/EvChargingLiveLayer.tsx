@@ -23,9 +23,9 @@ export const EV_CHARGING_COLUMNS_LAYER_ID = 'ev-charging-columns-3d';
 // 3D tuning: hexagonal column, height grows with sqrt(power_kw).
 const EV_COLUMN_RADIUS_M = 22;
 const EV_COLUMN_SIDES = 6;
-const EV_COLUMN_BASE_M = 30;
-const EV_COLUMN_M_PER_SQRT_KW = 45;
-const EV_COLUMN_MAX_M = 600;
+const EV_COLUMN_BASE_M = 15;
+const EV_COLUMN_M_PER_SQRT_KW = 12;
+const EV_COLUMN_MAX_M = 250;
 const EV_COLUMN_OPACITY = 0.9;
 
 // Shared by the flat circles and the columns so the colours are identical.

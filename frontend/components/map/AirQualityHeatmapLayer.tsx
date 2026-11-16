@@ -25,12 +25,13 @@ interface AirQualityHeatmapLayerProps {
 export const AIR_QUALITY_CELLS_LAYER_ID = 'air-quality-cells-3d';
 
 // 3D tuning: cell size is the measured grid spacing times the inset (leaves a small gap).
-const AIR_CELL_INSET = 0.92;
-const AIR_CELL_BASE_M = 20;
+// Slender bars, not tiles: at 0.92 the field is a solid slab that hides the city beneath.
+const AIR_CELL_INSET = 0.3;
+const AIR_CELL_BASE_M = 10;
 // Height at the top of the EAQI 'moderate' band of the pollutant.
 const AIR_CELL_MODERATE_TOP_M = 500;
 const AIR_CELL_MAX_M = 1500;
-const AIR_CELL_OPACITY = 0.6;
+const AIR_CELL_OPACITY = 0.75;
 
 const POLLUTANTS: readonly Pollutant[] = ['pm25', 'pm10', 'no2', 'o3'];
 

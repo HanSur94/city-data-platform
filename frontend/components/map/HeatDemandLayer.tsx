@@ -24,9 +24,9 @@ export const HEAT_DEMAND_COLUMNS_LAYER_ID = 'heat-demand-columns-3d';
 // 3D tuning: axis-aligned square of the building's floor area, height = demand.
 const HEAT_COLUMN_MIN_RADIUS_M = 8;
 const HEAT_COLUMN_MAX_RADIUS_M = 25;
-const HEAT_COLUMN_M_PER_KWH = 0.6;
+const HEAT_COLUMN_M_PER_KWH = 0.3;
 const HEAT_COLUMN_MIN_M = 5;
-const HEAT_COLUMN_MAX_M = 400;
+const HEAT_COLUMN_MAX_M = 200;
 const HEAT_COLUMN_OPACITY = 0.85;
 
 function clamp(value: number, min: number, max: number): number {
