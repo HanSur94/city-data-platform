@@ -329,7 +329,12 @@ async def get_layer(
         source_filter = ""
         params: dict[str, Any] = {"town_id": current_town.id, "domain": domain}
         if domain == "infrastructure" and source:
-            source_filter = "AND f.properties->>'source' = :source"
+            # Match the explicit "source" property (e.g. 'ocpdb') or, for connectors
+            # that only tag their features with a feature_type (cycling), that type.
+            source_filter = (
+                "AND (f.properties->>'source' = :source "
+                "OR f.properties->>'feature_type' = :source)"
+            )
             params["source"] = source
         result = await db.execute(
             text(f"""
